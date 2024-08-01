@@ -2,8 +2,10 @@
 
 -- print("2. Before loading LazyVim")
 -- 加载 LazyVim 配置
-require("config.lazy")
-
+require "config.lazy"
+require "nvim-treesitter"
+require "lspconfig"
+require "mason-lspconfig"
 -- print("3. After loading LazyVim")
 
 -- print("4. End of init.lua")
