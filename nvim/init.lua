@@ -8,6 +8,4 @@ require("config.lazy")
 
 -- print("4. End of init.lua")
 
-
 -- init.lua or plugins.lua
-

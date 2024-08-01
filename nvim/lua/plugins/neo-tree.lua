@@ -11,15 +11,17 @@ return {
   keys = {
     {
       "<leader>e",
-      "<cmd>Neotree toggle<cr>",
+      function()
+        vim.cmd("Neotree toggle " .. vim.fn.getcwd())
+      end,
       desc = "Explorer NeoTree (cwd)",
     },
     {
       "<leader>E",
       function()
-        vim.cmd("Neotree toggle " .. vim.fn.getcwd())
+        vim.cmd("Neotree toggle " .. vim.fn.finddir(".git/..", vim.fn.getcwd() .. ";"))
       end,
-      desc = "Explorer NeoTree (root dir)",
+      desc = "Explorer NeoTree (project root)",
     },
     { "<leader>fe", false },
     { "<leader>fE", false },
