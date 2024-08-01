@@ -27,11 +27,13 @@ This configuration is highly friendly to colorblind users, especially those with
    ```
 
 3. **Install Plugins**:
+
    Open Lazyvim and install&&update(auto)
 
 ## Key Bindings ⌨️
 
-<leader>
+    Open Neovim, and with any file open, simply press <leader> (usually the space key) to view all the shortcut key descriptions.
+ 
 
 ## License 📄
 
