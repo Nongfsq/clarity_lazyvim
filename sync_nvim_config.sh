@@ -17,7 +17,7 @@ cd /Users/meng/Github/my_nvim_config
 # 检查 Git 状态，添加更改到 Git
 if [ -n "$(git status --porcelain)" ]; then
     echo "Adding and committing changes..."
-    git add nvim
+    git add -A
     git commit -m "Auto-sync nvim configuration files"
 
     # 推送更改到 GitHub
