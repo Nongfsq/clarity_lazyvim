@@ -6,8 +6,9 @@ require "config.lazy"
 require "nvim-treesitter"
 require "lspconfig"
 require "mason-lspconfig"
--- print("3. After loading LazyVim")
 
+-- print("3. After loading LazyVim")
+-- 加载 Mason 和 LSP 配置
 -- print("4. End of init.lua")
 
 -- init.lua or plugins.lua

@@ -19,8 +19,6 @@ return {
             "pyright", -- Python
             "lua-language-server", -- Lua
             "typescript-language-server", -- JavaScript/TypeScript
-            "json-lsp", -- JSON
-            "marksman", -- Markdown
             "neocmakelsp", -- CMake
 
             -- Formatters and linters
