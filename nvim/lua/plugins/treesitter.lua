@@ -14,9 +14,7 @@ return {
         "json",
         "markdown",
         "vim",
-        "regex",
         "bash",
-        "markdown_inline",
       },
       highlight = {
         enable = true,
