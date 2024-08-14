@@ -19,7 +19,6 @@ return {
             "pyright", -- Python
             "lua-language-server", -- Lua
             "typescript-language-server", -- JavaScript/TypeScript
-            "neocmakelsp", -- CMake
 
             -- Formatters and linters
             "clang-format", -- C/C++
