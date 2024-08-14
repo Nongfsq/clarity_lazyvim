@@ -37,7 +37,6 @@ return {
       buf_set_keymap("n", "<space>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
       -- 设置格式化快捷键
       buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.format()<CR>", opts)
-
       -- Enable document highlight if supported by the server
       if client.server_capabilities.document_highlight then
         vim.cmd [[
