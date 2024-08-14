@@ -3,9 +3,12 @@
 -- print("2. Before loading LazyVim")
 -- 加载 LazyVim 配置
 require "config.lazy"
-require "nvim-treesitter"
 require "lspconfig"
 require "mason-lspconfig"
+require "dashboard"
+require "plugins.formatting"
+require "neo-tree"
+require "nvim-treesitter"
 
 -- print("3. After loading LazyVim")
 -- 加载 Mason 和 LSP 配置
