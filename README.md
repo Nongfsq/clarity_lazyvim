@@ -1,4 +1,4 @@
-# ClarityLazyVim 🌈✨
+# clarity_lazyvim 🌈✨
 
 This configuration is highly friendly to colorblind users, especially those with red-green color blindness, and ensures color contrast without straining the eyes. It works best on macOS, providing highlights and bold keywords for better readability.
 
@@ -29,15 +29,16 @@ This configuration is highly friendly to colorblind users, especially those with
 
 3. **Install Plugins**:
 
-   rm -rf ~/.local/share/
-   rm -rf ~/.cache/nvim/
-   nvim
+    rm -rf ~/.local/share/
+    rm -rf ~/.cache/nvim/
+    nvim
 
 ## Key Bindings ⌨️
 
-    1. Open Neovim, and with any file open, 
+1. Open Neovim, and with any file open, 
        simply press <leader> (usually the space key) to view all the shortcut key descriptions.
-    2. clarity_lazyvim/nvim/lua/plugins/lsp.lua
+
+2. clarity_lazyvim/nvim/lua/plugins/lsp.lua
 
 ## License 📄
 
