@@ -12,6 +12,7 @@ This configuration is highly friendly to colorblind users, especially those with
 - **Status Line**: Informative and aesthetic status line.
 - **File Explorer**: Efficient file navigation.
 - **Git Integration**: Seamless version control.
+- **nvim-cursorword**: Only highlight the word under the cursor.
 - **Theming**: Beautiful color schemes and icons.
 
 ## Installation 🛠️
@@ -28,12 +29,15 @@ This configuration is highly friendly to colorblind users, especially those with
 
 3. **Install Plugins**:
 
-   Open Lazyvim and install&&update(auto)
+   rm -rf ~/.local/share/
+   rm -rf ~/.cache/nvim/
+   nvim
 
 ## Key Bindings ⌨️
 
-    Open Neovim, and with any file open, simply press <leader> (usually the space key) to view all the shortcut key descriptions.
- 
+    1. Open Neovim, and with any file open, 
+       simply press <leader> (usually the space key) to view all the shortcut key descriptions.
+    2. clarity_lazyvim/nvim/lua/plugins/lsp.lua
 
 ## License 📄
 
