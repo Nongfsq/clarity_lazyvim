@@ -28,11 +28,11 @@ This configuration is highly friendly to colorblind users, especially those with
    ```
 
 3. **Install Plugins**:
-
+    ```sh
     rm -rf ~/.local/share/
     rm -rf ~/.cache/nvim/
     nvim
-
+    ```
 ## Key Bindings ⌨️
 
 1. Open Neovim, and with any file open, 
