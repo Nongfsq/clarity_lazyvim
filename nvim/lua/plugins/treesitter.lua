@@ -5,16 +5,12 @@ return {
       ensure_installed = {
         "c",
         "cpp",
-        "cmake",
         "lua",
         "rust",
         "typescript",
         "javascript",
         "python",
         "json",
-        "markdown",
-        "vim",
-        "bash",
       },
       highlight = {
         enable = true,
