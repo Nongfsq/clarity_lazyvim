@@ -24,7 +24,7 @@ This configuration is highly friendly to colorblind users, especially those with
 
 2. **Clone Repository**:
    ```sh
-   git clone https://github.com/Nongfsq/my_nvim_config](https://github.com/Nongfsq/clarity_lazyvim.git
+   git clone https://github.com/Nongfsq/my_nvim_config.git
    mv ./clarity_lazyvim/nvim ~/.config/
    ```
 
