@@ -21,7 +21,7 @@ require("lazy").setup {
     -- { import = "lazyvim.plugins.extras.lang.typescript" },
     -- { import = "lazyvim.plugins.extras.lang.json" },
     -- { import = "lazyvim.plugins.extras.ui.mini-animate" },
-    -- { "xiyaowong/nvim-cursorword" },
+    { "xiyaowong/nvim-cursorword" },
   },
   defaults = {
     lazy = false,
