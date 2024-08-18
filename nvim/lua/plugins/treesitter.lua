@@ -12,9 +12,6 @@ return {
         "javascript",
         "python",
         "json",
-        "markdown",
-        "vim",
-        "bash",
       },
       highlight = {
         enable = true,
