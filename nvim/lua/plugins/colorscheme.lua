@@ -1,13 +1,13 @@
 return {
-    {
-        "LazyVim/LazyVim",
-        opts = {
-            colorscheme = "custom_colorblind_theme",
-        },
+  {
+    "LazyVim/LazyVim",
+    opts = {
+      colorscheme = "custom_colorblind_theme",
     },
-    {
-        "rktjmp/lush.nvim",
-        lazy = false,
-        priority = 1000,
-    },
+  },
+  {
+    "rktjmp/lush.nvim",
+    lazy = false,
+    priority = 1000,
+  },
 }
