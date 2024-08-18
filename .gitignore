@@ -1,0 +1,34 @@
+# Ignore compiled Lua files
+*.luac
+
+# Ignore swap files
+*.swp
+*.swo
+
+# Ignore backup files
+*.bak
+*.tmp
+*.orig
+
+# Ignore temporary files
+*~
+
+# Ignore tags
+tags
+.tag
+
+# Ignore node_modules if you have any npm packages
+node_modules/
+
+# Ignore lazy.nvim installation folder if present
+lazy/
+
+# Ignore plugin lock file if you don't want to commit it
+lazy-lock.json
+
+# Ignore NeoVim undo files
+*.un~
+
+# Ignore NeoVim sessions
+Session.vim
+
