@@ -59,6 +59,21 @@ This configuration is highly friendly to colorblind users, especially those with
     
     # Install clangd and cmake LSP
     sudo apt install -y clangd cmake
+
+    # Install Julia
+    curl -fsSL https://install.julialang.org | sh
+    
+    # Install LazyGit (fetch the latest version automatically)
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf lazygit.tar.gz lazygit
+    sudo install lazygit /usr/local/bin
+    
+    # Install LuaRocks (for Lua dependencies)
+    sudo apt install -y luarocks
+    
+    # Reinstall Node.js support for Neovim plugins (if needed)
+    sudo npm install -g neovim
     ```
 1. **Backup Current Config**:
    ```sh
