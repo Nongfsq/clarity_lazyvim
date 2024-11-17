@@ -20,9 +20,18 @@ This configuration is highly friendly to colorblind users, especially those with
     
     Neovim
     ```sh
+    # Linux
     sudo add-apt-repository ppa:neovim-ppa/unstable
     sudo apt update
     sudo apt install neovim
+    nvim --version
+
+    # macOS
+    git clone https://github.com/neovim/neovim.git
+    cd neovim
+    git checkout release-0.11
+    make CMAKE_BUILD_TYPE=RelWithDebInfo
+    sudo make install
     nvim --version
     ```
     
