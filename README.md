@@ -48,10 +48,6 @@ This configuration is highly friendly to colorblind users, especially those with
       fd-find \
       fonts-powerline \
       fonts-noto-color-emoji
-
-    #Options2: macOS
-    brew install neovim node npm python3 git ripgrep fd
-
     
     # Install pynvim
     pip install pynvim
@@ -88,6 +84,30 @@ This configuration is highly friendly to colorblind users, especially those with
     
     # Reinstall Node.js support for Neovim plugins (if needed)
     sudo npm install -g neovim
+
+
+    #Options2: macOS
+    brew install neovim node npm python3 git ripgrep fd
+    python3 -m venv ~/.neovim_env
+    source ~/.neovim_env/bin/activate
+    pip install pynvim
+    python -m pip show pynvim
+     # Install Node.js support for Neovim plugins
+    npm install -g neovim
+    
+    # Install language servers
+    npm install -g pyright typescript typescript-language-server
+    
+    # Install Rust toolchain (including rust-analyzer)
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source $HOME/.cargo/env
+    rustup component add rust-analyzer
+    brew install lua@5.3 luarocks llvm cmake lazygit && \
+    luarocks install lua-lsp && \
+    curl -fsSL https://install.julialang.org | sh && \
+    npm install -g neovim && \
+    echo 'export PATH="/opt/homebrew/opt/llvm/bin:$HOME/.julia/bin:$PATH"' >> ~/.zshrc && \
+    source ~/.zshrc
     ```
 1. **Backup Current Config**:
    ```sh
