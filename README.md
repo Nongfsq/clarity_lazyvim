@@ -20,7 +20,7 @@ This configuration is highly friendly to colorblind users, especially those with
     
     Neovim
     ```sh
-    # Options1: Linux
+    # Options1: Ubuntu
     sudo add-apt-repository ppa:neovim-ppa/unstable
     sudo apt update
     sudo apt install neovim
@@ -39,7 +39,7 @@ This configuration is highly friendly to colorblind users, especially those with
     ```sh
    #!/bin/bash
 
-    # ================ Linux Installation ================
+    # ================ Ubuntu Installation ================
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Core dependencies
     sudo apt update && sudo apt install -y \
