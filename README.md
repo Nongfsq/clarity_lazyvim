@@ -20,13 +20,13 @@ This configuration is highly friendly to colorblind users, especially those with
     
     Neovim
     ```sh
-    # Linux
+    # Options1: Linux
     sudo add-apt-repository ppa:neovim-ppa/unstable
     sudo apt update
     sudo apt install neovim
     nvim --version
 
-    # macOS
+    # Options2: macOS
     git clone https://github.com/neovim/neovim.git
     cd neovim
     git checkout release-0.11
@@ -38,6 +38,7 @@ This configuration is highly friendly to colorblind users, especially those with
     Dependencies
     ```sh
     # Update package list and install basic dependencies
+    # Options1: Linux
     sudo apt update && sudo apt install -y \
       neovim \
       nodejs npm \
@@ -47,6 +48,10 @@ This configuration is highly friendly to colorblind users, especially those with
       fd-find \
       fonts-powerline \
       fonts-noto-color-emoji
+
+    #Options2: macOS
+    brew install neovim node npm python3 git ripgrep fd
+
     
     # Install pynvim
     pip install pynvim
