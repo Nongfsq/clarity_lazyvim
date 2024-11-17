@@ -37,77 +37,58 @@ This configuration is highly friendly to colorblind users, especially those with
     
     Dependencies
     ```sh
-    # Update package list and install basic dependencies
-    # Options1: Linux
+   #!/bin/bash
+
+    # ================ Linux Installation ================
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Core dependencies
     sudo apt update && sudo apt install -y \
-      neovim \
-      nodejs npm \
-      python3 python3-pip \
-      git \
-      ripgrep \
-      fd-find \
-      fonts-powerline \
-      fonts-noto-color-emoji
-    
-    # Install pynvim
+        neovim nodejs npm python3 python3-pip git ripgrep fd-find \
+        fonts-powerline fonts-noto-color-emoji lua5.3 clangd cmake
+
+    # Python & Node.js setup
     pip install pynvim
-    
-    # Install Node.js support for Neovim plugins
-    npm install -g neovim
-    
-    # Install language servers
-    npm install -g pyright typescript typescript-language-server
-    
-    # Install Rust toolchain (including rust-analyzer)
+    npm install -g neovim pyright typescript typescript-language-server
+
+    # Rust setup
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
     rustup component add rust-analyzer
-    
-    # Install lua_ls
-    sudo apt install -y lua5.3
-    luarocks install lua-lsp
-    
-    # Install clangd and cmake LSP
-    sudo apt install -y clangd cmake
 
-    # Install Julia
+    # Additional tools
+    luarocks install lua-lsp
     curl -fsSL https://install.julialang.org | sh
     
-    # Install LazyGit (fetch the latest version automatically)
+    # LazyGit
     LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
     curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
     tar xf lazygit.tar.gz lazygit
     sudo install lazygit /usr/local/bin
-    
-    # Install LuaRocks (for Lua dependencies)
-    sudo apt install -y luarocks
-    
-    # Reinstall Node.js support for Neovim plugins (if needed)
-    sudo npm install -g neovim
+    rm lazygit.tar.gz lazygit
 
+    # ================ macOS Installation ================
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Core dependencies
+    brew install neovim node npm python3 git ripgrep fd lua@5.3 \
+        luarocks llvm cmake lazygit
 
-    #Options2: macOS
-    brew install neovim node npm python3 git ripgrep fd
+    # Python & Node.js setup
     python3 -m venv ~/.neovim_env
     source ~/.neovim_env/bin/activate
     pip install pynvim
-    python -m pip show pynvim
-     # Install Node.js support for Neovim plugins
-    npm install -g neovim
-    
-    # Install language servers
-    npm install -g pyright typescript typescript-language-server
-    
-    # Install Rust toolchain (including rust-analyzer)
+    npm install -g neovim pyright typescript typescript-language-server
+
+    # Rust setup
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
     rustup component add rust-analyzer
-    brew install lua@5.3 luarocks llvm cmake lazygit && \
-    luarocks install lua-lsp && \
-    curl -fsSL https://install.julialang.org | sh && \
-    npm install -g neovim && \
-    echo 'export PATH="/opt/homebrew/opt/llvm/bin:$HOME/.julia/bin:$PATH"' >> ~/.zshrc && \
+
+    # Additional setup
+    luarocks install lua-lsp
+    curl -fsSL https://install.julialang.org | sh
+    echo 'export PATH="/opt/homebrew/opt/llvm/bin:$HOME/.julia/bin:$PATH"' >> ~/.zshrc
     source ~/.zshrc
+    fi
     ```
 1. **Backup Current Config**:
    ```sh
