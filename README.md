@@ -44,7 +44,7 @@ This configuration is highly friendly to colorblind users, especially those with
     # Core dependencies
     sudo apt update && sudo apt install -y \
         neovim nodejs npm python3 python3-pip git ripgrep fd-find \
-        fonts-powerline fonts-noto-color-emoji lua5.3 clangd cmake
+        fonts-powerline fonts-noto-color-emoji lua5.3 clangd cmake clang-format
 
     # Python & Node.js setup
     pip install pynvim
@@ -70,7 +70,7 @@ This configuration is highly friendly to colorblind users, especially those with
     elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Core dependencies
     brew install neovim node npm python3 git ripgrep fd lua@5.3 \
-        luarocks llvm cmake lazygit
+        luarocks llvm cmake lazygit clang-format
 
     # Python & Node.js setup
     python3 -m venv ~/.neovim_env
