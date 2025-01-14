@@ -26,7 +26,7 @@ This configuration is highly friendly to colorblind users, especially those with
     sudo apt install neovim
     nvim --version
 
-    # Options2: macOS
+    # Options2: macOS or Other Linux
     git clone https://github.com/neovim/neovim.git
     cd neovim
     git checkout release-0.11
