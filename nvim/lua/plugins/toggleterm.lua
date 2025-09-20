@@ -155,10 +155,6 @@ return {
     end,
   },
   {
-    "lewis6991/gitsigns.nvim",
-    config = true,
-  },
-  {
     "nvim-tree/nvim-web-devicons",
     config = function()
       require("nvim-web-devicons").setup {

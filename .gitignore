@@ -23,8 +23,6 @@ node_modules/
 # Ignore lazy.nvim installation folder if present
 lazy/
 
-# Ignore plugin lock file if you don't want to commit it
-lazy-lock.json
 
 # Ignore NeoVim undo files
 *.un~

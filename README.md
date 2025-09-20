@@ -1,126 +1,128 @@
 # clarity_lazyvim 🌈✨
 
-This configuration is highly friendly to colorblind users, especially those with red-green color blindness, and ensures color contrast without straining the eyes. It works best on macOS, providing highlights and bold keywords for better readability.
+A Neovim configuration meticulously designed for clarity, with special attention to colorblind-friendliness.
 
-## Features 🌟
+Built upon the powerful and performant [LazyVim](https://www.lazyvim.org/) framework, `clarity_lazyvim` is engineered to provide a high-contrast, distraction-free editing environment. By emphasizing readability through bolding and carefully selected colors for key syntax elements, it ensures a comfortable and productive coding experience, even during long sessions.
 
-- **LazyVim**: Minimal and powerful configuration framework.
-- **LSP Support**: Comprehensive language server integration.
-- **Telescope**: Intuitive fuzzy finder.
-- **Treesitter**: Enhanced syntax highlighting.
-- **Autocompletion**: Smart coding suggestions.
-- **Status Line**: Informative and aesthetic status line.
-- **File Explorer**: Efficient file navigation.
-- **Git Integration**: Seamless version control.
-- **nvim-cursorword**: Only highlight the word under the cursor.
-- **Theming**: Beautiful color schemes and icons.
+*We strongly recommend adding a screenshot of your configuration here to showcase its unique aesthetic.*
+`![image](https://path-to-your/screenshot.png)`
 
-## Installation 🛠️
-0. **Ensure your Neovim version is 0.11.x or higher and install the following packages:**
-    
-    Neovim
+## Philosophy
+
+*   **Readability First**: The core of this configuration is a custom color scheme optimized for red-green color blindness, ensuring that every piece of syntax is distinct and legible.
+*   **Intelligent & Automated**: This setup uses [Mason.nvim](https://github.com/williamboman/mason.nvim) to automatically install and manage all necessary language servers, formatters, and linters on the first run.
+*   **Modern & Performant**: By leveraging LazyVim, you get blazing-fast startup times and a modular structure that is simple to understand and extend.
+
+## Key Features & Customizations
+
+This is more than just a collection of plugins; it's a cohesive, customized editing experience. Here’s what makes `clarity_lazyvim` unique:
+
+### 🎨 Custom Color Scheme
+The heart of this project is the `custom_colorblind_theme.lua`. It's a theme built from the ground up using `lush.nvim` with a specific focus on:
+- **High Contrast**: Dark backgrounds with vibrant, easily distinguishable foreground colors.
+- **Bold Keywords**: Important keywords like `function`, `if`, and `return` are bolded to guide the eye.
+- **Accessibility**: Colors were chosen to be clear for users with red-green color blindness.
+
+### 🤖 AI-Powered Completion
+- **GitHub Copilot**: Integrated via `copilot.lua`.
+- **Custom Highlighting**: AI suggestions appear with an underline and a color that matches the theme's comments, making them clear but unobtrusive, upholding the project's design philosophy.
+
+###  TERMINAL Integrated Terminal
+- **ToggleTerm**: A powerful, flexible terminal is integrated directly into Neovim.
+- **Easy Access**: Launch a floating terminal anytime with `<leader>ft`.
+- **Git Integration**: A dedicated terminal for the `lazygit` interface is available for a seamless version control workflow.
+
+###  dashboards Custom Dashboard
+- The startup screen features custom ASCII art, immediately signaling that you're in the `clarity_lazyvim` environment.
+
+### ⌨️ Bilingual Keymap Descriptions
+- All custom keybindings have been given clear, bilingual (Chinese/English) descriptions, making the `which-key.nvim` pop-up menu exceptionally helpful.
+
+## Prerequisites
+
+Before installing, please ensure your system has the following core dependencies:
+
+1.  **Neovim (v0.11.x or newer)**
+2.  **Git**
+3.  **A C Compiler** (for `nvim-treesitter`)
+    -   **macOS**: `xcode-select --install`
+    -   **Debian / Ubuntu**: `sudo apt install build-essential`
+    -   **Arch Linux**: `sudo pacman -S base-devel`
+4.  **A Nerd Font** (e.g., [FiraCode Nerd Font](https://www.nerdfonts.com/font-downloads))
+
+> All other development tools (Language Servers, Linters, Formatters) will be installed **automatically** by `Mason.nvim`.
+
+## Installation
+
+1.  **Backup Your Current Configuration**:
     ```sh
-    # Options1: Ubuntu
-    sudo add-apt-repository ppa:neovim-ppa/unstable
-    sudo apt update
-    sudo apt install neovim
-    nvim --version
-
-    # Options2: macOS or Other Linux
-    git clone https://github.com/neovim/neovim.git
-    cd neovim
-    git checkout release-0.11
-    make CMAKE_BUILD_TYPE=RelWithDebInfo
-    sudo make install
-    nvim --version
+    mv ~/.config/nvim ~/.config/nvim.bak
     ```
-    
-    Dependencies
+2.  **Clone the Repository**:
     ```sh
-   #!/bin/bash
-
-    # ================ Ubuntu Installation ================
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Core dependencies
-    sudo apt update && sudo apt install -y \
-        neovim nodejs npm python3 python3-pip git ripgrep fd-find \
-        fonts-powerline fonts-noto-color-emoji lua5.3 clangd cmake clang-format clang
-
-    # Python & Node.js setup
-    pip install pynvim
-    npm install -g neovim pyright typescript typescript-language-server
-
-    # Rust setup
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source $HOME/.cargo/env
-    rustup component add rust-analyzer
-
-    # Additional tools
-    luarocks install lua-lsp
-    curl -fsSL https://install.julialang.org | sh
-    
-    # LazyGit
-    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-    tar xf lazygit.tar.gz lazygit
-    sudo install lazygit /usr/local/bin
-    rm lazygit.tar.gz lazygit
-
-    # ================ macOS Installation ================
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # Core dependencies
-    brew install neovim node npm python3 git ripgrep fd lua@5.3 \
-        luarocks llvm cmake lazygit clang-format clang
-
-    # Python & Node.js setup
-    python3 -m venv ~/.neovim_env
-    source ~/.neovim_env/bin/activate
-    pip install pynvim
-    npm install -g neovim pyright typescript typescript-language-server
-
-    # Rust setup
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source $HOME/.cargo/env
-    rustup component add rust-analyzer
-
-    # Additional setup
-    luarocks install lua-lsp
-    curl -fsSL https://install.julialang.org | sh
-    echo 'export PATH="/opt/homebrew/opt/llvm/bin:$HOME/.julia/bin:$PATH"' >> ~/.zshrc
-    source ~/.zshrc
-    fi
+    git clone https://github.com/Nongfsq/clarity_lazyvim.git ~/.config/nvim
     ```
-1. **Backup Current Config**:
-   ```sh
-   mv ~/.config/nvim ~/.config/nvim_backup
-   ```
-
-2. **Clone Repository**:
-   ```sh
-   git clone https://github.com/Nongfsq/clarity_lazyvim.git
-   ```
-   then...
-   ```sh
-   mv ./clarity_lazyvim/nvim ~/.config/
-   ```
-
-3. **Install Plugins**:
+3.  **Launch Neovim**:
     ```sh
-    rm -rf ~/.local/share/
-    rm -rf ~/.cache/nvim/
     nvim
     ```
-## Key Bindings ⌨️
+    On first launch, `lazy.nvim` will install all plugins, and `Mason.nvim` will then install all language tools.
 
-1. Open Neovim, and with any file open, 
-       simply press <leader> (usually the space key) to view all the shortcut key descriptions.
+## Keybinding Quick Reference
 
-2. clarity_lazyvim/nvim/lua/plugins/lsp.lua
+This configuration is **self-documenting**. Press `<leader>` (`Space`) and wait a moment for a pop-up menu. Below is a reference for the most important custom keybindings.
 
-## License 📄
+| Keybinding          | Description                           | Context / Plugin       |
+| ------------------- | ------------------------------------- | ---------------------- |
+| **--- General ---** |                                       |                        |
+| `<leader>ff`        | Find Files                            | Telescope              |
+| `<leader>fw`        | Find Word (Live Grep)                 | Telescope              |
+| `<leader>bc`        | Close Current Buffer                  | Buffer Management      |
+| **--- LSP ---**     | (Language Intelligence)               |                        |
+| `gd`                | Go to Definition                      | LSP                    |
+| `K`                 | Hover to Show Documentation           | LSP                    |
+| `gr`                | Find References                       | LSP                    |
+| `<leader>ca`        | Code Actions                          | LSP                    |
+| `[d` / `]d`         | Previous / Next Diagnostic            | LSP                    |
+| **--- Git ---**     |                                       |                        |
+| `<leader>gg`        | Open LazyGit                          | LazyGit                |
+| `<leader>gs`        | Stage Current Hunk                    | Gitsigns               |
+| `<leader>gr`        | Reset Current Hunk                    | Gitsigns               |
+| `<leader>gb`        | Blame Current Line                    | Gitsigns               |
+| **--- Terminal ---**|                                       |                        |
+| `<leader>\`         | Toggle Centered 'HUD' Terminal        | ToggleTerm             |
+| `<leader>ft`        | Toggle Floating Terminal              | ToggleTerm             |
+| `<leader>vt`        | Toggle Vertical Terminal              | ToggleTerm             |
+
+## Project Structure Explained
+
+The file structure is logical and easy to extend.
+
+```
+nvim
+├── colors/
+│   └── custom_colorblind_theme.lua  -- The unique, custom-built color scheme.
+├── init.lua                         -- The main entry point. DO NOT EDIT.
+├── lua/
+│   ├── config/
+│   │   ├── lazy.lua                 -- The heart of the configuration. Defines core settings, global keymaps, and Mason packages.
+│   │   └── options.lua              -- Global Neovim options (`vim.opt`).
+│   └── plugins/                     -- **Your customization area!** Add or override plugin configs here.
+│       └── ...                      -- Each file is a plugin spec.
+└── stylua.toml                      -- Code style configuration for this project's Lua files.
+```
+
+To add your own plugins, simply create a new file in the `lua/plugins/` directory.
+
+## Troubleshooting
+
+If `:checkhealth` reports issues with **Python** or **Node.js providers**, fix it by running:
+
+```sh
+npm install -g neovim
+pip install pynvim
+```
+
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-Happy coding! 🚀
