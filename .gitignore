@@ -30,3 +30,5 @@ lazy/
 # Ignore NeoVim sessions
 Session.vim
 
+.DS_Store
+.vscode/
