@@ -4,8 +4,6 @@ A Neovim configuration meticulously designed for clarity, with special attention
 
 Built upon the powerful and performant [LazyVim](https://www.lazyvim.org/) framework, `clarity_lazyvim` is engineered to provide a high-contrast, distraction-free editing environment. By emphasizing readability through bolding and carefully selected colors for key syntax elements, it ensures a comfortable and productive coding experience, even during long sessions.
 
-*We strongly recommend adding a screenshot of your configuration here to showcase its unique aesthetic.*
-`![image](https://path-to-your/screenshot.png)`
 
 ## Philosophy
 
