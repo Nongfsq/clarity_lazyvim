@@ -14,9 +14,9 @@ return {
     { "<leader>7", "<cmd>BufferLineGoToBuffer 7<CR>", desc = "跳转到第 7 个标签页" },
     { "<leader>8", "<cmd>BufferLineGoToBuffer 8<CR>", desc = "跳转到第 8 个标签页" },
     { "<leader>9", "<cmd>BufferLineGoToBuffer 9<CR>", desc = "跳转到最后一个标签页" },
-    -- { "<C-PageUp>", "<cmd>BufferLineCyclePrev<CR>", desc = "上一个标签页" },
-    -- { "<C-PageDown>", "<cmd>BufferLineCycleNext<CR>", desc = "下一个标签页" },
-    -- { "<leader>bq", "<cmd>bdelete<CR>", desc = "[关]闭当前标签页" },
+    { "<C-PageUp>", "<cmd>BufferLineCyclePrev<CR>", desc = "上一个标签页" },
+    { "<C-PageDown>", "<cmd>BufferLineCycleNext<CR>", desc = "下一个标签页" },
+    { "<leader>bq", "<cmd>bdelete<CR>", desc = "[关]闭当前标签页" },
   },
   opts = {
     options = {
