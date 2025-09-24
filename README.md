@@ -69,29 +69,31 @@ Before installing, please ensure your system has the following core dependencies
 
 This configuration is **self-documenting**. Press `<leader>` (`Space`) and wait a moment for a pop-up menu. Below is a reference for the most important custom keybindings.
 
-| Keybinding          | Description                           | Context / Plugin       |
-| ------------------- | ------------------------------------- | ---------------------- |
-| **--- General ---** |                                       |                        |
-| `<leader>ff`        | Find Files                            | Telescope              |
-| `<leader>fw`        | Find Word (Live Grep)                 | Telescope              |
-| `<leader>bc`        | Close Current Buffer                  | Buffer Management      |
-| **--- LSP ---**     | (Language Intelligence)               |                        |
-| `gd`                | Go to Definition                      | LSP                    |
-| `K`                 | Hover to Show Documentation           | LSP                    |
-| `gr`                | Find References                       | LSP                    |
-| `<leader>ca`        | Code Actions                          | LSP                    |
-| `[d` / `]d`         | Previous / Next Diagnostic            | LSP                    |
-| **--- Git ---**     |                                       |                        |
-| `<leader>gg`        | Open LazyGit                          | LazyGit                |
-| `<leader>gs`        | Stage Current Hunk                    | Gitsigns               |
-| `<leader>gr`        | Reset Current Hunk                    | Gitsigns               |
-| `<leader>gb`        | Blame Current Line                    | Gitsigns               |
-| **--- Terminal ---**|                                       |                        |
-| `<leader>\`         | Toggle Centered 'HUD' Terminal        | ToggleTerm             |
-| `<leader>ft`        | Toggle Floating Terminal              | ToggleTerm             |
-| `<leader>vt`        | Toggle Vertical Terminal              | ToggleTerm             |
-
-## Project Structure Explained
+| Keybinding                  | Description                           | Context / Plugin       |
+| --------------------------- | ------------------------------------- | ---------------------- |
+| **--- General ---**         |                                       |                        |
+| `<leader>ff`                | Find Files                            | Telescope              |
+| `<leader>fw`                | Find Word (Live Grep)                 | Telescope              |
+| `<leader>fb`                | Find in Open Buffers                  | Telescope              |
+| **--- Tabs / Bufferline ---** |                                       |                        |
+| `<C-PageUp>` / `<C-PageDown>` | Cycle Through Tabs                    | Bufferline             |
+| `<leader>` + `[1-9]`        | Go to Tab Number [1-9]                | Bufferline             |
+| `<leader>bq`                | Close Current Tab                     | Bufferline             |
+| **--- LSP ---**             | (Language Intelligence)               |                        |
+| `gd`                        | Go to Definition                      | LSP                    |
+| `K`                         | Hover to Show Documentation           | LSP                    |
+| `gr`                        | Find References                       | LSP                    |
+| `<leader>ca`                | Code Actions                          | LSP                    |
+| `[d` / `]d`                 | Previous / Next Diagnostic            | LSP                    |
+| **--- Git ---**             |                                       |                        |
+| `<leader>gg`                | Open LazyGit                          | LazyGit                |
+| `<leader>gs`                | Stage Current Hunk                    | Gitsigns               |
+| `<leader>gr`                | Reset Current Hunk                    | Gitsigns               |
+| `<leader>gb`                | Blame Current Line                    | Gitsigns               |
+| **--- Terminal ---**        |                                       |                        |
+| `<leader>\`                 | Toggle Centered 'HUD' Terminal        | ToggleTerm             |
+| `<leader>ft`                | Toggle Floating Terminal              | ToggleTerm             |
+| `<leader>vt`                | Toggle Vertical Terminal              | ToggleTerm             |## Project Structure Explained
 
 The file structure is logical and easy to extend.
 
