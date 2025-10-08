@@ -90,7 +90,7 @@ This configuration is **self-documenting**. Press `<leader>` (`Space`) and wait 
 | `<leader>gs`                | Stage Current Hunk                    | Gitsigns               |
 | `<leader>gr`                | Reset Current Hunk                    | Gitsigns               |
 | `<leader>gb`                | Blame Current Line                    | Gitsigns               |
-| **--- Terminal ---**        |                                       |                        |
+| **--- Terminal ---** Beta)        |                                       |                        |
 | `<leader>\`                 | Toggle Centered 'HUD' Terminal        | ToggleTerm             |
 | `<leader>ft`                | Toggle Floating Terminal              | ToggleTerm             |
 | `<leader>vt`                | Toggle Vertical Terminal              | ToggleTerm             |## Project Structure Explained
