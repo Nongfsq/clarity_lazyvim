@@ -31,13 +31,27 @@ The custom theme in `nvim/colors/custom_colorblind_theme.lua` focuses on:
 
 The configuration extends LazyVim instead of rebuilding editor primitives from zero. This keeps startup and maintenance costs lower while leaving room for strong custom identity.
 
+### Minimal necessary plugin set
+
+The public distribution now keeps only the plugin layers that directly support the product story:
+
+- LazyVim core for LSP, completion, Telescope, Mason, and statusline foundations
+- `lush.nvim` plus the custom accessibility theme
+- `neo-tree.nvim` for project navigation
+- `toggleterm.nvim` for integrated terminal workflows
+- `gitsigns.nvim` for inline Git feedback
+- `conform.nvim` for formatter orchestration
+- `nvim-treesitter` for syntax intelligence
+- `copilot.lua` as the single AI-assist layer
+
+Non-essential extras such as dashboard, bufferline, LazyGit integration, alternate colorschemes, and several inherited power-user plugins are intentionally disabled to keep the stack leaner and easier to audit.
+
 ### Integrated terminal workflow
 
 The repo includes floating, vertical, and horizontal terminal layouts through `toggleterm.nvim`.
 
 Optional extras:
 
-- `lazygit` for Git TUI workflows
 - `htop` or `btop` for system monitoring
 
 If those tools are missing, the related mappings now fail gracefully with a helpful warning instead of hard-crashing the flow.
@@ -49,6 +63,8 @@ Run `:ClarityAudit` inside Neovim to inspect:
 - bootstrap layout correctness
 - required external tools
 - optional external tools
+- active plugin inventory
+- plugins disabled by the minimal-set policy
 - overall environment readiness
 
 For a headless audit from the terminal, use:
@@ -79,8 +95,7 @@ python scripts/run_clarity_audit.py
 
 ### Optional
 
-1. `lazygit`
-2. `htop` or `btop`
+1. `htop` or `btop`
 
 ## Installation
 
@@ -120,6 +135,7 @@ This repository now follows these rules:
 2. Optional tools must remain optional.
 3. Formatter choices should prefer stable, documented commands over hidden machine-local assumptions.
 4. The canonical plugin lock file is the root [lazy-lock.json](lazy-lock.json).
+5. The active-vs-disabled plugin policy is defined in `nvim/lua/plugins/minimal.lua`, not inferred from lockfile entries alone.
 
 ## Keybindings
 
@@ -134,7 +150,6 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 | `[d` / `]d` | Previous / next diagnostic |
 | `<leader>e` | Toggle Neo-tree in current working directory |
 | `<leader>E` | Toggle Neo-tree at detected project root |
-| `<leader>gg` | Open LazyGit if installed |
 | `<leader>tf` | Floating center terminal |
 | `<leader>tr` | Floating right terminal |
 | `<leader>tv` | Vertical terminal |

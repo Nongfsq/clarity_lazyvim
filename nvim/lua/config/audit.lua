@@ -9,7 +9,6 @@ local tool_specs = {
   { id = "npm", required = false, commands = { "npm" }, feature = "install provider packages manually" },
   { id = "python", required = false, commands = { "python3", "python" }, feature = "Python provider and Python-based tools" },
   { id = "pip", required = false, commands = { "pip3", "pip" }, feature = "install Python provider packages manually" },
-  { id = "lazygit", required = false, commands = { "lazygit" }, feature = "LazyGit integration" },
   { id = "system_monitor", required = false, commands = { "htop", "btop" }, feature = "system monitor terminal" },
 }
 
@@ -58,6 +57,17 @@ local function describe_commands(commands)
   return table.concat(commands, " / ")
 end
 
+local function sorted_keys(tbl)
+  local keys = {}
+
+  for key in pairs(tbl or {}) do
+    table.insert(keys, key)
+  end
+
+  table.sort(keys)
+  return keys
+end
+
 function M.has(commands)
   local candidates = type(commands) == "table" and commands or { commands }
 
@@ -68,6 +78,37 @@ function M.has(commands)
   end
 
   return false, candidates[1]
+end
+
+function M.get_plugin_report()
+  local ok, config = pcall(require, "lazy.core.config")
+  if not ok then
+    return {
+      available = false,
+      active = {},
+      disabled = {},
+      active_count = 0,
+      disabled_count = 0,
+    }
+  end
+
+  local active = {}
+  for name, plugin in pairs(config.plugins or {}) do
+    if plugin and plugin.enabled ~= false then
+      table.insert(active, name)
+    end
+  end
+  table.sort(active)
+
+  local disabled = sorted_keys(config.spec and config.spec.disabled or {})
+
+  return {
+    available = true,
+    active = active,
+    disabled = disabled,
+    active_count = #active,
+    disabled_count = #disabled,
+  }
 end
 
 function M.notify_missing(commands, feature, hint)
@@ -103,6 +144,7 @@ function M.get_report()
       duplicate_lockfiles = file_exists(root_lock) and file_exists(nested_lock),
       nvim_dir_present = directory_exists(nvim_dir),
     },
+    plugins = M.get_plugin_report(),
     tools = {},
   }
 
@@ -181,6 +223,15 @@ function M.render_report(report)
     string.format("Repository root: %s", report.paths.repo_root),
     string.format("Nested nvim dir: %s", report.paths.nvim_dir),
   }
+
+  if report.plugins and report.plugins.available then
+    table.insert(lines, string.format("Active plugins: %d", report.plugins.active_count))
+    table.insert(lines, string.format("Disabled by policy: %d", report.plugins.disabled_count))
+
+    if report.plugins.disabled_count > 0 then
+      table.insert(lines, string.format("Disabled plugin set: %s", table.concat(report.plugins.disabled, ", ")))
+    end
+  end
 
   if report.layout.duplicate_lockfiles then
     table.insert(lines, "Warning: duplicate lock files detected.")

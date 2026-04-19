@@ -19,4 +19,27 @@ for _, path in ipairs(lua_paths) do
   end
 end
 
+local function apply_custom_colorscheme()
+  local theme_file = nvim_dir .. "/colors/custom_colorblind_theme.lua"
+  vim.opt.rtp:append(nvim_dir)
+
+  if vim.fn.filereadable(theme_file) ~= 1 then
+    return false
+  end
+
+  local ok, err = pcall(dofile, theme_file)
+  if not ok then
+    vim.schedule(function()
+      vim.notify("Failed to load custom_colorblind_theme: " .. err, vim.log.levels.ERROR)
+    end)
+    return false
+  end
+
+  return true
+end
+
 require "config.lazy"
+
+if not apply_custom_colorscheme() then
+  pcall(vim.cmd.colorscheme, "habamax")
+end

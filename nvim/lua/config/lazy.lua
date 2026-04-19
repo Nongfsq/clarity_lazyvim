@@ -42,13 +42,13 @@ require("lazy").setup {
       },
     },
 
-    -- 导入你的所有自定义插件
-    { import = "plugins" },
+    -- 显式聚合自定义插件，避免在非标准 config 根目录下导入失败
+    require "plugins",
   },
 
   -- 其他 Lazy 配置
   defaults = { lazy = false, version = false },
-  install = { colorscheme = { "tokyonight", "habamax" } },
+  install = { colorscheme = { "habamax" } },
   checker = { enabled = true },
   performance = {
     rtp = {
