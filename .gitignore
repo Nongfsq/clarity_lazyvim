@@ -20,6 +20,10 @@ tags
 # Ignore node_modules if you have any npm packages
 node_modules/
 
+# Ignore Python cache files for audit scripts
+__pycache__/
+*.pyc
+
 # Ignore lazy.nvim installation folder if present
 lazy/
 

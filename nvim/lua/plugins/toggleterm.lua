@@ -1,3 +1,5 @@
+local audit = require "config.audit"
+
 return {
   {
     "akinsho/toggleterm.nvim",
@@ -35,6 +37,7 @@ return {
     end,
     config = function(_, opts)
       require("toggleterm").setup(opts)
+      local has_system_monitor, system_monitor = audit.has { "htop", "btop" }
 
       -- Terminal keymaps
       vim.api.nvim_create_autocmd("TermOpen", {
@@ -82,29 +85,19 @@ return {
             },
           },
         },
-        lazygit = {
-          cmd = "lazygit",
-          dir = "git_dir",
-          direction = "float",
-          float_opts = { border = "double" },
-          on_open = function(term)
-            vim.cmd "startinsert!"
-            vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
-          end,
-          on_close = function(_)
-            vim.cmd "checktime"
-          end,
-        },
-        htop = {
-          cmd = "htop",
+      }
+
+      if has_system_monitor then
+        terminals.system_monitor = {
+          cmd = system_monitor,
           direction = "float",
           float_opts = { border = "curved" },
           on_open = function(term)
             vim.cmd "startinsert!"
             vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
           end,
-        },
-      }
+        }
+      end
 
       -- Create terminal instances
       local term_instances = {}
@@ -146,8 +139,19 @@ return {
         { "<leader>tr", create_toggle_func "float_right", "Float Right Terminal" },
         { "<leader>tv", toggle_vertical, "Vertical Terminal" },
         { "<leader>th", toggle_horizontal, "Horizontal Terminal" },
-        { "<leader>ht", create_toggle_func "htop", "htop" },
       }
+
+      if has_system_monitor then
+        table.insert(keymaps, { "<leader>ht", create_toggle_func "system_monitor", system_monitor })
+      else
+        table.insert(keymaps, {
+          "<leader>ht",
+          function()
+            audit.notify_missing({ "htop", "btop" }, "System monitor terminal", "Install `htop` or `btop` to enable `<leader>ht`.")
+          end,
+          "System monitor (missing dependency)",
+        })
+      end
 
       for _, keymap in ipairs(keymaps) do
         vim.keymap.set("n", keymap[1], keymap[2], { noremap = true, silent = true, desc = keymap[3] })

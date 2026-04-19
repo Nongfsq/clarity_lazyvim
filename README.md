@@ -1,121 +1,197 @@
-# clarity_lazyvim 🌈✨
+# clarity_lazyvim
 
-A Neovim configuration meticulously designed for clarity, with special attention to colorblind-friendliness.
+A colorblind-friendly, high-contrast Neovim configuration built on [LazyVim](https://www.lazyvim.org/).
 
-Built upon the powerful and performant [LazyVim](https://www.lazyvim.org/) framework, `clarity_lazyvim` is engineered to provide a high-contrast, distraction-free editing environment. By emphasizing readability through bolding and carefully selected colors for key syntax elements, it ensures a comfortable and productive coding experience, even during long sessions.
+`clarity_lazyvim` is designed to be readable first:
 
-## Philosophy
+- bold, high-contrast syntax groups
+- a custom accessibility-focused colorscheme
+- curated LazyVim overrides instead of a from-scratch editor stack
+- bilingual key descriptions for a clearer `which-key` experience
 
-*   **Readability First**: The core of this configuration is a custom color scheme optimized for red-green color blindness, ensuring that every piece of syntax is distinct and legible.
-*   **Intelligent & Automated**: This setup uses [Mason.nvim](https://github.com/williamboman/mason.nvim) to automatically install and manage all necessary language servers, formatters, and linters on the first run.
-*   **Modern & Performant**: By leveraging LazyVim, you get blazing-fast startup times and a modular structure that is simple to understand and extend.
+## Why This Repo Exists
 
-## Key Features & Customizations
+The project is opinionated, but it should not be fragile.
 
-This is more than just a collection of plugins; it's a cohesive, customized editing experience. Here’s what makes `clarity_lazyvim` unique:
+The current repository is structured so it can be cloned directly into the Neovim config path while still keeping the main implementation under `nvim/`. A root `init.lua` now bootstraps that nested config correctly.
 
-### 🎨 Custom Color Scheme
-The heart of this project is the `custom_colorblind_theme.lua`. It's a theme built from the ground up using `lush.nvim` with a specific focus on:
-- **High Contrast**: Dark backgrounds with vibrant, easily distinguishable foreground colors.
-- **Bold Keywords**: Important keywords like `function`, `if`, and `return` are bolded to guide the eye.
-- **Accessibility**: Colors were chosen to be clear for users with red-green color blindness.
+Architecture notes and the ongoing remediation plan live in [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md).
 
-### 🤖 AI-Powered Completion
-- **GitHub Copilot**: Integrated via `copilot.lua`.
-- **Custom Highlighting**: AI suggestions appear with an underline and a color that matches the theme's comments, making them clear but unobtrusive, upholding the project's design philosophy.
+## Core Features
 
-###  TERMINAL Integrated Terminal
-- **ToggleTerm**: A powerful, flexible terminal is integrated directly into Neovim.
-- **Easy Access**: Launch a floating terminal anytime with `<leader>ft`.
-- **Git Integration**: A dedicated terminal for the `lazygit` interface is available for a seamless version control workflow.
+### Accessibility-first theme
 
-###  dashboards Custom Dashboard
-- The startup screen features custom ASCII art, immediately signaling that you're in the `clarity_lazyvim` environment.
+The custom theme in `nvim/colors/custom_colorblind_theme.lua` focuses on:
 
-### ⌨️ Bilingual Keymap Descriptions
-- All custom keybindings have been given clear, bilingual (Chinese/English) descriptions, making the `which-key.nvim` pop-up menu exceptionally helpful.
+- high contrast foreground/background pairs
+- bold keywords and types
+- syntax separation designed for red-green colorblind users
+
+### Curated LazyVim foundation
+
+The configuration extends LazyVim instead of rebuilding editor primitives from zero. This keeps startup and maintenance costs lower while leaving room for strong custom identity.
+
+### Integrated terminal workflow
+
+The repo includes floating, vertical, and horizontal terminal layouts through `toggleterm.nvim`.
+
+Optional extras:
+
+- `lazygit` for Git TUI workflows
+- `htop` or `btop` for system monitoring
+
+If those tools are missing, the related mappings now fail gracefully with a helpful warning instead of hard-crashing the flow.
+
+### Built-in audit command
+
+Run `:ClarityAudit` inside Neovim to inspect:
+
+- bootstrap layout correctness
+- required external tools
+- optional external tools
+- overall environment readiness
+
+For a headless audit from the terminal, use:
+
+```powershell
+python scripts/run_clarity_audit.py
+```
 
 ## Prerequisites
 
-Before installing, please ensure your system has the following core dependencies:
+### Required
 
-1.  **Neovim (v0.11.x or newer)**
-2.  **Git**
-3.  **A C Compiler** (for `nvim-treesitter`)
-    -   **macOS**: `xcode-select --install`
-    -   **Debian / Ubuntu**: `sudo apt install build-essential`
-    -   **Arch Linux**: `sudo pacman -S base-devel`
-4.  **A Nerd Font** (e.g., [FiraCode Nerd Font](https://www.nerdfonts.com/font-downloads))
+1. Neovim `0.12+`
+2. Git
+3. A C compiler for `nvim-treesitter`
+   - Windows: GCC/Clang or MSVC
+   - macOS: `xcode-select --install`
+   - Debian/Ubuntu: `sudo apt install build-essential`
+   - Arch: `sudo pacman -S base-devel`
+4. A Nerd Font for icons
 
-> All other development tools (Language Servers, Linters, Formatters) will be installed **automatically** by `Mason.nvim`.
+### Recommended
+
+1. `ripgrep`
+2. `fd`
+3. Node.js and npm
+4. Python and pip
+
+### Optional
+
+1. `lazygit`
+2. `htop` or `btop`
 
 ## Installation
 
-1.  **Backup Your Current Configuration**:
-    ```sh
-    mv ~/.config/nvim ~/.config/nvim.bak
-    ```
-2.  **Clone the Repository**:
-    ```sh
-    git clone https://github.com/Nongfsq/clarity_lazyvim.git ~/.config/nvim
-    ```
-3.  **Launch Neovim**:
-    ```sh
-    nvim
-    ```
-    On first launch, `lazy.nvim` will install all plugins, and `Mason.nvim` will then install all language tools.
+### Windows
 
-## Keybinding Quick Reference
+Clone into `%LOCALAPPDATA%\nvim`:
 
-This configuration is **self-documenting**. Press `<leader>` (`Space`) and wait a moment for a pop-up menu. Below is a reference for the most important custom keybindings.
-
-| Keybinding                  | Description                           | Context / Plugin       |
-| --------------------------- | ------------------------------------- | ---------------------- |
-| **--- General ---**         |                                       |                        |
-| `<leader>ff`                | Find Files                            | Telescope              |
-| `<leader>fw`                | Find Word (Live Grep)                 | Telescope              |
-| `<leader>fb`                | Find in Open Buffers                  | Telescope              |
-| **--- Tabs / Bufferline ---** |                                       |                        |
-| `<C-PageUp>` / `<C-PageDown>` | Cycle Through Tabs                    | Bufferline             |
-| `<leader>` + `[1-9]`        | Go to Tab Number [1-9]                | Bufferline             |
-| `<leader>bq`                | Close Current Tab                     | Bufferline             |
-| **--- LSP ---**             | (Language Intelligence)               |                        |
-| `gd`                        | Go to Definition                      | LSP                    |
-| `K`                         | Hover to Show Documentation           | LSP                    |
-| `gr`                        | Find References                       | LSP                    |
-| `<leader>ca`                | Code Actions                          | LSP                    |
-| `[d` / `]d`                 | Previous / Next Diagnostic            | LSP                    |
-| **--- Git ---**             |                                       |                        |
-| `<leader>gg`                | Open LazyGit                          | LazyGit                |
-| `<leader>gs`                | Stage Current Hunk                    | Gitsigns               |
-| `<leader>gr`                | Reset Current Hunk                    | Gitsigns               |
-| `<leader>gb`                | Blame Current Line                    | Gitsigns               |
-| **--- Terminal ---** Beta)        |                                       |                        |
-| `<leader>\`                 | Toggle Centered 'HUD' Terminal        | ToggleTerm             |
-| `<leader>ft`                | Toggle Floating Terminal              | ToggleTerm             |
-| `<leader>vt`                | Toggle Vertical Terminal              | ToggleTerm             |## Project Structure Explained
-
-The file structure is logical and easy to extend.
-
+```powershell
+git clone https://github.com/Nongfsq/clarity_lazyvim.git $env:LOCALAPPDATA\nvim
 ```
+
+### Linux / macOS
+
+Clone into `~/.config/nvim`:
+
+```sh
+git clone https://github.com/Nongfsq/clarity_lazyvim.git ~/.config/nvim
+```
+
+### First launch
+
+```sh
 nvim
-├── colors/
-│   └── custom_colorblind_theme.lua  -- The unique, custom-built color scheme.
-├── init.lua                         -- The main entry point. DO NOT EDIT.
-├── lua/
-│   ├── config/
-│   │   ├── lazy.lua                 -- The heart of the configuration. Defines core settings, global keymaps, and Mason packages.
-│   │   └── options.lua              -- Global Neovim options (`vim.opt`).
-│   └── plugins/                     -- **Your customization area!** Add or override plugin configs here.
-│       └── ...                      -- Each file is a plugin spec.
-└── stylua.toml                      -- Code style configuration for this project's Lua files.
 ```
 
-To add your own plugins, simply create a new file in the `lua/plugins/` directory.
+On first launch:
+
+1. `lazy.nvim` bootstraps plugins
+2. `Mason.nvim` installs configured language servers and formatter tooling
+3. `nvim-treesitter` compiles parsers if a compiler is available
+
+## Dependency Strategy
+
+This repository now follows these rules:
+
+1. Shell frameworks such as `oh-my-zsh` are not part of the runtime foundation.
+2. Optional tools must remain optional.
+3. Formatter choices should prefer stable, documented commands over hidden machine-local assumptions.
+4. The canonical plugin lock file is the root [lazy-lock.json](lazy-lock.json).
+
+## Keybindings
+
+The configuration is largely self-documenting via `which-key`, but the most important custom mappings are:
+
+| Keybinding | Description |
+| --- | --- |
+| `gd` | Go to definition |
+| `K` | Hover documentation |
+| `gr` | Find references |
+| `<leader>ca` | Code action |
+| `[d` / `]d` | Previous / next diagnostic |
+| `<leader>e` | Toggle Neo-tree in current working directory |
+| `<leader>E` | Toggle Neo-tree at detected project root |
+| `<leader>gg` | Open LazyGit if installed |
+| `<leader>tf` | Floating center terminal |
+| `<leader>tr` | Floating right terminal |
+| `<leader>tv` | Vertical terminal |
+| `<leader>th` | Horizontal terminal |
+| `<leader>ht` | System monitor terminal if `htop` or `btop` is installed |
+
+## Project Structure
+
+```text
+.
+├── init.lua
+├── lazy-lock.json
+├── doc/
+│   └── clarity_architecture_governance.md
+├── nvim/
+│   ├── colors/
+│   ├── init.lua
+│   └── lua/
+│       ├── config/
+│       └── plugins/
+└── scripts/
+    └── run_clarity_audit.py
+```
+
+## Audit and Smoke Test
+
+Inside Neovim:
+
+```vim
+:ClarityAudit
+```
+
+From the terminal:
+
+```powershell
+python scripts/run_clarity_audit.py
+```
+
+Minimal smoke test:
+
+```powershell
+nvim --headless -u .\init.lua "+qall"
+```
 
 ## Troubleshooting
 
-If `:checkhealth` reports issues with **Python** or **Node.js providers**, fix it by running:
+### `nvim-treesitter` complains about missing compiler
+
+Install a working C compiler and restart your shell so `gcc`, `clang`, or `cl` is available in `PATH`.
+
+### `:ClarityAudit` reports missing optional tools
+
+That is expected if you have not installed them. The related mappings will warn and degrade gracefully.
+
+### Node.js or Python provider issues
+
+If `:checkhealth` reports provider issues, install the missing provider package:
 
 ```sh
 npm install -g neovim
@@ -124,4 +200,4 @@ pip install pynvim
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).

@@ -1,5 +1,7 @@
 -- nvim/lua/plugins/git.lua
 
+local audit = require "config.audit"
+
 return {
   -- GitSigns: Show git diff in the sign column
   {
@@ -63,7 +65,19 @@ return {
     },
     -- use keys to lazy-load the plugin
     keys = {
-      { "<leader>gg", "<cmd>LazyGit<cr>", desc = "打开 [G]it 管理 (LazyGit)" },
+      {
+        "<leader>gg",
+        function()
+          local has_lazygit = audit.has "lazygit"
+          if has_lazygit then
+            vim.cmd "LazyGit"
+            return
+          end
+
+          audit.notify_missing("lazygit", "LazyGit integration", "Install `lazygit` to enable `<leader>gg`.")
+        end,
+        desc = "打开 [G]it 管理 (LazyGit)",
+      },
     },
   },
 }
