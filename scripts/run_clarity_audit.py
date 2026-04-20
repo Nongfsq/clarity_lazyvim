@@ -26,6 +26,7 @@ def resolve_nvim_binary() -> str:
 
 def build_env() -> dict[str, str]:
     env = os.environ.copy()
+    env["CLARITY_NONINTERACTIVE"] = "1"
 
     if os.name == "nt":
         compiler_bin = Path(
@@ -52,7 +53,15 @@ def main() -> int:
         "+qall",
     ]
 
-    result = subprocess.run(command, cwd=repo_root, env=env, capture_output=True, text=True)
+    result = subprocess.run(
+        command,
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
 
     if result.returncode != 0:
         sys.stderr.write(result.stderr or result.stdout)

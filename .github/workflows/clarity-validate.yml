@@ -1,0 +1,59 @@
+name: clarity-validate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y neovim build-essential ripgrep fd-find
+
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install neovim zig ripgrep -y --no-progress
+          if (Test-Path "C:\Program Files\Neovim\bin\nvim.exe") {
+            "NVIM_BIN=C:\Program Files\Neovim\bin\nvim.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      - name: Install provider packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pynvim
+          npm install -g neovim tree-sitter-cli
+
+      - name: Run audit
+        run: python scripts/run_clarity_audit.py
+
+      - name: Run runtime validation
+        run: python scripts/run_clarity_validate.py

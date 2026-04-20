@@ -21,6 +21,17 @@ If you want the current product evaluation and architecture report, read [doc/cl
 
 If you want the root execution documents for future AI-driven work, read [REQUIREMENTS.md](REQUIREMENTS.md), [PLAN.md](PLAN.md), and [TASKS.md](TASKS.md).
 
+## Current Product Direction
+
+The latest round delivered four high-impact product improvements:
+
+1. `T-006` In-editor onboarding entrypoint (`:ClarityStart` / `<leader>hh`)
+2. `T-007` Explicit Windows + WSL clipboard help (`:ClarityClipboard`)
+3. `T-009` Source-of-truth workflow help (`:ClaritySync`)
+4. `T-011` Expanded automated validation (`:ClarityValidate`, `python scripts/run_clarity_validate.py`)
+
+The goal of this round was to reduce "I forgot how to do this" and "I updated but nothing changed" failures inside the product itself.
+
 ## Core Features
 
 ### Accessibility-first theme
@@ -76,6 +87,24 @@ For a headless audit from the terminal, use:
 ```powershell
 python scripts/run_clarity_audit.py
 ```
+
+### In-editor recovery entrypoint
+
+The repo now includes a dedicated recovery route for forgetfulness:
+
+- `:ClarityStart`
+- `<leader>hh`
+
+It centralizes:
+
+- primary workflows (`<leader>ff`, `<leader>fw`, `<leader>tf`, diagnostics, formatting, rename)
+- clipboard help for Windows + WSL users
+- environment checks (`:ClarityAudit`, provider readiness, validation path)
+
+Related in-editor help commands:
+
+- `:ClarityClipboard`
+- `:ClaritySync`
 
 ## Prerequisites
 
@@ -142,6 +171,20 @@ This repository now follows these rules:
 4. The canonical plugin lock file is the root [lazy-lock.json](lazy-lock.json).
 5. The active-vs-disabled plugin policy is defined in `nvim/lua/plugins/minimal.lua`, not inferred from lockfile entries alone.
 
+## Windows + WSL Source Of Truth
+
+To avoid environment drift, use this as the official workflow:
+
+1. Windows repo is the canonical authoring repo.
+2. Make changes on Windows, then `commit` and `push`.
+3. Pull updates in WSL runtime repo.
+4. Restart Neovim if behavior does not update immediately.
+
+Short diagnosis rule:
+
+- If docs and keymaps look old in WSL, check WSL repo `HEAD` first.
+- If keybindings reference removed backends (for example Telescope errors on `<leader>ff`), you are likely running stale config.
+
 ## Keybindings
 
 The configuration is largely self-documenting via `which-key`, but the most important custom mappings are:
@@ -163,6 +206,7 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 | `<leader>-` / `<leader>|` | Split current window |
 | `<leader>wd` | Close current window |
 | `<leader>gd` / `<leader>gs` | Git diff list / Git status |
+| `<leader>hh` | Open the Clarity help hub |
 | `<leader>tf` | Floating center terminal |
 | `<leader>tr` | Floating right terminal |
 | `<leader>tv` | Vertical terminal |
@@ -191,7 +235,8 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 │       ├── config/
 │       └── plugins/
 └── scripts/
-    └── run_clarity_audit.py
+    ├── run_clarity_audit.py
+    └── run_clarity_validate.py
 ```
 
 ## Audit and Smoke Test
@@ -200,12 +245,14 @@ Inside Neovim:
 
 ```vim
 :ClarityAudit
+:ClarityValidate
 ```
 
 From the terminal:
 
 ```powershell
 python scripts/run_clarity_audit.py
+python scripts/run_clarity_validate.py
 ```
 
 Minimal smoke test:
@@ -213,6 +260,15 @@ Minimal smoke test:
 ```powershell
 nvim --headless -u .\init.lua "+qall"
 ```
+
+Current validation coverage (T-011):
+
+- startup smoke checks on Windows and Ubuntu (WSL)
+- `python scripts/run_clarity_audit.py`
+- `python scripts/run_clarity_validate.py`
+- keymap assertions for high-frequency commands such as `<leader>ff`, `<leader>fw`, `<leader>gd`, `<leader>hs`
+- special UI behavior checks for dashboard, neo-tree, and terminal surfaces
+- provider readiness checks (clipboard, Python provider, Node provider)
 
 ## Troubleshooting
 

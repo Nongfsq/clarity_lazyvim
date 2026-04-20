@@ -60,7 +60,7 @@ Acceptance criteria:
 
 ### T-006 Add in-editor onboarding entrypoint
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -70,7 +70,7 @@ Acceptance criteria:
 
 ### T-007 Add clipboard help for Windows + WSL users
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -90,7 +90,7 @@ Acceptance criteria:
 
 ### T-009 Clarify repo source-of-truth workflow
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -111,7 +111,7 @@ Acceptance criteria:
 
 ### T-011 Add CI or scripted validation expansion
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -134,8 +134,60 @@ Acceptance criteria:
 
 ## Suggested next execution order
 
-1. T-006 Add in-editor onboarding entrypoint
-2. T-007 Add clipboard help for Windows + WSL users
-3. T-009 Clarify repo source-of-truth workflow
-4. T-010 Add stronger startup guidance
-5. T-011 Add CI or scripted validation expansion
+1. T-010 Add stronger startup guidance
+2. T-012 Keep docs synced with behavior
+3. Add provider-install convenience guidance for Windows
+4. Evaluate whether clipboard setup should become fully self-healing
+
+## Parallel task breakdown (current round)
+
+### Lane A: In-editor onboarding (T-006)
+
+- `A1` Define onboarding content contract:
+  - top workflows
+  - clipboard route
+  - audit route
+- `A2` Wire command and key entrypoint (`:ClarityStart`, `<leader>hh`)
+- `A3` Add short in-editor recovery cheatsheet
+- `A4` Verify entrypoint discoverability from `Space` menu
+
+### Lane B: Clipboard and source-of-truth (T-007, T-009)
+
+- `B1` Document terminal copy vs Neovim yank vs system clipboard
+- `B2` Add WSL-to-Windows practical copy/paste flow
+- `B3` Define canonical repo sync rule:
+  - Windows commit/push
+  - WSL pull
+- `B4` Add stale-config diagnosis checklist for outdated runtime behavior
+
+### Lane C: Validation expansion (T-011)
+
+- `C1` Add startup smoke checks for Windows and Ubuntu (WSL)
+- `C2` Add keymap assertions for:
+  - `<leader>ff`
+  - `<leader>fw`
+  - `<leader>gd`
+  - `<leader>hs`
+- `C3` Add special UI behavior checks:
+  - dashboard
+  - neo-tree
+  - terminal
+- `C4` Add provider readiness checks:
+  - clipboard provider
+  - `pynvim`
+  - `npm neovim`
+  - Copilot Node runtime floor
+
+### Lane D: Documentation sync (T-012)
+
+- `D1` Update README with current sprint direction and source-of-truth rules
+- `D2` Update Chinese guide with in-editor recovery and sync workflow
+- `D3` Update governance report with scoring deltas and execution order
+- `D4` Keep requirements/plan/tasks wording aligned with implementation output
+
+## Exit criteria for this round
+
+1. `T-006`, `T-007`, `T-009`, and `T-011` are all delivered with visible implementation evidence.
+2. Validation coverage includes behavior checks, not only binary presence.
+3. Users can recover commands and clipboard flows from inside the product.
+4. Windows and WSL source-of-truth workflow is documented in one unambiguous path.

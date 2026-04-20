@@ -220,6 +220,24 @@ Esc
 
 这是“忘了命令怎么办”的官方解决路径。
 
+### 6.3 `ClarityStart` / `空格 h h`（产品内恢复入口）
+
+当前版本已经提供一个统一入口：
+
+- `:ClarityStart`
+- `空格 h h`
+
+它的目标不是替代文档，而是当你忘了命令时，直接在编辑器里给你一条可执行路径，集中显示：
+
+- 主路径命令
+- 剪贴板说明
+- 环境审计与验证入口
+
+如果你当前版本没有这个入口，通常说明你跑的还是旧配置。临时替代路径是：
+
+- `空格` 看 which-key 分组
+- `空格 s k` 搜索快捷键
+
 ---
 
 ## 7. 最顺手的日常工作流
@@ -477,7 +495,14 @@ v
 
 ### 11.3 复制到 Windows 剪贴板
 
-如果你明确想复制到 Windows 外部程序，使用系统剪贴板寄存器：
+当前配置已经开启 `clipboard=unnamedplus`。
+
+这意味着：
+
+- 在 clipboard provider 正常时，普通 `y` / `yy` 往往已经会进入系统剪贴板
+- 如果你想显式指定系统剪贴板，仍然可以使用 `+` 寄存器
+
+最明确的写法是：
 
 ```vim
 "+y
@@ -854,6 +879,40 @@ python scripts/run_clarity_audit.py
 - 新机器刚配置完
 - WSL / Windows 切换之后感觉环境不对
 
+### 17.5 进阶验证（T-011 方向）
+
+除 `:ClarityAudit` 之外，当前还可以直接运行：
+
+```vim
+:ClarityValidate
+```
+
+或在终端执行：
+
+```powershell
+python scripts/run_clarity_validate.py
+```
+
+它会覆盖“行为正确性”，不仅是“工具是否安装”。
+
+当前验证覆盖：
+
+- Windows + Ubuntu (WSL) 启动 smoke test
+- 核心命令断言：
+  - `空格 f f`
+  - `空格 f w`
+  - `空格 g d`
+  - `空格 h s`
+- 特殊界面行为检查：
+  - dashboard
+  - neo-tree
+  - terminal
+- provider 就绪度检查：
+  - clipboard
+  - `pynvim`
+  - `npm neovim`
+  - Copilot Node 版本
+
 ---
 
 ## 18. 推荐你只背这一套“最小肌肉记忆”
@@ -931,7 +990,8 @@ Esc
 
 最稳方案：
 
-- 复制到系统：`"+y`
+- 在 provider 正常时直接用 `y` / `yy`
+- 想强制走系统剪贴板时用 `"+y`
 - 从系统粘贴：`Ctrl + Shift + V`
 
 ### 20.2 为什么我按 `空格 f f` 或 `空格 f w` 报错
@@ -960,6 +1020,20 @@ Esc
 - 全局搜索依赖 `rg`
 - 文件搜索更推荐 `fd`
 - 系统监视终端依赖 `htop` / `btop`
+
+### 20.5 为什么我“已经改了”，WSL 里还是旧行为
+
+这通常不是你操作错，而是你在两份仓库之间没有同步到同一个提交。
+
+官方建议流程：
+
+1. 在 Windows 主仓改动并 `commit`、`push`
+2. 进入 WSL 运行仓 `pull`
+3. 重启 Neovim 再验证命令
+
+把这条流程记成一句话：
+
+`Windows 写入 -> 远端同步 -> WSL 拉取 -> Neovim 重启`
 
 ---
 

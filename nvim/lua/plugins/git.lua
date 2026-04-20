@@ -71,15 +71,35 @@ return {
     config = function(_, opts)
       require("gitsigns").setup(opts)
 
+      local function attach_if_ready(bufnr, retries)
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
+
+        vim.schedule(function()
+          if vim.api.nvim_buf_is_valid(bufnr) and vim.b[bufnr].gitsigns_head then
+            setup_hunk_keymaps(bufnr)
+          elseif retries and retries > 0 then
+            vim.defer_fn(function()
+              attach_if_ready(bufnr, retries - 1)
+            end, 120)
+          end
+        end)
+      end
+
       local group = vim.api.nvim_create_augroup("clarity_gitsigns_keymaps", { clear = true })
-      vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+      vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "BufReadPost", "FocusGained" }, {
         group = group,
         callback = function(event)
-          if vim.b[event.buf].gitsigns_head then
-            setup_hunk_keymaps(event.buf)
-          end
+          attach_if_ready(event.buf, 6)
         end,
       })
+
+      vim.defer_fn(function()
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+          attach_if_ready(buf, 6)
+        end
+      end, 200)
     end,
   },
 }

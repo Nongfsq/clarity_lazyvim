@@ -1,8 +1,11 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    opts = {
-      ensure_installed = {
+    opts = function()
+      local noninteractive = vim.env.CLARITY_NONINTERACTIVE == "1" or #vim.api.nvim_list_uis() == 0
+
+      return {
+        ensure_installed = noninteractive and {} or {
         "c",
         "cpp",
         "cmake",
@@ -28,6 +31,7 @@ return {
           node_decremental = "<bs>",
         },
       },
-    },
+      }
+    end,
   },
 }

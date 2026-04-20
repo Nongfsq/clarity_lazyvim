@@ -72,6 +72,111 @@ local function sorted_keys(tbl)
   return keys
 end
 
+local function list_to_set(items)
+  local set = {}
+
+  for _, item in ipairs(items or {}) do
+    set[item] = true
+  end
+
+  return set
+end
+
+local function option_contains(option_value, expected)
+  if type(option_value) == "string" then
+    if option_value == "" then
+      return false
+    end
+
+    return option_value == expected
+  end
+
+  return vim.tbl_contains(option_value or {}, expected)
+end
+
+local function find_python_module(module_name)
+  for _, command in ipairs { "python3", "python" } do
+    if vim.fn.executable(command) == 1 then
+      vim.fn.system {
+        command,
+        "-c",
+        string.format("import importlib.util, sys; sys.exit(0 if importlib.util.find_spec(%q) else 1)", module_name),
+      }
+
+      if vim.v.shell_error == 0 then
+        return true, command
+      end
+    end
+  end
+
+  return false, nil
+end
+
+local function find_global_npm_package(package_name)
+  if vim.fn.executable "npm" ~= 1 then
+    return false, nil
+  end
+
+  local output = vim.fn.system { "npm", "list", "-g", package_name, "--depth=0", "--json" }
+  local ok, data = pcall(vim.json.decode, output)
+
+  if not ok or type(data) ~= "table" then
+    return false, nil
+  end
+
+  local dependency = data.dependencies and data.dependencies[package_name]
+  if dependency and dependency.version then
+    return true, dependency.version
+  end
+
+  return false, nil
+end
+
+local function get_clipboard_status()
+  local ok, provider = pcall(function()
+    return vim.fn["provider#clipboard#Executable"]()
+  end)
+  local clipboard = vim.opt.clipboard:get()
+  local unnamedplus = option_contains(clipboard, "unnamedplus")
+
+  if not ok or not provider or provider == "" then
+    return {
+      present = false,
+      provider = nil,
+      unnamedplus = unnamedplus,
+    }
+  end
+
+  return {
+    present = true,
+    provider = provider,
+    unnamedplus = unnamedplus,
+  }
+end
+
+local function get_picker_status(plugin_report)
+  local active = list_to_set(plugin_report.active)
+
+  if active["snacks.nvim"] and not active["telescope.nvim"] then
+    return {
+      backend = "snacks",
+      reason = "inferred from active plugin set",
+    }
+  end
+
+  if active["telescope.nvim"] then
+    return {
+      backend = "telescope",
+      reason = "inferred from active plugin set",
+    }
+  end
+
+  return {
+    backend = "unknown",
+    reason = "no known picker plugin detected",
+  }
+end
+
 function M.has(commands)
   local candidates = type(commands) == "table" and commands or { commands }
 
@@ -140,6 +245,9 @@ function M.notify_missing(commands, feature, hint)
 end
 
 function M.get_report()
+  pcall(vim.cmd, "doautocmd User VeryLazy")
+  vim.wait(100)
+
   local repo_root = get_repo_root()
   local nvim_dir = get_nvim_dir()
   local root_lock = repo_root .. "/lazy-lock.json"
@@ -169,6 +277,7 @@ function M.get_report()
   local required_ok = 0
   local optional_total = 0
   local optional_ok = 0
+  local node_entry
 
   for _, spec in ipairs(tool_specs) do
     local present, detected = M.has(spec.commands)
@@ -192,6 +301,10 @@ function M.get_report()
 
     table.insert(report.tools, entry)
 
+    if spec.id == "node" then
+      node_entry = entry
+    end
+
     if spec.required then
       required_total = required_total + 1
       if present then
@@ -203,6 +316,56 @@ function M.get_report()
         optional_ok = optional_ok + 1
       end
     end
+  end
+
+  local clipboard = get_clipboard_status()
+  local python_provider_present, python_interpreter = find_python_module "pynvim"
+  local node_provider_present, node_provider_version = find_global_npm_package "neovim"
+  local picker = get_picker_status(report.plugins)
+
+  report.integrations = {
+    clipboard = clipboard,
+    python_provider = {
+      present = python_provider_present,
+      interpreter = python_interpreter,
+      module = "pynvim",
+    },
+    node_provider = {
+      present = node_provider_present,
+      manager = "npm",
+      package = "neovim",
+      version = node_provider_version,
+    },
+    picker = picker,
+    copilot = {
+      present = node_entry and node_entry.present or false,
+      satisfied = node_entry and node_entry.present or false,
+      detected = node_entry and node_entry.detected or nil,
+      version = node_entry and node_entry.version or nil,
+      minimum_major = 22,
+    },
+  }
+
+  local integration_total = 6
+  local integration_ok = 0
+
+  if report.integrations.clipboard.present then
+    integration_ok = integration_ok + 1
+  end
+  if report.integrations.clipboard.unnamedplus then
+    integration_ok = integration_ok + 1
+  end
+  if report.integrations.python_provider.present then
+    integration_ok = integration_ok + 1
+  end
+  if report.integrations.node_provider.present then
+    integration_ok = integration_ok + 1
+  end
+  if report.integrations.picker.backend == "snacks" then
+    integration_ok = integration_ok + 1
+  end
+  if report.integrations.copilot.satisfied then
+    integration_ok = integration_ok + 1
   end
 
   local layout_score = 100
@@ -223,10 +386,12 @@ function M.get_report()
   report.summary = {
     required = { ok = required_ok, total = required_total },
     optional = { ok = optional_ok, total = optional_total },
+    integrations = { ok = integration_ok, total = integration_total },
     scores = {
       required = score(required_ok, required_total),
       optional = score(optional_ok, optional_total),
       layout = layout_score,
+      integrations = score(integration_ok, integration_total),
     },
   }
 
@@ -246,6 +411,12 @@ function M.render_report(report)
     string.format("Required tools: %d/%d", report.summary.required.ok, report.summary.required.total),
     string.format("Optional tools: %d/%d", report.summary.optional.ok, report.summary.optional.total),
     string.format("Layout hygiene: %d/100", report.summary.scores.layout),
+    string.format(
+      "Integration readiness: %d/100 (%d/%d)",
+      report.summary.scores.integrations,
+      report.summary.integrations.ok,
+      report.summary.integrations.total
+    ),
     string.format("Repository root: %s", report.paths.repo_root),
     string.format("Nested nvim dir: %s", report.paths.nvim_dir),
   }
@@ -262,6 +433,48 @@ function M.render_report(report)
   if report.layout.duplicate_lockfiles then
     table.insert(lines, "Warning: duplicate lock files detected.")
   end
+
+  local clipboard_provider = report.integrations.clipboard.provider or "missing"
+  table.insert(
+    lines,
+    string.format(
+      "Clipboard provider: %s (unnamedplus=%s)",
+      clipboard_provider,
+      report.integrations.clipboard.unnamedplus and "on" or "off"
+    )
+  )
+
+  local python_status = report.integrations.python_provider.present
+      and string.format("OK -> %s", report.integrations.python_provider.interpreter)
+    or "MISSING"
+  table.insert(lines, string.format("Python provider package (pynvim): %s", python_status))
+
+  local node_provider_status = report.integrations.node_provider.present
+      and string.format("OK -> npm %s (%s)", report.integrations.node_provider.package, report.integrations.node_provider.version)
+    or "MISSING"
+  table.insert(lines, string.format("Node provider package (neovim): %s", node_provider_status))
+
+  table.insert(
+    lines,
+    string.format(
+      "Search backend: %s (%s)",
+      report.integrations.picker.backend,
+      report.integrations.picker.reason
+    )
+  )
+
+  local copilot_status = report.integrations.copilot.satisfied and "OK" or "MISSING"
+  local copilot_version = report.integrations.copilot.version and (" (" .. report.integrations.copilot.version .. ")") or ""
+  table.insert(
+    lines,
+    string.format(
+      "Copilot node runtime: %s -> %s%s; requires >=%d",
+      copilot_status,
+      report.integrations.copilot.detected or "node",
+      copilot_version,
+      report.integrations.copilot.minimum_major
+    )
+  )
 
   for _, tool in ipairs(report.tools) do
     local marker = tool.present and "OK" or "MISSING"

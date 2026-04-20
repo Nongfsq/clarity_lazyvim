@@ -4,6 +4,15 @@
 
 Move `clarity_lazyvim` from a strong but still uneven configuration into a polished, beginner-friendly Neovim product with cleaner command semantics, lower cognitive load, and more reliable Windows + WSL workflows.
 
+## Current execution focus (T-006 / T-007 / T-009 / T-011)
+
+This round prioritizes four linked outcomes:
+
+1. Add a first-class in-editor recovery entrypoint.
+2. Make clipboard behavior understandable for Windows + WSL users.
+3. Turn source-of-truth repo sync into explicit product policy.
+4. Expand validation to catch behavioral regressions, not just missing binaries.
+
 ## Strategic phases
 
 ### Phase 1. Documentation and orientation
@@ -95,9 +104,86 @@ Validation:
 3. Preserve existing power where possible, but hide it behind secondary paths rather than the main user story.
 4. Keep the project anchored to LazyVim unless a concrete blocker proves otherwise.
 
+## Parallel execution structure
+
+The implementation is intentionally split into parallel tracks so progress is steady and auditable.
+
+### Track A. Product entrypoint and in-editor guidance
+
+Scope:
+
+- deliver `:ClarityStart` and `<leader>hh` style onboarding path
+- make top workflows and recovery routes visible in-editor
+
+Primary tasks:
+
+- `T-006`
+- part of `T-010`
+
+Expected evidence:
+
+- entrypoint command exists
+- entrypoint content includes search, diagnostics, terminal, clipboard, audit
+
+### Track B. Clipboard and cross-environment ergonomics
+
+Scope:
+
+- clarify terminal copy vs Neovim copy vs system clipboard
+- provide deterministic source-of-truth workflow for Windows and WSL
+
+Primary tasks:
+
+- `T-007`
+- `T-009`
+
+Expected evidence:
+
+- docs and help surfaces explain copy/paste clearly
+- sync steps are explicit and short
+- stale-config diagnosis can be followed without advanced knowledge
+
+### Track C. Validation and audit expansion
+
+Scope:
+
+- extend validation from binary presence into user-visible behavior checks
+
+Primary tasks:
+
+- `T-011`
+
+Expected evidence:
+
+- scripted checks for startup and keymaps
+- checks for dashboard / neo-tree / terminal behavior
+- provider readiness reporting for clipboard, Python, and Node
+
+### Track D. Documentation and governance sync
+
+Scope:
+
+- keep all user-facing and governance docs aligned with runtime behavior
+
+Primary tasks:
+
+- `T-012` (continuous)
+
+Expected evidence:
+
+- docs updated in the same implementation round
+- no conflict between README, guide, and root planning files
+
+## Execution order with parallelism
+
+1. Start Track A and Track B in parallel.
+2. Start Track C as soon as first behavior surfaces are stable.
+3. Run Track D continuously and finalize it after verification.
+4. Finish only when Windows and WSL validation narratives agree.
+
 ## Target outcome
 
-Raise the combined project score from `84/100` to `90+/100` by focusing on:
+Raise the combined project score from `88/100` to `92+/100` by focusing on:
 
 - discoverability
 - workflow consistency

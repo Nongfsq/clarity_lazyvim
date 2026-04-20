@@ -90,6 +90,36 @@ Build an accessibility-first, beginner-friendly, high-contrast Neovim distributi
 - Optional integrations should degrade gracefully
 - Tooling version floors must be documented
 
+### R8. In-editor recovery must be first-class
+
+- A dedicated recovery entrypoint must exist inside Neovim (`:ClarityStart` and/or `<leader>hh`)
+- The entrypoint must surface:
+  - primary workflows
+  - clipboard guidance
+  - audit and validation guidance
+- Users should recover from forgotten commands without leaving the editor
+
+### R9. Source-of-truth workflow must be explicit
+
+- Documentation must state that Windows repo is canonical and WSL repo is runtime mirror
+- Update flow must be deterministic:
+  - Windows commit/push
+  - WSL pull
+  - restart Neovim when needed
+- Stale-config diagnosis steps must be documented in beginner language
+
+### R10. Validation must test behavior, not just presence
+
+- Validation coverage should include:
+  - startup smoke
+  - keymap assertions on core commands
+  - special UI behavior checks (dashboard, neo-tree, terminal)
+  - provider readiness:
+    - clipboard provider
+    - Python provider (`pynvim`)
+    - Node provider (`npm neovim` and Node runtime floor for Copilot)
+- Windows and Ubuntu (WSL) paths should both be represented in scripted validation
+
 ## Non-goals
 
 1. Becoming a maximalist plugin showcase
@@ -110,15 +140,21 @@ Build an accessibility-first, beginner-friendly, high-contrast Neovim distributi
 2. The most common command set fits within a one-page cheat sheet
 3. Git keymaps no longer have ambiguous meaning between global and buffer-local contexts
 4. Every major UX change updates docs in the same commit or task round
+5. A user who forgets commands can recover from inside Neovim in under 30 seconds
+6. Windows + WSL users can explain and execute source-of-truth sync without external help
+7. Validation report can distinguish:
+   - missing dependency
+   - stale repo sync
+   - keymap or behavior regression
 
 ## Current baseline
 
-- Combined project score: `84/100`
+- Combined project score: `88/100`
 - Strongest areas:
   - architecture
   - auditability
   - theme differentiation
 - Weakest areas:
-  - Git namespace consistency
-  - command-surface simplification
-  - beginner in-product onboarding
+  - first-run guidance polish
+  - Windows optional-tool onboarding convenience
+  - remaining command-surface compression
