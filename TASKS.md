@@ -102,7 +102,7 @@ Acceptance criteria:
 
 ### T-010 Add stronger startup guidance
 
-Status: `TODO`
+Status: `IN_PROGRESS`
 
 Acceptance criteria:
 
@@ -138,6 +138,22 @@ Acceptance criteria:
 2. T-012 Keep docs synced with behavior
 3. Add provider-install convenience guidance for Windows
 4. Evaluate whether clipboard setup should become fully self-healing
+
+## Current verified state
+
+1. Windows authoring machine:
+   - `python scripts/run_clarity_audit.py` => `94/100`
+   - required checks green
+   - integration checks green
+   - remaining optional gaps: `fd`, `htop` / `btop`
+2. WSL runtime machine:
+   - `python3 scripts/run_clarity_audit.py` => `100/100`
+   - `python3 scripts/run_clarity_validate.py` => all required checks green
+3. Product help commands now available:
+   - `:ClarityStart`
+   - `:ClarityClipboard`
+   - `:ClaritySync`
+   - `:ClarityValidate`
 
 ## Parallel task breakdown (current round)
 

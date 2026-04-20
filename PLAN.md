@@ -4,14 +4,20 @@
 
 Move `clarity_lazyvim` from a strong but still uneven configuration into a polished, beginner-friendly Neovim product with cleaner command semantics, lower cognitive load, and more reliable Windows + WSL workflows.
 
-## Current execution focus (T-006 / T-007 / T-009 / T-011)
+## Current execution focus (post help / validation round)
 
-This round prioritizes four linked outcomes:
+This round has already completed four linked outcomes:
 
-1. Add a first-class in-editor recovery entrypoint.
-2. Make clipboard behavior understandable for Windows + WSL users.
-3. Turn source-of-truth repo sync into explicit product policy.
-4. Expand validation to catch behavioral regressions, not just missing binaries.
+1. a first-class in-editor recovery entrypoint
+2. clipboard and sync guidance inside the product
+3. explicit Windows -> WSL source-of-truth workflow
+4. behavioral validation beyond binary presence
+
+The next focus is now:
+
+1. polish first-run guidance so the first five minutes feel calmer
+2. reduce setup friction for optional Windows tools
+3. keep docs and runtime behavior tightly synchronized
 
 ## Strategic phases
 
@@ -176,10 +182,10 @@ Expected evidence:
 
 ## Execution order with parallelism
 
-1. Start Track A and Track B in parallel.
-2. Start Track C as soon as first behavior surfaces are stable.
-3. Run Track D continuously and finalize it after verification.
-4. Finish only when Windows and WSL validation narratives agree.
+1. Treat Track A, B, and C as delivered for the current round.
+2. Continue Track D every time UX or runtime behavior changes.
+3. Use the next cycle to turn `T-010` from partial progress into a smoother first-run experience.
+4. Keep Windows and WSL validation narratives aligned before every release.
 
 ## Target outcome
 

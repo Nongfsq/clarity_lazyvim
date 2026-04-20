@@ -21,7 +21,7 @@ If you want the current product evaluation and architecture report, read [doc/cl
 
 If you want the root execution documents for future AI-driven work, read [REQUIREMENTS.md](REQUIREMENTS.md), [PLAN.md](PLAN.md), and [TASKS.md](TASKS.md).
 
-## Current Product Direction
+## Current Product State
 
 The latest round delivered four high-impact product improvements:
 
@@ -31,6 +31,18 @@ The latest round delivered four high-impact product improvements:
 4. `T-011` Expanded automated validation (`:ClarityValidate`, `python scripts/run_clarity_validate.py`)
 
 The goal of this round was to reduce "I forgot how to do this" and "I updated but nothing changed" failures inside the product itself.
+
+Current verified state:
+
+- Windows authoring environment: `94/100` readiness
+- WSL runtime environment: `100/100` readiness
+- Required validation checks: all passing
+
+Current next focus:
+
+1. strengthen first-run guidance without adding noise
+2. make Windows optional-tool setup (`fd`, `htop` / `btop`) more convenient
+3. keep shrinking explanation cost around secondary paths
 
 ## Core Features
 
@@ -88,6 +100,21 @@ For a headless audit from the terminal, use:
 python scripts/run_clarity_audit.py
 ```
 
+### Built-in validation command
+
+Run `:ClarityValidate` inside Neovim to verify:
+
+- critical keymaps
+- Git hunk keymap attachment
+- dashboard / neo-tree / terminal UI behavior
+- clipboard, picker, and Copilot integration assumptions
+
+For a headless validation run from the terminal, use:
+
+```powershell
+python scripts/run_clarity_validate.py
+```
+
 ### In-editor recovery entrypoint
 
 The repo now includes a dedicated recovery route for forgetfulness:
@@ -105,6 +132,7 @@ Related in-editor help commands:
 
 - `:ClarityClipboard`
 - `:ClaritySync`
+- `:ClarityValidate`
 
 ## Prerequisites
 
@@ -220,6 +248,9 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 
 ```text
 .
+├── .github/
+│   └── workflows/
+│       └── clarity-validate.yml
 ├── init.lua
 ├── lazy-lock.json
 ├── REQUIREMENTS.md
@@ -279,6 +310,8 @@ Install a working C compiler and restart your shell so `gcc`, `clang`, or `cl` i
 ### `:ClarityAudit` reports missing optional tools
 
 That is expected if you have not installed them. The related mappings will warn and degrade gracefully.
+
+On the current Windows authoring machine, the audit stays at `94/100` mainly because `fd` and `htop` / `btop` are still optional and not installed.
 
 ### Node.js or Python provider issues
 

@@ -30,6 +30,18 @@
 
 你只要会这 10 个动作，就已经能完成大部分日常工作。
 
+如果你只额外记一个“救命入口”，请记住：
+
+```vim
+:ClarityStart
+```
+
+或者：
+
+```text
+空格 h h
+```
+
 ---
 
 ## 2. 这个项目到底是什么
@@ -237,6 +249,17 @@ Esc
 
 - `空格` 看 which-key 分组
 - `空格 s k` 搜索快捷键
+
+### 6.4 另外三个你应该知道的帮助命令
+
+如果你在 Windows 11 + WSL2 中长期使用，这 3 个命令非常值得记住：
+
+- `:ClarityClipboard`
+  专门解释复制、粘贴、系统剪贴板、终端复制之间的区别
+- `:ClaritySync`
+  专门解释 Windows 主仓、WSL 运行仓、为什么“改了却没生效”
+- `:ClarityValidate`
+  专门检查关键键位和特殊 UI 行为是不是仍然正常
 
 ---
 
@@ -912,6 +935,27 @@ python scripts/run_clarity_validate.py
   - `pynvim`
   - `npm neovim`
   - Copilot Node 版本
+
+### 17.6 你怎么看验证结果
+
+你可以这样理解：
+
+- `:ClarityAudit`
+  更像“环境体检”，看依赖、provider、插件状态、整体 readiness
+- `:ClarityValidate`
+  更像“行为验收”，看命令和界面有没有回归
+
+当前项目的真实状态是：
+
+- Windows 主开发环境：`94/100`
+- WSL 运行环境：`100/100`
+
+这不是说 Windows 不能用，而是说当前 Windows 上还缺少两个可选项：
+
+- `fd`
+- `htop` / `btop`
+
+它们不会阻止你工作，只会让某些体验没有达到“最完整状态”。
 
 ---
 

@@ -150,10 +150,13 @@ Build an accessibility-first, beginner-friendly, high-contrast Neovim distributi
 ## Current baseline
 
 - Combined project score: `88/100`
+- Windows authoring readiness: `94/100`
+- WSL runtime readiness: `100/100`
 - Strongest areas:
   - architecture
   - auditability
   - theme differentiation
+  - in-editor recovery and validation flow
 - Weakest areas:
   - first-run guidance polish
   - Windows optional-tool onboarding convenience
