@@ -1,8 +1,8 @@
 # Clarity LazyVim Architecture Governance
 
-Last updated: 2026-04-19 (round 2 plugin minimization complete)
+Last updated: 2026-04-20 (round 3 dependency floor hardening complete)
 Repository: `E:\Project\clarity_lazyvim`
-Status: Active governance, round 2 shipped
+Status: Active governance, round 3 shipped
 
 ## 1. Mission
 
@@ -31,6 +31,7 @@ Round 2 closes that gap:
 - non-essential default plugins were disabled to improve portability and auditability
 - docs and audit expectations are now aligned with the reduced architecture
 - plugin auditing now distinguishes active runtime plugins from plugins merely preserved in the lockfile
+- Copilot now resolves a compatible Node.js runtime explicitly instead of trusting ambient shell PATH state
 
 Top-level conclusion:
 
@@ -125,6 +126,11 @@ The wrong stack would be:
      - `theme=custom_colorblind_theme`
      - `<leader>e` resolved to `nvim/lua/plugins/neo-tree.lua`
      - `<leader>tf` resolved to `nvim/lua/plugins/toggleterm.lua`
+
+7. Copilot runtime depended too heavily on ambient PATH state
+   - `copilot.lua` now resolves a Node.js `22+` binary explicitly
+   - `fnm`-managed Node installations are preferred when present
+   - audit now marks outdated Node runtimes as insufficient for the supported Copilot feature set
 
 ### 5.2 Strengths Worth Preserving
 
@@ -253,6 +259,7 @@ Every major change should be validated in this order:
 3. Audit report
    - `:ClarityAudit`
    - or `python scripts/run_clarity_audit.py`
+   - confirm Node.js is both present and modern enough for Copilot
 
 4. Documentation update
    - update this file with results, score change, and remaining risk
@@ -376,3 +383,10 @@ That combination is now materially improved.
 - Verified the custom theme and custom keymaps load from repo-owned files.
 - Reconciled README, audit scope, and governance documentation with the reduced plugin surface.
 - Extended audit output to report active plugin inventory and disabled plugin policy explicitly.
+
+### 2026-04-20 Round 3
+
+- Hardened Copilot startup by resolving a Node.js `22+` runtime explicitly.
+- Preferred `fnm`-managed Node binaries over stale system PATH entries.
+- Updated audit semantics so outdated Node runtimes fail the Copilot-capable dependency check.
+- Documented the Copilot Node.js floor and preferred runtime resolution behavior.

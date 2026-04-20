@@ -90,7 +90,7 @@ python scripts/run_clarity_audit.py
 
 1. `ripgrep`
 2. `fd`
-3. Node.js and npm
+3. Node.js `22+` and npm
 4. Python and pip
 
 ### Optional
@@ -126,6 +126,7 @@ On first launch:
 1. `lazy.nvim` bootstraps plugins
 2. `Mason.nvim` installs configured language servers and formatter tooling
 3. `nvim-treesitter` compiles parsers if a compiler is available
+4. `copilot.lua` uses a Node.js `22+` runtime and prefers an `fnm`-managed Node automatically when available
 
 ## Dependency Strategy
 
@@ -212,6 +213,12 @@ If `:checkhealth` reports provider issues, install the missing provider package:
 npm install -g neovim
 pip install pynvim
 ```
+
+### `copilot.lua` says Node.js `22+` is required
+
+This config expects a modern Node runtime for Copilot. If your shell still exposes an older system Node, install a current LTS release with a version manager such as `fnm`, `nvm`, or `volta`.
+
+When `fnm` is present, `clarity_lazyvim` now prefers the newest `fnm`-managed Node binary automatically before falling back to `node` from `PATH`.
 
 ## License
 

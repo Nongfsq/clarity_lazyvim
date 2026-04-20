@@ -5,7 +5,7 @@ local tool_specs = {
   { id = "compiler", required = true, commands = { "cl", "gcc", "clang", "cc", "zig" }, feature = "build Treesitter parsers" },
   { id = "ripgrep", required = false, commands = { "rg" }, feature = "fast text search" },
   { id = "fd", required = false, commands = { "fd", "fdfind" }, feature = "fast file search" },
-  { id = "node", required = false, commands = { "node" }, feature = "Node provider and JS-based tools" },
+  { id = "node", required = false, commands = { "node" }, feature = "Node provider and Copilot runtime", minimum_major = 22 },
   { id = "npm", required = false, commands = { "npm" }, feature = "install provider packages manually" },
   { id = "python", required = false, commands = { "python3", "python" }, feature = "Python provider and Python-based tools" },
   { id = "pip", required = false, commands = { "pip3", "pip" }, feature = "install Python provider packages manually" },
@@ -57,6 +57,10 @@ local function describe_commands(commands)
   return table.concat(commands, " / ")
 end
 
+local function parse_major(version)
+  return tonumber(tostring(version):match "^v?(%d+)")
+end
+
 local function sorted_keys(tbl)
   local keys = {}
 
@@ -78,6 +82,19 @@ function M.has(commands)
   end
 
   return false, candidates[1]
+end
+
+function M.get_command_version(command)
+  if not command or command == "" or vim.fn.executable(command) ~= 1 then
+    return nil
+  end
+
+  local output = vim.fn.system { command, "--version" }
+  if vim.v.shell_error ~= 0 then
+    return nil
+  end
+
+  return vim.trim(output)
 end
 
 function M.get_plugin_report()
@@ -155,6 +172,13 @@ function M.get_report()
 
   for _, spec in ipairs(tool_specs) do
     local present, detected = M.has(spec.commands)
+    local version = present and M.get_command_version(detected) or nil
+    local version_major = parse_major(version)
+
+    if present and spec.minimum_major and (not version_major or version_major < spec.minimum_major) then
+      present = false
+    end
+
     local entry = {
       id = spec.id,
       required = spec.required,
@@ -162,6 +186,8 @@ function M.get_report()
       feature = spec.feature,
       present = present,
       detected = detected,
+      version = version,
+      minimum_major = spec.minimum_major,
     }
 
     table.insert(report.tools, entry)
@@ -241,9 +267,11 @@ function M.render_report(report)
     local marker = tool.present and "OK" or "MISSING"
     local kind = tool.required and "required" or "optional"
     local detected = tool.present and string.format(" -> %s", tool.detected) or ""
+    local version = tool.version and string.format(" (%s)", tool.version) or ""
+    local minimum = tool.minimum_major and string.format("; requires >=%d", tool.minimum_major) or ""
     table.insert(
       lines,
-      string.format("- [%s] %s (%s): %s%s", marker, tool.id, kind, tool.feature, detected)
+      string.format("- [%s] %s (%s): %s%s%s%s", marker, tool.id, kind, tool.feature, detected, version, minimum)
     )
   end
 
