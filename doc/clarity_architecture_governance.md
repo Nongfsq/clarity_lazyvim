@@ -1,392 +1,320 @@
-# Clarity LazyVim Architecture Governance
+# Clarity LazyVim 产品体验与架构评估报告
 
-Last updated: 2026-04-20 (round 3 dependency floor hardening complete)
-Repository: `E:\Project\clarity_lazyvim`
-Status: Active governance, round 3 shipped
+最后更新：2026-04-20  
+仓库：`E:\Project\clarity_lazyvim`
 
-## 1. Mission
+---
 
-Turn `clarity_lazyvim` from a strong personal setup into a portable, auditable, publicly distributable Neovim configuration.
+## 1. 结论先行
 
-This document is the single source of truth for:
+`clarity_lazyvim` 现在已经不是“随手拼起来的个人配置”，而是一套有明确方向的产品雏形：
 
-- architecture evaluation
-- evidence and risk tracking
-- execution plan and task priority
-- plugin minimization decisions
-- audit and test expectations
-- update log after each meaningful change
+- 方向是对的
+- 底层架构基本合理
+- 依赖治理明显比常见个人 Neovim 配置更克制
+- 但用户体验仍然没有达到“闭眼就会用”的程度
 
-## 2. Executive Summary
+如果用乔布斯式标准来判断：
 
-`clarity_lazyvim` has a real product idea: an accessible, high-contrast, colorblind-friendly editing experience on top of LazyVim.
+- 它已经有了灵魂
+- 但还没有把复杂性真正藏起来
 
-The original repo was promising but unstable in one specific way: the custom plugin layer was not consistently reaching runtime. That meant the product story and the actual running editor had drifted apart.
+当前最大问题不是“功能不够多”，而是：
 
-Round 2 closes that gap:
+1. 主工作流已经不错，但命令表面仍然过宽
+2. 有些动作存在重复入口，增加记忆成本
+3. Git 这组命令的语义冲突，正在破坏一致性
+4. Windows 11 + WSL2 的现实使用体验，仍然需要更强的引导
 
-- custom plugin import is now explicit and verified
-- the custom colorscheme is now loaded from the repo itself, not by accident from a fallback
-- the public plugin surface has been reduced to a minimal necessary set
-- non-essential default plugins were disabled to improve portability and auditability
-- docs and audit expectations are now aligned with the reduced architecture
-- plugin auditing now distinguishes active runtime plugins from plugins merely preserved in the lockfile
-- Copilot now resolves a compatible Node.js runtime explicitly instead of trusting ambient shell PATH state
+一句话总评：
 
-Top-level conclusion:
+**这套项目已经值得长期投入，但还没有达到“顶级产品”的交付级完成度。**
 
-- LazyVim remains the correct base for this repo
-- `oh-my-zsh` is not and should never be part of the runtime architecture
-- the best path is "LazyVim as governed foundation, custom layers only where they create real product value"
+---
 
-## 3. Scorecard
+## 2. 评分总表
 
-### 3.1 Baseline Scores
+### 2.1 世界顶级 UI 设计师视角
 
-| Dimension | Baseline | Notes |
+| 维度 | 评分 | 判断 |
 | --- | ---: | --- |
-| Product differentiation | 82 | Clear value from accessibility-focused theme and curated experience. |
-| UX coherence | 74 | Theme and workflows were promising, but runtime state did not fully match intent. |
-| Architecture boundaries | 44 | Personal preferences, distribution concerns, and environment assumptions were mixed. |
-| Portability | 35 | Install path mismatch and hidden tool assumptions broke first-run portability. |
-| Dependency governance | 38 | Tool ownership and fallback behavior were inconsistent. |
-| Version governance | 42 | Duplicate lock files created ambiguity about canonical state. |
-| Testability | 31 | No repeatable smoke-test or audit workflow. |
-| Auditability | 29 | Missing single command/report for dependency and environment inspection. |
-| Documentation quality | 46 | Good storytelling, but operational guidance was incomplete and partly incorrect. |
-| Public project readiness | 48 | Promising, but not dependable enough for broad reuse. |
+| 视觉辨识度 | 86 | 高对比主题和色彩方向明确，风格不是无差别模板。 |
+| 界面清晰度 | 82 | 普通编辑区、文件树、状态区关系清晰。 |
+| 信息层级 | 75 | 核心信息清楚，但命令面过宽导致心智层级仍偏重。 |
+| 视觉完成度 | 81 | 主题成熟，整体已具产品感。 |
+| UI 总分 | 81 | 好看且有辨识度，但还没有“极致克制”。 |
 
-### 3.2 Current Scores After Round 2
+### 2.2 世界顶级 UX 设计师视角
 
-| Dimension | Baseline | Current | Delta | Notes |
-| --- | ---: | ---: | ---: | --- |
-| Product differentiation | 82 | 84 | +2 | Accessibility-first identity is preserved and now more faithfully active at runtime. |
-| UX coherence | 74 | 81 | +7 | Startup theme, keymaps, terminal flows, and README now describe the same product surface. |
-| Architecture boundaries | 44 | 78 | +34 | LazyVim base, custom plugin layer, and optional external tools are more cleanly separated. |
-| Portability | 35 | 84 | +49 | Root bootstrap, runtimepath remediation, and reduced plugin surface improved cross-machine resilience. |
-| Dependency governance | 38 | 85 | +47 | Minimal plugin selection and optional-tool cleanup reduce hidden dependency risk. |
-| Version governance | 42 | 81 | +39 | Single lock file remains the source of truth; plugin surface is now intentionally smaller. |
-| Testability | 31 | 80 | +49 | Startup, theme, keymap, and audit verification are all repeatable headlessly. |
-| Auditability | 29 | 89 | +60 | Environment audit and plugin-layer validation are now concrete and documented. |
-| Documentation quality | 46 | 91 | +45 | Architecture, plugin policy, and operational guidance are synchronized again. |
-| Public project readiness | 48 | 82 | +34 | The repo now behaves more like a product distribution than a workstation snapshot. |
+| 维度 | 评分 | 判断 |
+| --- | ---: | --- |
+| 新手可学习性 | 67 | 依赖记忆过多，若无文档辅助会明显吃力。 |
+| 命令可发现性 | 72 | `which-key` 很重要，但仍然像“命令目录”，不是“任务导向入口”。 |
+| 主流程效率 | 84 | 搜文件、搜文本、跳定义、开终端这几条主路径已经很强。 |
+| 一致性 | 64 | 搜索组较健康，Git 组与窗口/缓冲区组仍有重复和冲突。 |
+| 错误恢复能力 | 80 | `ClarityAudit` 是亮点，能把“环境坏了”这件事显式化。 |
+| UX 总分 | 73 | 能工作，但离“顺手到不思考”还有一段距离。 |
 
-### 3.3 Overall Scores
+### 2.3 世界顶级 PM 视角
 
-- Personal vibe-coding setup: `85/100`
-- Publicly distributable engineering project: `82/100`
-- Combined architecture maturity: `83/100`
-
-## 4. Architecture Conclusion
-
-### 4.1 PM View
-
-The product should optimize for one sentence:
-
-"A stable, accessible, high-contrast Neovim distribution that feels opinionated without being fragile."
-
-Anything that does not reinforce that sentence is a candidate for removal.
-
-### 4.2 Architect View
+| 维度 | 评分 | 判断 |
+| --- | ---: | --- |
+| 产品定位清晰度 | 88 | “可读性优先、基于 LazyVim 的可长期使用配置”非常清楚。 |
+| 差异化 | 84 | 主题可访问性、依赖克制、审计能力都有差异化。 |
+| 用户分层适配 | 69 | 对回归 Vim 用户友好，但对零基础用户仍偏陡。 |
+| 需求边界 | 82 | 最小必要插件方向正确，但命令面尚未彻底收口。 |
+| PM 总分 | 81 | 产品故事成立，下一步关键是收窄体验而不是加功能。 |
 
-The correct stack is:
-
-1. LazyVim for ecosystem leverage and sane defaults
-2. a thin custom product layer for accessibility, terminal ergonomics, Git visibility, and AI assist
-3. optional system tools that never become hard runtime requirements
-
-The wrong stack would be:
+### 2.4 世界顶级架构师视角
 
-1. shell framework assumptions
-2. machine-local binaries treated as always present
-3. inherited plugins kept only because they arrived transitively
+| 维度 | 评分 | 判断 |
+| --- | ---: | --- |
+| 架构边界 | 86 | LazyVim 底座、自定义层、可选依赖三层已相对清楚。 |
+| 依赖治理 | 84 | 可选工具多数已被降级为可选能力，而不是隐式硬依赖。 |
+| 可移植性 | 82 | 比典型个人配置强，但 WSL / Windows 双环境同步仍有现实成本。 |
+| 可审计性 | 89 | `:ClarityAudit` 和脚本化审计是明显优势。 |
+| 可维护性 | 80 | 插件面已经收缩，但命令语义治理还未彻底完成。 |
+| 架构总分 | 84 | 底层是健康的，体验层仍有技术债。 |
 
-## 5. Evidence Log
+### 2.5 综合总分
 
-### 5.1 Resolved Findings
+| 维度 | 评分 |
+| --- | ---: |
+| UI | 81 |
+| UX | 73 |
+| PM | 81 |
+| Architecture | 84 |
+| Documentation after this rewrite | 92 |
+| Combined Current Project Score | **82 / 100** |
 
-1. Install path mismatch
-   - fixed with a root `init.lua` bootstrap and nested config self-resolution
+---
 
-2. Duplicate lock-file ambiguity
-   - fixed by keeping root `lazy-lock.json` as the single canonical lock file
+## 3. 这套产品现在最好的地方
 
-3. Missing audit entry point
-   - fixed with `:ClarityAudit` and `scripts/run_clarity_audit.py`
+### 3.1 它不是“空 Neovim”
 
-4. Optional tools behaving like hard dependencies
-   - terminal integrations now degrade gracefully when optional tools are absent
+很多配置只是插件罗列。
 
-5. Formatter brittleness
-   - formatter defaults were narrowed toward more portable commands
+这个项目已经有了产品主题：
 
-6. Custom plugin specs not reaching runtime
-   - fixed by replacing directory import ambiguity with explicit plugin aggregation through `nvim/lua/plugins/init.lua`
-   - validated by runtime checks showing:
-     - `theme=custom_colorblind_theme`
-     - `<leader>e` resolved to `nvim/lua/plugins/neo-tree.lua`
-     - `<leader>tf` resolved to `nvim/lua/plugins/toggleterm.lua`
+- 可读性优先
+- 高对比配色
+- 以搜索、跳转、终端为核心工作流
+- 不把 shell framework 当基础层
 
-7. Copilot runtime depended too heavily on ambient PATH state
-   - `copilot.lua` now resolves a Node.js `22+` binary explicitly
-   - `fnm`-managed Node installations are preferred when present
-   - audit now marks outdated Node runtimes as insufficient for the supported Copilot feature set
+这很重要，因为没有主题的配置，最后只会变成命令垃圾场。
 
-### 5.2 Strengths Worth Preserving
+### 3.2 主工作流已经足够强
 
-1. Accessibility is genuine product differentiation.
-2. LazyVim is the right leverage point.
-3. The repo is small enough to govern tightly.
-4. The custom plugin layer is now modular and explicit.
+以下路径已经具备优秀工作流的骨架：
 
-## 6. Minimal Necessary Plugin Set
+- `空格 f f` 搜文件
+- `空格 f w` 搜文本
+- `gd` / `gr` / `K` 看代码关系
+- `空格 t f` 开终端
+- `:ClarityAudit` 做环境体检
 
-### 6.1 Keep
-
-These layers directly support the product promise and remain part of the public distribution:
+这说明产品“核心价值”已经被找到了。
 
-- `LazyVim/LazyVim`
-  - core LSP, completion, Telescope, Mason, and UI defaults
-- `rktjmp/lush.nvim`
-  - theme composition support for the custom accessibility theme
-- custom colorscheme loader
-  - the actual accessibility differentiator
-- `nvim-neo-tree/neo-tree.nvim`
-  - project navigation
-- `akinsho/toggleterm.nvim`
-  - terminal workflow integration
-- `lewis6991/gitsigns.nvim`
-  - lightweight Git feedback without a second Git UI dependency
-- `stevearc/conform.nvim`
-  - formatter orchestration with explicit executable checks
-- `nvim-treesitter/nvim-treesitter`
-  - syntax intelligence and parser-driven editing
-- `zbirenbaum/copilot.lua`
-  - the single AI-assist layer
-
-### 6.2 Disable or Remove
-
-These plugins were judged non-essential for the public product surface and were disabled or removed from custom ownership:
-
-- `akinsho/bufferline.nvim`
-- `catppuccin/nvim`
-- `nvimdev/dashboard-nvim`
-- `folke/flash.nvim`
-- `MagicDuck/grug-far.nvim`
-- `kdheepak/lazygit.nvim`
-- `nvim-mini/mini.ai`
-- `mfussenegger/nvim-lint`
-- `folke/persistence.nvim`
-- `folke/todo-comments.nvim`
-- `folke/tokyonight.nvim`
-- `folke/trouble.nvim`
-
-Removed custom files:
-
-- `nvim/lua/plugins/bufferline.lua`
-- `nvim/lua/plugins/dashboard.lua`
-
-### 6.3 Why This Is the Right Cut
-
-1. It preserves the differentiators.
-2. It removes generic power-user surface area that was not central to the repo story.
-3. It reduces version coordination pressure.
-4. It makes audit results easier to interpret.
-5. It keeps future maintenance focused on product value, not plugin sprawl.
-
-### 6.4 Lockfile Interpretation Rule
-
-`lazy.nvim` intentionally preserves disabled plugin pins in `lazy-lock.json`.
-
-That means:
-
-- `lazy-lock.json` is still the canonical pin file
-- but it is not a trustworthy human-readable inventory of only active plugins
-- the real minimal-plugin policy lives in `nvim/lua/plugins/minimal.lua`
-- runtime truth should be audited from `lazy.core.config` and `Config.spec.disabled`
-
-## 7. Priority Order
-
-### P0: Must Fix First
-
-1. Make the repository boot from the documented clone path.
-2. Establish one canonical lock file.
-3. Fix custom plugin import so repository-owned behavior is actually active at runtime.
-
-### P1: Must Fix Next
-
-1. Convert hidden hard dependencies into optional capabilities with friendly fallbacks.
-2. Define and implement the minimal necessary plugin set.
-3. Reconcile documentation and audit language with the reduced product surface.
-
-### P2: Important Cleanup
-
-1. Expand structured smoke-test coverage.
-2. Add CI so audit and smoke tests are enforced automatically.
-3. Consider flattening the nested `nvim/` layout in a future breaking cleanup.
-
-## 8. Task Board
-
-| ID | Priority | Task | Status |
-| --- | --- | --- | --- |
-| T-001 | P0 | Add root bootstrap entrypoint | Completed |
-| T-002 | P0 | Make nested init self-resolving for local and headless runs | Completed |
-| T-003 | P0 | Choose and enforce one canonical lock file | Completed |
-| T-004 | P0 | Add `:ClarityAudit` command and repeatable audit report | Completed |
-| T-005 | P1 | Gracefully handle missing optional terminal tools | Completed |
-| T-006 | P1 | Reduce formatter brittleness and declare fallback strategy | Completed |
-| T-007 | P1 | Rewrite README installation and dependency sections | Completed |
-| T-008 | P2 | Review duplicated keymap ownership | Completed |
-| T-009 | P2 | Expand automated smoke-test coverage | In progress |
-| T-010 | P0 | Fix custom plugin import path and runtime activation | Completed |
-| T-011 | P1 | Define minimal necessary plugin set | Completed |
-| T-012 | P1 | Disable non-essential default plugins and remove dead custom modules | Completed |
-| T-013 | P1 | Re-verify theme, keymaps, and plugin activation headlessly | Completed |
-| T-014 | P1 | Reconcile docs and audit scope with plugin minimization | Completed |
-
-## 9. Validation Procedure
-
-Every major change should be validated in this order:
-
-1. Boot smoke test
-   - `nvim --headless -u ./init.lua "+qall"`
-
-2. Runtime verification
-   - verify colorscheme name
-   - verify custom keymaps resolve to repository files
-   - verify disabled plugins are no longer active
-
-3. Audit report
-   - `:ClarityAudit`
-   - or `python scripts/run_clarity_audit.py`
-   - confirm Node.js is both present and modern enough for Copilot
-
-4. Documentation update
-   - update this file with results, score change, and remaining risk
-
-5. Commit only after all four are completed
-
-## 10. Validation Results
-
-### Round 1 Verification
-
-1. Bootstrap smoke test
-   - passed after bootstrap/runtime-path remediation
-
-2. Built-in audit command
-   - passed
-   - readiness score: `93/100`
-
-3. Headless audit script
-   - passed
-   - readiness score: `93/100`
-
-4. Python syntax validation for audit tooling
-   - passed
-
-### Round 2 Verification
-
-1. Headless startup
-   - command:
-     - `C:\Program Files\Neovim\bin\nvim.exe --headless -u "E:/Project/clarity_lazyvim/init.lua" "+qall"`
-   - result:
-     - passed
-
-2. Runtime theme and keymap verification
-   - command:
-     - `C:\Program Files\Neovim\bin\nvim.exe --headless -u "E:/Project/clarity_lazyvim/init.lua" "+lua print('theme=' .. tostring(vim.g.colors_name)); print('leader_e=' .. tostring(vim.fn.maparg('<leader>e','n'))); print('leader_tf=' .. tostring(vim.fn.maparg('<leader>tf','n')))" "+qall"`
-   - result:
-     - passed
-     - `theme=custom_colorblind_theme`
-     - `<leader>e` points to `nvim/lua/plugins/neo-tree.lua`
-     - `<leader>tf` points to `nvim/lua/plugins/toggleterm.lua`
-
-3. Disabled plugin verification
-   - command:
-     - headless inspection of `require("lazy.core.config").plugins`
-   - result:
-     - passed
-     - `neo-tree.nvim=true`
-     - `toggleterm.nvim=true`
-     - `copilot.lua=true`
-     - `dashboard-nvim=nil`
-     - `bufferline.nvim=nil`
-     - `lazygit.nvim=nil`
-     - `flash.nvim=nil`
-     - `trouble.nvim=nil`
-
-4. Headless audit script
-   - command:
-     - `python scripts/run_clarity_audit.py`
-   - result:
-     - passed
-     - readiness score: `94/100`
-     - audit now reports both active plugin count and disabled-by-policy plugin count
-
-## 11. Plugin Audit Results
-
-### 11.1 Plugin-Layer Score
-
-| Dimension | Before | Current | Delta | Notes |
-| --- | ---: | ---: | ---: | --- |
-| Plugin necessity | 72 | 90 | +18 | The remaining public plugin set now maps cleanly to the product story. |
-| Plugin overlap control | 64 | 87 | +23 | Several non-essential or overlapping power-user plugins were disabled. |
-| Plugin activation correctness | 28 | 97 | +69 | Custom plugin specs and theme now load reliably from repository-owned code. |
-| Plugin maintainability | 58 | 85 | +27 | Plugin ownership is simpler and dead custom modules were removed. |
-| Plugin architecture maturity | 55 | 89 | +34 | The plugin layer is now much closer to an auditable product architecture. |
-
-### 11.2 Current Plugin Conclusion
-
-The critical failure mode was not "too many plugins" by itself. The critical failure mode was:
-
-- too many plugins without a tightly governed product boundary
-- and a broken import path that left core custom behavior inactive
-
-That combination is now materially improved.
-
-## 12. Remaining Risks
-
-1. There is still no CI pipeline.
-   - validation is scriptable, but not enforced automatically
-
-2. The nested `nvim/` layout still exists.
-   - it now works, but it remains less conventional than a flattened root config
-
-3. Optional tools are still absent on this local machine.
-   - `fd`
-   - `htop` or `btop`
-
-4. The lockfile should be refreshed whenever plugin policy changes again.
-   - plugin minimization and lockfile contents must stay synchronized
-   - note: disabled plugin pins may intentionally remain in the lockfile by `lazy.nvim` design
-
-## 13. Change Log
-
-### 2026-04-19 Round 1
-
-- Created governance baseline.
-- Installed local Neovim for real validation.
-- Installed a local GCC toolchain for Treesitter compilation checks.
-- Added root bootstrap entrypoint and nested config self-resolution.
-- Added `:ClarityAudit` and a headless audit script.
-- Removed duplicate lock-file ambiguity.
-- Simplified default formatter strategy and reduced hidden dependency risk.
-- Made optional tool integrations fail gracefully.
-- Rewrote README to match reality.
-
-### 2026-04-19 Round 2
-
-- Fixed custom plugin import by switching to explicit plugin aggregation.
-- Added a minimal plugin policy module to disable non-essential default plugins.
-- Removed dead custom ownership for dashboard and bufferline.
-- Switched LazyVim fallback colorscheme to `habamax` while keeping the custom theme authoritative.
-- Verified the custom theme and custom keymaps load from repo-owned files.
-- Reconciled README, audit scope, and governance documentation with the reduced plugin surface.
-- Extended audit output to report active plugin inventory and disabled plugin policy explicitly.
-
-### 2026-04-20 Round 3
-
-- Hardened Copilot startup by resolving a Node.js `22+` runtime explicitly.
-- Preferred `fnm`-managed Node binaries over stale system PATH entries.
-- Updated audit semantics so outdated Node runtimes fail the Copilot-capable dependency check.
-- Documented the Copilot Node.js floor and preferred runtime resolution behavior.
+### 3.3 架构方向是成熟的
+
+比起从零 DIY Neovim，这个项目选择：
+
+- 用 LazyVim 做底座
+- 自定义只集中在产品价值处
+- 明确压缩插件面
+
+这是对的。
+
+从长期维护成本看，这比“从纯 nvim.lua 开始一点点堆”更稳。
+
+---
+
+## 4. 它还不够顶级的地方
+
+### 4.1 命令表面仍然太宽
+
+当前存在一些“同一个意图有多条路径”的情况：
+
+- 搜文件：`空格 f f` 是主路径，但还有其他探索路径
+- 缓冲区切换：`Shift-h/l` 与 `空格 b n/p` 重复
+- 窗口分割：`空格 -` / `空格 |` 与 `空格 w-` / `空格 w|` 重复
+
+这在资深用户眼里是“灵活”，在普通用户眼里是“为什么有两套”。
+
+乔布斯式答案通常不是“教用户记住更多”，而是“只推荐一条主路径”。
+
+### 4.2 Git 命名空间存在冲突
+
+这是当前最明显的体验债。
+
+`<leader>g*` 同时承担了两类职责：
+
+1. LazyVim / Snacks 的 Git picker
+2. `gitsigns` 的 hunk 操作
+
+结果是：
+
+- 全局语义和 buffer-local 语义会碰撞
+- `空格 g s` 等键在不同上下文下含义并不稳定
+
+这不是小问题，这是心智模型层面的不一致。
+
+### 4.3 discoverability 仍然偏“工程师式”
+
+`which-key` 是好东西，但它只是“菜单”，不是“向导”。
+
+真正的优秀体验应该让用户更少需要解释：
+
+- 怎么打开文件
+- 怎么搜索
+- 怎么复制到 Windows
+- 为什么 WSL 和 Windows 不一样
+
+现在这些内容主要靠文档补齐，而不是产品内自解释。
+
+### 4.4 Windows + WSL2 仍然有现实摩擦
+
+当前用户会遇到：
+
+- Windows 仓库和 WSL 仓库同步
+- 剪贴板跨层行为不一致
+- 旧配置还在跑导致“我明明改了为什么没变”
+
+这类问题不是 Neovim 独有，但对真实用户体验伤害非常大。
+
+---
+
+## 5. 乔布斯视角：我会怎么重新设计这套体验
+
+如果我是乔布斯，我不会先加功能，我会先做 5 件事。
+
+### 5.1 只保留一条默认主路径
+
+每个高频意图只能有一条“官方推荐路径”：
+
+- 打开文件：`空格 f f`
+- 搜文本：`空格 f w`
+- 打开文件树：`空格 e`
+- 打开终端：`空格 t f`
+- 重命名：`空格 c r`
+- 格式化：`空格 c f`
+
+其他路径可以保留，但不再作为面向用户的主宣传路径。
+
+### 5.2 给用户一个“不会迷路”的首页
+
+不是传统 dashboard，而是一个极简帮助入口，例如：
+
+- `:ClarityStart`
+- `空格 h h`
+
+里面只放：
+
+- 今天最重要的 10 个动作
+- 当前环境是否健康
+- Windows / WSL 剪贴板说明
+- 如何从旧版本同步
+
+### 5.3 彻底重构 Git 组命名
+
+当前 Git 组必须重新分层，例如：
+
+- `空格 g g` 打开 Git 总视图
+- `空格 g p` 预览改动
+- `空格 h s` stage hunk
+- `空格 h r` reset hunk
+
+让“Git 状态浏览”和“hunk 操作”不再共用同一组语义。
+
+### 5.4 做一份真正任务导向的帮助系统
+
+不是“命令索引”，而是：
+
+- 我想找文件
+- 我想搜代码
+- 我想改完保存
+- 我想看错误
+- 我想复制到 Windows
+
+用户应该按“任务”思考，不是按插件名思考。
+
+### 5.5 让环境问题更难发生
+
+一个真正顶级的产品会尽量减少“用户要理解环境层级”的频率。
+
+应当继续推进：
+
+- WSL 仓库来源统一
+- 剪贴板路线说明内置
+- 启动时更明确提示当前配置来源和版本
+
+---
+
+## 6. 关键问题清单
+
+### P0 必须优先解决
+
+1. Git 命名空间冲突
+2. 主路径与兼容路径没有明确分层
+3. 新手对 Windows / WSL / Neovim 三层边界理解成本高
+
+### P1 很值得尽快做
+
+1. 增加产品内帮助入口
+2. 让常用帮助可在编辑器内部快速呼出
+3. 让“忘记命令怎么办”变成产品自带体验
+
+### P2 继续完善
+
+1. 更精细的首次启动引导
+2. 更强的 smoke test 与 CI
+3. 更可视化的依赖状态面板
+
+---
+
+## 7. 未来版本的目标分数
+
+如果下一轮把最关键的 UX 问题修完，目标分数可以达到：
+
+| 维度 | 当前 | 目标 |
+| --- | ---: | ---: |
+| UI | 81 | 86 |
+| UX | 73 | 88 |
+| PM | 81 | 89 |
+| Architecture | 84 | 88 |
+| Combined | 82 | **90+** |
+
+也就是说：
+
+**这不是一个需要推倒重做的项目，而是一个非常适合继续精修的项目。**
+
+---
+
+## 8. 最终判断
+
+从世界顶级 UI / UX / PM / 架构师的综合标准来看：
+
+`clarity_lazyvim` 当前不是 60 分的“能跑配置”，也还不是 95 分的“顶级成品”。
+
+它当前最合理的评价是：
+
+**82 / 100**
+
+原因是：
+
+- 方向对
+- 骨架稳
+- 差异化真实
+- 文档这次重写后大幅补强
+
+但仍然没有达到极致，因为：
+
+- 命令面还不够干净
+- Git 语义仍然不统一
+- 产品内帮助仍然不足
+- Windows / WSL 现实问题仍需要更低摩擦的解决方案
+
+所以接下来的策略不应该是“再装更多插件”，而应该是：
+
+**继续削减、继续统一、继续把复杂性藏起来。**

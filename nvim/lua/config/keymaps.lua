@@ -8,6 +8,12 @@ local opts = { remap = true, desc = "" }
 
 -- 模式: n=Normal, i=Insert, v=Visual, x=Visual Block, o=Operator pending
 
+local function pick(command, pick_opts)
+  return function()
+    require("lazyvim.util.pick").open(command, pick_opts)
+  end
+end
+
 -- LSP & 诊断
 opts.desc = "跳转到 [声]明处"
 map("n", "gD", vim.lsp.buf.declaration, opts)
@@ -48,10 +54,8 @@ map("n", "<leader>bp", ":bprevious<CR>", opts)
 opts.desc = "[标]签页 - [关]闭当前"
 map("n", "<leader>bc", ":bdelete<CR>", opts)
 
--- Telescope (模糊搜索)
-opts.desc = "🔍 [查]找 - 文件"
-map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", opts)
-opts.desc = "🔍 [查]找 - Git 文件"
-map("n", "<leader>fg", "<cmd>Telescope git_files<cr>", opts)
+-- 搜索
+-- `<leader>ff` / `<leader>fg` 由 LazyVim 默认搜索器接管。
+-- 这里只保留 `<leader>fw` 作为中文工作流里的文本搜索别名。
 opts.desc = "🔍 [查]找 - [文]本内容"
-map("n", "<leader>fw", "<cmd>Telescope live_grep<cr>", opts)
+map("n", "<leader>fw", pick("live_grep"), opts)

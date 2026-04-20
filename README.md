@@ -15,7 +15,11 @@ The project is opinionated, but it should not be fragile.
 
 The current repository is structured so it can be cloned directly into the Neovim config path while still keeping the main implementation under `nvim/`. A root `init.lua` now bootstraps that nested config correctly.
 
-Architecture notes and the ongoing remediation plan live in [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md).
+If you want the new beginner-friendly Chinese guide, start with [doc/clarity_lazyvim_complete_guide_zh.md](doc/clarity_lazyvim_complete_guide_zh.md).
+
+If you want the current product evaluation and architecture report, read [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md).
+
+If you want the root execution documents for future AI-driven work, read [REQUIREMENTS.md](REQUIREMENTS.md), [PLAN.md](PLAN.md), and [TASKS.md](TASKS.md).
 
 ## Core Features
 
@@ -35,7 +39,7 @@ The configuration extends LazyVim instead of rebuilding editor primitives from z
 
 The public distribution now keeps only the plugin layers that directly support the product story:
 
-- LazyVim core for LSP, completion, Telescope, Mason, and statusline foundations
+- LazyVim core for LSP, completion, Snacks-based picking, Mason, and statusline foundations
 - `lush.nvim` plus the custom accessibility theme
 - `neo-tree.nvim` for project navigation
 - `toggleterm.nvim` for integrated terminal workflows
@@ -149,6 +153,9 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 | `gr` | Find references |
 | `<leader>ca` | Code action |
 | `[d` / `]d` | Previous / next diagnostic |
+| `<leader>ff` | Find files from project root |
+| `<leader>fg` | Find tracked Git files |
+| `<leader>fw` | Search text in project |
 | `<leader>e` | Toggle Neo-tree in current working directory |
 | `<leader>E` | Toggle Neo-tree at detected project root |
 | `<leader>tf` | Floating center terminal |
@@ -163,8 +170,12 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 .
 ├── init.lua
 ├── lazy-lock.json
+├── REQUIREMENTS.md
+├── PLAN.md
+├── TASKS.md
 ├── doc/
-│   └── clarity_architecture_governance.md
+│   ├── clarity_architecture_governance.md
+│   └── clarity_lazyvim_complete_guide_zh.md
 ├── nvim/
 │   ├── colors/
 │   ├── init.lua

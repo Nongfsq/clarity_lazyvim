@@ -2,7 +2,8 @@
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
 
-vim.opt.relativenumber = false -- Show numberline instead of relative number
+vim.opt.number = true -- Always show absolute line numbers in normal editing windows.
+vim.opt.relativenumber = false -- Disable relative line numbers for beginner-friendly navigation.
 
 -- Set timeout for key mappings (in milliseconds)
 -- vim.o.timeoutlen = 100
