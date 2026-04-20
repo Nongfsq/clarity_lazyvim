@@ -19,16 +19,27 @@ If you want the new beginner-friendly Chinese guide, start with [doc/clarity_laz
 
 If you want the current product evaluation and architecture report, read [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md).
 
-If you want the root execution documents for future AI-driven work, read [REQUIREMENTS.md](REQUIREMENTS.md), [PLAN.md](PLAN.md), and [TASKS.md](TASKS.md).
+Local AI working files and private execution notes are intentionally kept out of the public repository.
+
+## Document Boundaries
+
+Public repo content should stay focused on:
+
+- user-facing docs in `README.md` and `doc/`
+- runtime configuration under `nvim/`
+- validation scripts and CI
+
+Local planning and prompt-state files are allowed on authoring machines, but they are intentionally `gitignore`d and are not part of the public distribution.
 
 ## Current Product State
 
-The latest round delivered four high-impact product improvements:
+The latest round delivered five high-impact product improvements:
 
 1. `T-006` In-editor onboarding entrypoint (`:ClarityStart` / `<leader>hh`)
 2. `T-007` Explicit Windows + WSL clipboard help (`:ClarityClipboard`)
 3. `T-009` Source-of-truth workflow help (`:ClaritySync`)
 4. `T-011` Expanded automated validation (`:ClarityValidate`, `python scripts/run_clarity_validate.py`)
+5. `T-010` Stronger first-run guidance (automatic welcome panel on the first empty startup)
 
 The goal of this round was to reduce "I forgot how to do this" and "I updated but nothing changed" failures inside the product itself.
 
@@ -40,7 +51,7 @@ Current verified state:
 
 Current next focus:
 
-1. strengthen first-run guidance without adding noise
+1. keep first-run guidance calm and maintain it as the product evolves
 2. make Windows optional-tool setup (`fd`, `htop` / `btop`) more convenient
 3. keep shrinking explanation cost around secondary paths
 
@@ -122,6 +133,8 @@ The repo now includes a dedicated recovery route for forgetfulness:
 - `:ClarityStart`
 - `<leader>hh`
 
+On the first empty interactive launch of a new onboarding version, the welcome panel now opens automatically once.
+
 It centralizes:
 
 - primary workflows (`<leader>ff`, `<leader>fw`, `<leader>tf`, diagnostics, formatting, rename)
@@ -188,6 +201,7 @@ On first launch:
 2. `Mason.nvim` installs configured language servers and formatter tooling
 3. `nvim-treesitter` compiles parsers if a compiler is available
 4. `copilot.lua` uses a Node.js `22+` runtime and prefers an `fnm`-managed Node automatically when available
+5. the Clarity welcome panel appears automatically on the first empty interactive startup and can always be reopened with `:ClarityStart` or `<leader>hh`
 
 ## Dependency Strategy
 
@@ -253,9 +267,6 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 │       └── clarity-validate.yml
 ├── init.lua
 ├── lazy-lock.json
-├── REQUIREMENTS.md
-├── PLAN.md
-├── TASKS.md
 ├── doc/
 │   ├── clarity_architecture_governance.md
 │   └── clarity_lazyvim_complete_guide_zh.md

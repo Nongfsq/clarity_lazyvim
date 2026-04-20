@@ -36,3 +36,10 @@ Session.vim
 
 .DS_Store
 .vscode/
+
+# Local AI execution files. Keep them on authoring machines, not in the public repo.
+AGENTS.md
+CLAUDE.md
+REQUIREMENTS.md
+PLAN.md
+TASKS.md

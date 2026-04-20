@@ -5,12 +5,79 @@ local state = {
   win = nil,
 }
 
+local STARTUP_GUIDE_VERSION = "2026-04-20-startup-guide-v1"
+
 local function repo_root()
   if type(vim.g.clarity_repo_root) == "string" and vim.g.clarity_repo_root ~= "" then
     return vim.g.clarity_repo_root
   end
 
   return vim.fn.getcwd()
+end
+
+local function is_interactive()
+  return vim.env.CLARITY_NONINTERACTIVE ~= "1" and #vim.api.nvim_list_uis() > 0
+end
+
+local function startup_state_path()
+  return vim.fn.stdpath "state" .. "/clarity_startup_guide_version.txt"
+end
+
+local function read_startup_state()
+  local path = startup_state_path()
+  if vim.fn.filereadable(path) ~= 1 then
+    return nil
+  end
+
+  local ok, lines = pcall(vim.fn.readfile, path)
+  if not ok or type(lines) ~= "table" or #lines == 0 then
+    return nil
+  end
+
+  return lines[1]
+end
+
+local function mark_startup_seen()
+  local path = startup_state_path()
+  local dir = vim.fn.fnamemodify(path, ":h")
+  pcall(vim.fn.mkdir, dir, "p")
+  pcall(vim.fn.writefile, { STARTUP_GUIDE_VERSION }, path)
+end
+
+local function startup_buffer_ready()
+  if not is_interactive() or vim.fn.argc() ~= 0 or vim.o.diff then
+    return false
+  end
+
+  local buf = vim.api.nvim_get_current_buf()
+  if not vim.api.nvim_buf_is_valid(buf) then
+    return false
+  end
+
+  if vim.api.nvim_buf_get_name(buf) ~= "" or vim.bo[buf].modified or vim.bo[buf].buftype ~= "" then
+    return false
+  end
+
+  return true
+end
+
+local function should_show_startup_guide()
+  return startup_buffer_ready() and read_startup_state() ~= STARTUP_GUIDE_VERSION
+end
+
+local function platform_label()
+  local uname = vim.loop.os_uname()
+  local sysname = uname.sysname
+
+  if sysname == "Linux" and vim.fn.has "wsl" == 1 then
+    sysname = "WSL"
+  end
+
+  return string.format("%s %s", sysname, uname.release)
+end
+
+local function short_repo_root()
+  return vim.fn.fnamemodify(repo_root(), ":~")
 end
 
 local function clipboard_provider()
@@ -223,37 +290,54 @@ local function show_sync_help()
   end, { buffer = buf, nowait = true, silent = true, desc = "Return to ClarityStart" })
 end
 
-local function show_start()
+local function show_start(opts)
+  opts = opts or {}
+
+  local intro = opts.auto_open
+      and "This guide opened automatically because this is your first empty startup with the current onboarding version."
+    or "Use this panel whenever you forget the safest next step."
   local lines = {
     "# Clarity Start",
     "",
-    "Use this panel when you forget what to do next.",
+    intro,
+    "Reopen any time with `:ClarityStart` or `<leader>hh`.",
     "",
-    "## Core actions",
+    string.format("- Platform: `%s`", platform_label()),
+    string.format("- Clipboard provider: `%s`", clipboard_provider()),
+    string.format("- Repo root: `%s`", short_repo_root()),
     "",
-    "- `f` Find files -> `<leader>ff`",
-    "- `w` Search text -> `<leader>fw`",
-    "- `e` Toggle explorer -> `<leader>e`",
-    "- `t` Open terminal -> `<leader>tf`",
-    "- `r` Rename symbol -> `<leader>cr`",
-    "- `m` Format file -> `<leader>cf`",
-    "- `d` Show line diagnostic -> `gl`",
+    "## Start with these 10 actions",
     "",
-    "## Recovery paths",
+    "1. `Space` then pause -> open the command menu",
+    "2. `f` Find files -> `<leader>ff`",
+    "3. `w` Search project text -> `<leader>fw`",
+    "4. `e` Toggle explorer -> `<leader>e`",
+    "5. `b` Switch open buffers -> `<leader>fb`",
+    "6. `t` Open the floating terminal -> `<leader>tf`",
+    "7. `gd` in code -> jump to definition",
+    "8. `gl` in code -> explain the current line diagnostic",
+    "9. `<leader>cf` -> format the current file",
+    "10. `<leader>cr` -> rename the current symbol",
     "",
-    "- `Space` then pause -> `which-key` command menu",
+    "## Recovery if something feels wrong",
+    "",
     "- `k` Search keymaps -> `<leader>sk`",
-    "- `a` Run `:ClarityAudit`",
-    "- `v` Run `:ClarityValidate`",
-    "- `c` Open clipboard help",
-    "- `s` Open Windows + WSL sync workflow",
+    "- `a` Run `:ClarityAudit` for environment health",
+    "- `v` Run `:ClarityValidate` for behavior checks",
+    "- `c` Open clipboard help for Windows + WSL",
+    "- `s` Open repo sync help",
+    "",
+    "## If search looks stale or broken",
+    "",
+    "- This config expects the Snacks picker, not Telescope.",
+    "- If `<leader>ff` or `<leader>fw` mention Telescope, pull the latest repo and open `:ClaritySync`.",
     "",
     "## Close",
     "",
     "- `q` or `Esc` close this panel",
   }
 
-  local buf = open_float(lines, " Clarity Start ")
+  local buf = open_float(lines, opts.auto_open and " Clarity First Start " or " Clarity Start ")
 
   local actions = {
     f = function()
@@ -271,24 +355,14 @@ local function show_start()
         vim.cmd("Neotree toggle " .. vim.fn.getcwd())
       end)
     end,
+    b = function()
+      run_after_close(function()
+        require("lazyvim.util.pick").open("buffers")
+      end)
+    end,
     t = function()
       run_after_close(function()
         feedkeys("<leader>tf")
-      end)
-    end,
-    r = function()
-      run_after_close(function()
-        feedkeys("<leader>cr")
-      end)
-    end,
-    m = function()
-      run_after_close(function()
-        feedkeys("<leader>cf")
-      end)
-    end,
-    d = function()
-      run_after_close(function()
-        vim.diagnostic.open_float()
       end)
     end,
     k = function()
@@ -342,6 +416,25 @@ function M.setup()
   vim.keymap.set("n", "<leader>hh", function()
     vim.cmd "ClarityStart"
   end, { desc = "Help: Clarity start hub" })
+
+  local group = vim.api.nvim_create_augroup("clarity_startup_guide", { clear = true })
+  vim.api.nvim_create_autocmd("VimEnter", {
+    group = group,
+    once = true,
+    callback = function()
+      if not should_show_startup_guide() then
+        return
+      end
+
+      mark_startup_seen()
+
+      vim.defer_fn(function()
+        if startup_buffer_ready() then
+          show_start({ auto_open = true })
+        end
+      end, 120)
+    end,
+  })
 end
 
 return M
