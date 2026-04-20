@@ -39,7 +39,7 @@ Acceptance criteria:
 
 ### T-004 Resolve Git namespace conflict
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -49,7 +49,7 @@ Acceptance criteria:
 
 ### T-005 Define one recommended path per core task
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -80,7 +80,7 @@ Acceptance criteria:
 
 ### T-008 Reduce duplicate window and buffer workflows
 
-Status: `TODO`
+Status: `DONE`
 
 Acceptance criteria:
 
@@ -134,10 +134,8 @@ Acceptance criteria:
 
 ## Suggested next execution order
 
-1. T-004 Resolve Git namespace conflict
-2. T-005 Define one recommended path per core task
-3. T-006 Add in-editor onboarding entrypoint
-4. T-008 Reduce duplicate window and buffer workflows
-5. T-007 Add clipboard help for Windows + WSL users
-6. T-009 Clarify repo source-of-truth workflow
-7. T-011 Add CI or scripted validation expansion
+1. T-006 Add in-editor onboarding entrypoint
+2. T-007 Add clipboard help for Windows + WSL users
+3. T-009 Clarify repo source-of-truth workflow
+4. T-010 Add stronger startup guidance
+5. T-011 Add CI or scripted validation expansion

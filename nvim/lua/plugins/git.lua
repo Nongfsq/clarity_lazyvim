@@ -1,5 +1,55 @@
 -- nvim/lua/plugins/git.lua
 
+local function setup_hunk_keymaps(bufnr)
+  if vim.b[bufnr].clarity_gitsigns_keymaps then
+    return
+  end
+
+  local gs = package.loaded.gitsigns
+  if not gs then
+    return
+  end
+
+  local function map(mode, lhs, rhs, desc)
+    vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc, silent = true })
+  end
+
+  local function hunk_nav(next_hunk)
+    return function()
+      if vim.wo.diff then
+        return next_hunk and "]h" or "[h"
+      end
+      vim.schedule(function()
+        if next_hunk then
+          gs.next_hunk()
+        else
+          gs.prev_hunk()
+        end
+      end)
+      return "<Ignore>"
+    end
+  end
+
+  map("n", "]h", hunk_nav(true), "下一个 [块]级 Git 改动 (Hunk)")
+  map("n", "[h", hunk_nav(false), "上一个 [块]级 Git 改动 (Hunk)")
+  map("n", "]c", hunk_nav(true), "Legacy: 下一个 Git 改动块")
+  map("n", "[c", hunk_nav(false), "Legacy: 上一个 Git 改动块")
+
+  map({ "n", "v" }, "<leader>hs", ":Gitsigns stage_hunk<CR>", "Hunk: 暂存当前改动块")
+  map({ "n", "v" }, "<leader>hr", ":Gitsigns reset_hunk<CR>", "Hunk: 重置当前改动块")
+  map("n", "<leader>hS", gs.stage_buffer, "Hunk: 暂存整个缓冲区")
+  map("n", "<leader>hR", gs.reset_buffer, "Hunk: 重置整个缓冲区")
+  map("n", "<leader>hu", gs.undo_stage_hunk, "Hunk: 撤销上次暂存")
+
+  map("n", "<leader>hp", gs.preview_hunk, "Hunk: 预览改动")
+  map("n", "<leader>hb", function()
+    gs.blame_line({ full = true })
+  end, "Hunk: 查看当前行 blame")
+  map("n", "<leader>hd", gs.diffthis, "Hunk: 查看当前文件 diff")
+
+  vim.b[bufnr].clarity_gitsigns_keymaps = true
+end
+
 return {
   -- GitSigns: Show git diff in the sign column
   {
@@ -14,37 +64,22 @@ return {
         changedelete = { text = "▎" },
         untracked = { text = "▎" },
       },
-        on_attach = function(bufnr)
-        local gs = package.loaded.gitsigns
-        local function map(mode, l, r, desc)
-          vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
-        end
-
-        -- 跳转 (Hunks)
-        map("n", "]c", function()
-          if vim.wo.diff then return "]c" end
-          vim.schedule(function() gs.next_hunk() end)
-          return "<Ignore>"
-        end, "下一个 [代]码块 (Hunk)")
-
-        map("n", "[c", function()
-          if vim.wo.diff then return "[c" end
-          vim.schedule(function() gs.prev_hunk() end)
-          return "<Ignore>"
-        end, "上一个 [代]码块 (Hunk)")
-
-        -- 操作 (Actions)
-        map({ "n", "v" }, "<leader>gs", ":Gitsigns stage_hunk<CR>", "暂存 [当]前代码块 (Stage)")
-        map({ "n", "v" }, "<leader>gr", ":Gitsigns reset_hunk<CR>", "重置 [当]前代码块 (Reset)")
-        map("n", "<leader>gS", gs.stage_buffer, "暂存 [全]部代码 (Stage Buffer)")
-        map("n", "<leader>gR", gs.reset_buffer, "重置 [全]部代码 (Reset Buffer)")
-        map("n", "<leader>gu", gs.undo_stage_hunk, "[撤]销上次暂存 (Undo Stage)")
-        
-        -- 查看 (View)
-        map("n", "<leader>gp", gs.preview_hunk, "[预]览代码块改动")
-        map("n", "<leader>gb", function() gs.blame_line({ full = true }) end, "[查]看行历史 (Blame)")
-        map("n", "<leader>gd", gs.diffthis, "[查]看文件差异 (Diff)")
+      on_attach = function(bufnr)
+        setup_hunk_keymaps(bufnr)
       end,
     },
+    config = function(_, opts)
+      require("gitsigns").setup(opts)
+
+      local group = vim.api.nvim_create_augroup("clarity_gitsigns_keymaps", { clear = true })
+      vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+        group = group,
+        callback = function(event)
+          if vim.b[event.buf].gitsigns_head then
+            setup_hunk_keymaps(event.buf)
+          end
+        end,
+      })
+    end,
   },
 }

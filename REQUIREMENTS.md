@@ -113,7 +113,7 @@ Build an accessibility-first, beginner-friendly, high-contrast Neovim distributi
 
 ## Current baseline
 
-- Combined project score: `82/100`
+- Combined project score: `84/100`
 - Strongest areas:
   - architecture
   - auditability

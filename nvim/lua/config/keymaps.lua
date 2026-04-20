@@ -37,22 +37,10 @@ opts.desc = "下一个[错]误"
 map("n", "]d", vim.diagnostic.goto_next, opts)
 
 -- 窗口管理
-opts.desc = "[窗]口 - 水平分割"
-map("n", "<leader>w-", "<C-w>s", opts)
-opts.desc = "[窗]口 - 垂直分割"
-map("n", "<leader>w|", "<C-w>v", opts)
-opts.desc = "[窗]口 - 关闭当前"
-map("n", "<leader>wc", "<C-w>c", opts)
+-- `<leader>-` / `<leader>|` / `<leader>wd` 由 LazyVim 默认映射提供主路径。
+-- 这里只保留 `<leader>wo`，因为它表达的是“仅保留当前窗口”。
 opts.desc = "[窗]口 - 仅保留当前"
 map("n", "<leader>wo", "<C-w>o", opts)
-
--- 缓冲区 (Tabs) 管理
-opts.desc = "[标]签页 - 下一个"
-map("n", "<leader>bn", ":bnext<CR>", opts)
-opts.desc = "[标]签页 - 上一个"
-map("n", "<leader>bp", ":bprevious<CR>", opts)
-opts.desc = "[标]签页 - [关]闭当前"
-map("n", "<leader>bc", ":bdelete<CR>", opts)
 
 -- 搜索
 -- `<leader>ff` / `<leader>fg` 由 LazyVim 默认搜索器接管。

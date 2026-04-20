@@ -154,15 +154,23 @@ The configuration is largely self-documenting via `which-key`, but the most impo
 | `<leader>ca` | Code action |
 | `[d` / `]d` | Previous / next diagnostic |
 | `<leader>ff` | Find files from project root |
+| `<leader>fb` | Open buffer list |
 | `<leader>fg` | Find tracked Git files |
 | `<leader>fw` | Search text in project |
+| `<leader>bd` | Delete current buffer |
 | `<leader>e` | Toggle Neo-tree in current working directory |
 | `<leader>E` | Toggle Neo-tree at detected project root |
+| `<leader>-` / `<leader>|` | Split current window |
+| `<leader>wd` | Close current window |
+| `<leader>gd` / `<leader>gs` | Git diff list / Git status |
 | `<leader>tf` | Floating center terminal |
 | `<leader>tr` | Floating right terminal |
 | `<leader>tv` | Vertical terminal |
 | `<leader>th` | Horizontal terminal |
 | `<leader>ht` | System monitor terminal if `htop` or `btop` is installed |
+| `[h` / `]h` | Previous / next Git hunk |
+| `<leader>hs` / `<leader>hr` | Stage / reset current Git hunk |
+| `<leader>hp` | Preview current Git hunk |
 
 ## Project Structure
 

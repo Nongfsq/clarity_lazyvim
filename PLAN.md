@@ -97,7 +97,7 @@ Validation:
 
 ## Target outcome
 
-Raise the combined project score from `82/100` to `90+/100` by focusing on:
+Raise the combined project score from `84/100` to `90+/100` by focusing on:
 
 - discoverability
 - workflow consistency
