@@ -1,177 +1,102 @@
 # clarity_lazyvim
 
-A colorblind-friendly, high-contrast Neovim configuration built on [LazyVim](https://www.lazyvim.org/).
+<p align="center">
+  <img src="doc/assets/clarity-hero.svg" alt="Clarity LazyVim hero banner" width="100%" />
+</p>
 
-`clarity_lazyvim` is designed to be readable first:
+<p align="center">
+  <a href="https://github.com/Nongfsq/clarity_lazyvim/actions/workflows/clarity-validate.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/Nongfsq/clarity_lazyvim/clarity-validate.yml?branch=main&style=flat-square&label=validate" alt="Validation status" />
+  </a>
+  <img src="https://img.shields.io/badge/Neovim-0.12%2B-57A143?style=flat-square&logo=neovim&logoColor=white" alt="Neovim 0.12+" />
+  <img src="https://img.shields.io/badge/Foundation-LazyVim-0F172A?style=flat-square" alt="LazyVim foundation" />
+  <img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20WSL2%20%7C%20Linux-1F6FEB?style=flat-square" alt="Windows WSL2 Linux" />
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/Nongfsq/clarity_lazyvim?style=flat-square" alt="MIT license" />
+  </a>
+</p>
 
-- bold, high-contrast syntax groups
-- a custom accessibility-focused colorscheme
-- curated LazyVim overrides instead of a from-scratch editor stack
-- bilingual key descriptions for a clearer `which-key` experience
+<p align="center">
+  An accessibility-first, high-contrast, product-shaped Neovim distribution built on <a href="https://www.lazyvim.org/">LazyVim</a>.
+</p>
 
-## Why This Repo Exists
+<p align="center">
+  Designed for people who want the speed of Neovim without the usual plugin sprawl, shell coupling, or "I updated it and nothing changed" confusion.
+</p>
 
-The project is opinionated, but it should not be fragile.
+## Why Clarity
 
-The current repository is structured so it can be cloned directly into the Neovim config path while still keeping the main implementation under `nvim/`. A root `init.lua` now bootstraps that nested config correctly.
+Most personal Neovim repos are powerful but hard to trust.
 
-If you want the new beginner-friendly Chinese guide, start with [doc/clarity_lazyvim_complete_guide_zh.md](doc/clarity_lazyvim_complete_guide_zh.md).
+`clarity_lazyvim` takes a different position:
 
-If you want the current product evaluation and architecture report, read [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md).
+- readability is a product feature, not a theme afterthought
+- one recommended path is better than five clever ones
+- optional tools stay optional
+- Windows + WSL workflows should be explicit, not tribal knowledge
+- validation matters as much as visual polish
 
-Local AI working files and private execution notes are intentionally kept out of the public repository.
+This repo is not an `oh-my-zsh` bundle, not a shell framework, and not a maximalist plugin showcase.
+It is a focused editor product for daily work.
 
-## Document Boundaries
+## What You Get
 
-Public repo content should stay focused on:
+| Area | Primary path | Why it matters |
+| --- | --- | --- |
+| File search | `<leader>ff` | Fast project entry without depending on file trees for everything |
+| Text search | `<leader>fw` | One obvious search path backed by Snacks picker |
+| Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
+| Git hunks | `<leader>hs`, `<leader>hr`, `<leader>hp` | Clear hunk ownership without overloading the global Git namespace |
+| Recovery | `:ClarityStart`, `<leader>hh` | A product-level "I forgot" path inside Neovim |
+| Audit | `:ClarityAudit` | Environment and dependency readiness in one command |
+| Validation | `:ClarityValidate` | Behavior checks, not just "is the binary installed?" |
 
-- user-facing docs in `README.md` and `doc/`
-- runtime configuration under `nvim/`
-- validation scripts and CI
+## Product Highlights
 
-Local planning and prompt-state files are allowed on authoring machines, but they are intentionally `gitignore`d and are not part of the public distribution.
+### Accessibility-first visual system
 
-## Current Product State
+The custom theme is built around strong contrast, clearer syntax separation, and better readability for red-green colorblind users.
 
-The latest round delivered five high-impact product improvements:
+### Curated plugin surface
 
-1. `T-006` In-editor onboarding entrypoint (`:ClarityStart` / `<leader>hh`)
-2. `T-007` Explicit Windows + WSL clipboard help (`:ClarityClipboard`)
-3. `T-009` Source-of-truth workflow help (`:ClaritySync`)
-4. `T-011` Expanded automated validation (`:ClarityValidate`, `python scripts/run_clarity_validate.py`)
-5. `T-010` Stronger first-run guidance (automatic welcome panel on the first empty startup)
+The active stack stays intentionally small:
 
-The goal of this round was to reduce "I forgot how to do this" and "I updated but nothing changed" failures inside the product itself.
+- LazyVim core
+- Snacks picker
+- `neo-tree.nvim`
+- `toggleterm.nvim`
+- `gitsigns.nvim`
+- `conform.nvim`
+- `nvim-treesitter`
+- `copilot.lua`
 
-Current verified state:
+Several inherited or optional power-user plugins are deliberately disabled to keep the public product easier to audit and maintain.
 
-- Windows authoring environment: `94/100` readiness
-- WSL runtime environment: `100/100` readiness
-- Required validation checks: all passing
+### First-run guidance that actually helps
 
-Current next focus:
+The first empty interactive startup opens a welcome guide automatically once per onboarding version.
+It teaches the top actions, points users to clipboard help, and explains how to recover from stale configs.
 
-1. keep first-run guidance calm and maintain it as the product evolves
-2. make Windows optional-tool setup (`fd`, `htop` / `btop`) more convenient
-3. keep shrinking explanation cost around secondary paths
+### Windows + WSL workflow discipline
 
-## Core Features
+The project documents and supports a simple operational rule:
 
-### Accessibility-first theme
+1. Windows repo is the source of truth for edits, commits, and pushes.
+2. WSL repo is the runtime mirror.
+3. If WSL behavior looks old, compare `HEAD` before debugging anything else.
 
-The custom theme in `nvim/colors/custom_colorblind_theme.lua` focuses on:
+### Built-in trust layer
 
-- high contrast foreground/background pairs
-- bold keywords and types
-- syntax separation designed for red-green colorblind users
+This repo ships with:
 
-### Curated LazyVim foundation
-
-The configuration extends LazyVim instead of rebuilding editor primitives from zero. This keeps startup and maintenance costs lower while leaving room for strong custom identity.
-
-### Minimal necessary plugin set
-
-The public distribution now keeps only the plugin layers that directly support the product story:
-
-- LazyVim core for LSP, completion, Snacks-based picking, Mason, and statusline foundations
-- `lush.nvim` plus the custom accessibility theme
-- `neo-tree.nvim` for project navigation
-- `toggleterm.nvim` for integrated terminal workflows
-- `gitsigns.nvim` for inline Git feedback
-- `conform.nvim` for formatter orchestration
-- `nvim-treesitter` for syntax intelligence
-- `copilot.lua` as the single AI-assist layer
-
-Non-essential extras such as dashboard, bufferline, LazyGit integration, alternate colorschemes, and several inherited power-user plugins are intentionally disabled to keep the stack leaner and easier to audit.
-
-### Integrated terminal workflow
-
-The repo includes floating, vertical, and horizontal terminal layouts through `toggleterm.nvim`.
-
-Optional extras:
-
-- `htop` or `btop` for system monitoring
-
-If those tools are missing, the related mappings now fail gracefully with a helpful warning instead of hard-crashing the flow.
-
-### Built-in audit command
-
-Run `:ClarityAudit` inside Neovim to inspect:
-
-- bootstrap layout correctness
-- required external tools
-- optional external tools
-- active plugin inventory
-- plugins disabled by the minimal-set policy
-- overall environment readiness
-
-For a headless audit from the terminal, use:
-
-```powershell
-python scripts/run_clarity_audit.py
-```
-
-### Built-in validation command
-
-Run `:ClarityValidate` inside Neovim to verify:
-
-- critical keymaps
-- Git hunk keymap attachment
-- dashboard / neo-tree / terminal UI behavior
-- clipboard, picker, and Copilot integration assumptions
-
-For a headless validation run from the terminal, use:
-
-```powershell
-python scripts/run_clarity_validate.py
-```
-
-### In-editor recovery entrypoint
-
-The repo now includes a dedicated recovery route for forgetfulness:
-
-- `:ClarityStart`
-- `<leader>hh`
-
-On the first empty interactive launch of a new onboarding version, the welcome panel now opens automatically once.
-
-It centralizes:
-
-- primary workflows (`<leader>ff`, `<leader>fw`, `<leader>tf`, diagnostics, formatting, rename)
-- clipboard help for Windows + WSL users
-- environment checks (`:ClarityAudit`, provider readiness, validation path)
-
-Related in-editor help commands:
-
-- `:ClarityClipboard`
-- `:ClaritySync`
+- `:ClarityAudit`
 - `:ClarityValidate`
+- headless validation scripts
+- GitHub Actions CI
 
-## Prerequisites
+That makes the project feel more like a product than a bag of config files.
 
-### Required
-
-1. Neovim `0.12+`
-2. Git
-3. A C compiler for `nvim-treesitter`
-   - Windows: GCC/Clang or MSVC
-   - macOS: `xcode-select --install`
-   - Debian/Ubuntu: `sudo apt install build-essential`
-   - Arch: `sudo pacman -S base-devel`
-4. A Nerd Font for icons
-
-### Recommended
-
-1. `ripgrep`
-2. `fd`
-3. Node.js `22+` and npm
-4. Python and pip
-
-### Optional
-
-1. `htop` or `btop`
-
-## Installation
+## Quick Start
 
 ### Windows
 
@@ -181,7 +106,7 @@ Clone into `%LOCALAPPDATA%\nvim`:
 git clone https://github.com/Nongfsq/clarity_lazyvim.git $env:LOCALAPPDATA\nvim
 ```
 
-### Linux / macOS
+### Linux / WSL / macOS
 
 Clone into `~/.config/nvim`:
 
@@ -197,91 +122,74 @@ nvim
 
 On first launch:
 
-1. `lazy.nvim` bootstraps plugins
-2. `Mason.nvim` installs configured language servers and formatter tooling
-3. `nvim-treesitter` compiles parsers if a compiler is available
-4. `copilot.lua` uses a Node.js `22+` runtime and prefers an `fnm`-managed Node automatically when available
-5. the Clarity welcome panel appears automatically on the first empty interactive startup and can always be reopened with `:ClarityStart` or `<leader>hh`
+1. `lazy.nvim` bootstraps plugins.
+2. Mason installs configured language servers and formatter tooling.
+3. Treesitter compiles parsers if a compiler is available.
+4. Copilot prefers a Node.js `22+` runtime.
+5. The Clarity welcome panel appears automatically on the first empty interactive startup.
 
-## Dependency Strategy
+## First 5 Minutes
 
-This repository now follows these rules:
+If you only remember one workflow, remember this:
 
-1. Shell frameworks such as `oh-my-zsh` are not part of the runtime foundation.
-2. Optional tools must remain optional.
-3. Formatter choices should prefer stable, documented commands over hidden machine-local assumptions.
-4. The canonical plugin lock file is the root [lazy-lock.json](lazy-lock.json).
-5. The active-vs-disabled plugin policy is defined in `nvim/lua/plugins/minimal.lua`, not inferred from lockfile entries alone.
+1. Press `Space` and pause to open `which-key`.
+2. Use `<leader>ff` to find files.
+3. Use `<leader>fw` to search project text.
+4. Use `<leader>e` when you want the file tree.
+5. Use `<leader>tf` for the floating terminal.
+6. Use `gd`, `gr`, and `gl` to navigate code and diagnostics.
+7. Reopen help any time with `:ClarityStart` or `<leader>hh`.
 
-## Windows + WSL Source Of Truth
+## Architecture
 
-To avoid environment drift, use this as the official workflow:
-
-1. Windows repo is the canonical authoring repo.
-2. Make changes on Windows, then `commit` and `push`.
-3. Pull updates in WSL runtime repo.
-4. Restart Neovim if behavior does not update immediately.
-
-Short diagnosis rule:
-
-- If docs and keymaps look old in WSL, check WSL repo `HEAD` first.
-- If keybindings reference removed backends (for example Telescope errors on `<leader>ff`), you are likely running stale config.
-
-## Keybindings
-
-The configuration is largely self-documenting via `which-key`, but the most important custom mappings are:
-
-| Keybinding | Description |
-| --- | --- |
-| `gd` | Go to definition |
-| `K` | Hover documentation |
-| `gr` | Find references |
-| `<leader>ca` | Code action |
-| `[d` / `]d` | Previous / next diagnostic |
-| `<leader>ff` | Find files from project root |
-| `<leader>fb` | Open buffer list |
-| `<leader>fg` | Find tracked Git files |
-| `<leader>fw` | Search text in project |
-| `<leader>bd` | Delete current buffer |
-| `<leader>e` | Toggle Neo-tree in current working directory |
-| `<leader>E` | Toggle Neo-tree at detected project root |
-| `<leader>-` / `<leader>|` | Split current window |
-| `<leader>wd` | Close current window |
-| `<leader>gd` / `<leader>gs` | Git diff list / Git status |
-| `<leader>hh` | Open the Clarity help hub |
-| `<leader>tf` | Floating center terminal |
-| `<leader>tr` | Floating right terminal |
-| `<leader>tv` | Vertical terminal |
-| `<leader>th` | Horizontal terminal |
-| `<leader>ht` | System monitor terminal if `htop` or `btop` is installed |
-| `[h` / `]h` | Previous / next Git hunk |
-| `<leader>hs` / `<leader>hr` | Stage / reset current Git hunk |
-| `<leader>hp` | Preview current Git hunk |
-
-## Project Structure
-
-```text
-.
-├── .github/
-│   └── workflows/
-│       └── clarity-validate.yml
-├── init.lua
-├── lazy-lock.json
-├── doc/
-│   ├── clarity_architecture_governance.md
-│   └── clarity_lazyvim_complete_guide_zh.md
-├── nvim/
-│   ├── colors/
-│   ├── init.lua
-│   └── lua/
-│       ├── config/
-│       └── plugins/
-└── scripts/
-    ├── run_clarity_audit.py
-    └── run_clarity_validate.py
+```mermaid
+flowchart LR
+    A["Neovim 0.12+"] --> B["LazyVim foundation"]
+    B --> C["Clarity product layer"]
+    C --> D["Accessibility theme"]
+    C --> E["Minimal plugin policy"]
+    C --> F["Help + audit + validation"]
+    F --> G["Windows source-of-truth workflow"]
+    F --> H["WSL runtime mirror workflow"]
 ```
 
-## Audit and Smoke Test
+### Dependency strategy
+
+The project follows five hard rules:
+
+1. Shell frameworks such as `oh-my-zsh` are not runtime foundations.
+2. Optional tools must degrade gracefully.
+3. Formatter and provider requirements must be documented.
+4. The source of truth for plugin versions is the root [`lazy-lock.json`](lazy-lock.json).
+5. Public docs describe public behavior; local AI planning files stay out of the repo.
+
+## Tech Stack
+
+<p>
+  <img src="https://img.shields.io/badge/Lua-2C2D72?style=flat-square&logo=lua&logoColor=white" alt="Lua" />
+  <img src="https://img.shields.io/badge/LazyVim-111827?style=flat-square" alt="LazyVim" />
+  <img src="https://img.shields.io/badge/Snacks_Picker-0EA5E9?style=flat-square" alt="Snacks picker" />
+  <img src="https://img.shields.io/badge/Treesitter-2563EB?style=flat-square" alt="Treesitter" />
+  <img src="https://img.shields.io/badge/Neo--tree-10B981?style=flat-square" alt="Neo-tree" />
+  <img src="https://img.shields.io/badge/ToggleTerm-F59E0B?style=flat-square" alt="Toggleterm" />
+  <img src="https://img.shields.io/badge/Gitsigns-E11D48?style=flat-square" alt="Gitsigns" />
+  <img src="https://img.shields.io/badge/Conform-7C3AED?style=flat-square" alt="Conform" />
+  <img src="https://img.shields.io/badge/Copilot-171717?style=flat-square&logo=githubcopilot&logoColor=white" alt="Copilot" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" />
+</p>
+
+## Verified Baseline
+
+Current validated baseline:
+
+- Windows authoring environment: `94/100`
+- WSL runtime environment: `100/100`
+- Required validation checks: passing
+
+That does not mean Windows is broken.
+It means a few optional tools such as `fd` and `htop` / `btop` are still missing on the current authoring machine.
+
+## Validation
 
 Inside Neovim:
 
@@ -303,41 +211,94 @@ Minimal smoke test:
 nvim --headless -u .\init.lua "+qall"
 ```
 
-Current validation coverage (T-011):
+Validation currently covers:
 
-- startup smoke checks on Windows and Ubuntu (WSL)
-- `python scripts/run_clarity_audit.py`
-- `python scripts/run_clarity_validate.py`
-- keymap assertions for high-frequency commands such as `<leader>ff`, `<leader>fw`, `<leader>gd`, `<leader>hs`
-- special UI behavior checks for dashboard, neo-tree, and terminal surfaces
-- provider readiness checks (clipboard, Python provider, Node provider)
+- startup smoke checks on Windows and WSL
+- keymap assertions for high-frequency paths
+- dashboard, `neo-tree`, and terminal UI behavior
+- clipboard, Python, Node, and Copilot provider readiness
+
+## Prerequisites
+
+### Required
+
+1. Neovim `0.12+`
+2. Git
+3. A C compiler for Treesitter
+4. A Nerd Font
+
+### Recommended
+
+1. `ripgrep`
+2. `fd`
+3. Node.js `22+` and npm
+4. Python and pip
+
+### Optional
+
+1. `htop` or `btop`
 
 ## Troubleshooting
 
-### `nvim-treesitter` complains about missing compiler
+### Search mentions Telescope
 
-Install a working C compiler and restart your shell so `gcc`, `clang`, or `cl` is available in `PATH`.
+This config expects the Snacks picker.
+If `<leader>ff` or `<leader>fw` mentions Telescope, you are almost certainly running stale config.
+
+Run:
+
+1. `:ClaritySync`
+2. compare `git rev-parse --short HEAD` between Windows and WSL
+3. restart Neovim after pull
+
+### Clipboard feels inconsistent in WSL
+
+Use `:ClarityClipboard`.
+
+It explains the difference between:
+
+- terminal copy
+- Neovim yank
+- explicit system clipboard copy such as `"+y`
 
 ### `:ClarityAudit` reports missing optional tools
 
-That is expected if you have not installed them. The related mappings will warn and degrade gracefully.
+That is expected when optional extras are not installed.
+The related features warn and degrade gracefully instead of crashing the editor.
 
-On the current Windows authoring machine, the audit stays at `94/100` mainly because `fd` and `htop` / `btop` are still optional and not installed.
+### Copilot says Node.js `22+` is required
 
-### Node.js or Python provider issues
+Install a modern Node runtime with `fnm`, `nvm`, or `volta`.
+When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatically before falling back to `PATH`.
 
-If `:checkhealth` reports provider issues, install the missing provider package:
+## Documentation
 
-```sh
-npm install -g neovim
-pip install pynvim
+- Chinese complete guide: [doc/clarity_lazyvim_complete_guide_zh.md](doc/clarity_lazyvim_complete_guide_zh.md)
+- Product evaluation and architecture report: [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md)
+
+## Project Structure
+
+```text
+.
+├── .github/
+│   └── workflows/
+│       └── clarity-validate.yml
+├── doc/
+│   ├── assets/
+│   ├── clarity_architecture_governance.md
+│   └── clarity_lazyvim_complete_guide_zh.md
+├── nvim/
+│   ├── colors/
+│   ├── lua/
+│   │   ├── config/
+│   │   └── plugins/
+│   └── init.lua
+├── scripts/
+│   ├── run_clarity_audit.py
+│   └── run_clarity_validate.py
+├── init.lua
+└── lazy-lock.json
 ```
-
-### `copilot.lua` says Node.js `22+` is required
-
-This config expects a modern Node runtime for Copilot. If your shell still exposes an older system Node, install a current LTS release with a version manager such as `fnm`, `nvm`, or `volta`.
-
-When `fnm` is present, `clarity_lazyvim` now prefers the newest `fnm`-managed Node binary automatically before falling back to `node` from `PATH`.
 
 ## License
 
