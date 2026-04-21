@@ -180,7 +180,7 @@ flowchart LR
 
 ### Dependency strategy
 
-The project follows five hard rules:
+The project follows seven hard rules:
 
 1. Shell frameworks such as `oh-my-zsh` are not runtime foundations.
 2. Optional tools must degrade gracefully.
@@ -188,6 +188,7 @@ The project follows five hard rules:
 4. The source of truth for plugin versions is the root [`lazy-lock.json`](lazy-lock.json).
 5. Source comments stay English-only; Clarity-owned runtime UI may localize to English or Chinese.
 6. Public docs describe public behavior; local AI planning files stay out of the repo.
+7. Clarity-owned code uses a unified four-space indentation policy across editor defaults, formatters, and `.editorconfig`.
 
 ## Tech Stack
 

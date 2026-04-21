@@ -5,8 +5,8 @@ vim.g.clarity_repo_root = repo_root
 
 local nested_init = repo_root .. "/nvim/init.lua"
 if vim.fn.filereadable(nested_init) == 1 then
-  dofile(nested_init)
-  return
+    dofile(nested_init)
+    return
 end
 
-require "config.lazy"
+require("config.lazy")

@@ -771,6 +771,13 @@ gl
 空格 c f
 ```
 
+当前仓库已经统一成 `4` 空格缩进：
+
+- Neovim 默认编辑缩进是 `4`
+- Lua 由 `stylua` 按 `4` 空格格式化
+- JavaScript / TypeScript / JSON / Markdown 由 `prettier` 按 `4` 空格格式化
+- IDEA、VS Code 等编辑器会读取仓库根目录的 `.editorconfig`
+
 如果格式化没生效，先检查对应 formatter 是否安装，再运行：
 
 ```vim

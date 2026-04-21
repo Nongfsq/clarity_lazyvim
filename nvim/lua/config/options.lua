@@ -28,4 +28,3 @@ opt.shiftwidth = 4 -- Number of spaces to use for each step of (auto)indent.
 opt.expandtab = true -- Use spaces instead of tabs.
 opt.smartindent = true -- Makes indenting smart.
 opt.autoindent = true -- Copy indent from current line when starting a new line.
-

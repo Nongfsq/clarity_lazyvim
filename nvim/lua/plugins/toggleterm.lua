@@ -1,182 +1,203 @@
-local audit = require "config.audit"
-local i18n = require "config.i18n"
+local audit = require("config.audit")
+local i18n = require("config.i18n")
 
 return {
-  {
-    "akinsho/toggleterm.nvim",
-    version = "*",
-    opts = function()
-      local function get_size(term)
-        if term.direction == "horizontal" then
-          return 15
-        elseif term.direction == "vertical" then
-          return vim.o.columns * 0.4
-        end
-      end
+    {
+        "akinsho/toggleterm.nvim",
+        version = "*",
+        opts = function()
+            local function get_size(term)
+                if term.direction == "horizontal" then
+                    return 15
+                elseif term.direction == "vertical" then
+                    return vim.o.columns * 0.4
+                end
+            end
 
-      return {
-        size = get_size,
-        open_mapping = [[<C-\>]],
-        hide_numbers = true,
-        shade_terminals = true,
-        shading_factor = 2,
-        start_in_insert = true,
-        insert_mappings = true,
-        persist_size = true,
-        direction = "float",
-        close_on_exit = true,
-        shell = vim.o.shell,
-        float_opts = {
-          border = "curved",
-          winblend = 5,
-          highlights = {
-            border = "Normal",
-            background = "Normal",
-          },
-        },
-      }
-    end,
-    config = function(_, opts)
-      require("toggleterm").setup(opts)
-      local has_system_monitor, system_monitor = audit.has { "htop", "btop" }
-
-      -- Terminal keymaps.
-      vim.api.nvim_create_autocmd("TermOpen", {
-        pattern = "term://*",
-        callback = function()
-          local opts = { buffer = 0 }
-          vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], opts)
-          vim.keymap.set("t", "jk", [[<C-\><C-n>]], opts)
-          vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], opts)
-          vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
-          vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
-          vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
-          vim.keymap.set("t", "<C-w>", [[<C-\><C-n><C-w>]], opts)
+            return {
+                size = get_size,
+                open_mapping = [[<C-\>]],
+                hide_numbers = true,
+                shade_terminals = true,
+                shading_factor = 2,
+                start_in_insert = true,
+                insert_mappings = true,
+                persist_size = true,
+                direction = "float",
+                close_on_exit = true,
+                shell = vim.o.shell,
+                float_opts = {
+                    border = "curved",
+                    winblend = 5,
+                    highlights = {
+                        border = "Normal",
+                        background = "Normal",
+                    },
+                },
+            }
         end,
-      })
+        config = function(_, opts)
+            require("toggleterm").setup(opts)
+            local has_system_monitor, system_monitor = audit.has({ "htop", "btop" })
 
-      local Terminal = require("toggleterm.terminal").Terminal
+            -- Terminal keymaps.
+            vim.api.nvim_create_autocmd("TermOpen", {
+                pattern = "term://*",
+                callback = function()
+                    local opts = { buffer = 0 }
+                    vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], opts)
+                    vim.keymap.set("t", "jk", [[<C-\><C-n>]], opts)
+                    vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], opts)
+                    vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
+                    vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
+                    vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
+                    vim.keymap.set("t", "<C-w>", [[<C-\><C-n><C-w>]], opts)
+                end,
+            })
 
-      -- Terminal configurations.
-      local terminals = {
-        float_center = {
-          direction = "float",
-          float_opts = {
-            border = "curved",
-            winblend = 10,
-          },
-        },
-        float_right = {
-          direction = "float",
-          float_opts = {
-            border = "double",
-            width = function()
-              return math.floor(vim.o.columns * 0.4)
-            end,
-            height = function()
-              return math.floor(vim.o.lines * 0.8)
-            end,
-            col = function()
-              return vim.o.columns
-            end,
-            row = 1,
-            highlights = {
-              border = "SpecialComment",
-              background = "NormalFloat",
-            },
-          },
-        },
-      }
+            local Terminal = require("toggleterm.terminal").Terminal
 
-      if has_system_monitor then
-        terminals.system_monitor = {
-          cmd = system_monitor,
-          direction = "float",
-          float_opts = { border = "curved" },
-          on_open = function(term)
-            vim.cmd "startinsert!"
-            vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
-          end,
-        }
-      end
+            -- Terminal configurations.
+            local terminals = {
+                float_center = {
+                    direction = "float",
+                    float_opts = {
+                        border = "curved",
+                        winblend = 10,
+                    },
+                },
+                float_right = {
+                    direction = "float",
+                    float_opts = {
+                        border = "double",
+                        width = function()
+                            return math.floor(vim.o.columns * 0.4)
+                        end,
+                        height = function()
+                            return math.floor(vim.o.lines * 0.8)
+                        end,
+                        col = function()
+                            return vim.o.columns
+                        end,
+                        row = 1,
+                        highlights = {
+                            border = "SpecialComment",
+                            background = "NormalFloat",
+                        },
+                    },
+                },
+            }
 
-      -- Create terminal instances.
-      local term_instances = {}
-      for name, config in pairs(terminals) do
-        term_instances[name] = Terminal:new(config)
-      end
+            if has_system_monitor then
+                terminals.system_monitor = {
+                    cmd = system_monitor,
+                    direction = "float",
+                    float_opts = { border = "curved" },
+                    on_open = function(term)
+                        vim.cmd("startinsert!")
+                        vim.api.nvim_buf_set_keymap(
+                            term.bufnr,
+                            "n",
+                            "q",
+                            "<cmd>close<CR>",
+                            { noremap = true, silent = true }
+                        )
+                    end,
+                }
+            end
 
-      -- Toggle functions.
-      local function create_toggle_func(term_name)
-        return function()
-          term_instances[term_name]:toggle()
-        end
-      end
+            -- Create terminal instances.
+            local term_instances = {}
+            for name, config in pairs(terminals) do
+                term_instances[name] = Terminal:new(config)
+            end
 
-      -- Special toggle functions.
-      local function toggle_vertical()
-        Terminal:new({
-          direction = "vertical",
-          on_open = function(term)
-            vim.cmd "startinsert!"
-            vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
-          end,
-        }):toggle(vim.o.columns * 0.4)
-      end
+            -- Toggle functions.
+            local function create_toggle_func(term_name)
+                return function()
+                    term_instances[term_name]:toggle()
+                end
+            end
 
-      local function toggle_horizontal()
-        Terminal:new({
-          direction = "horizontal",
-          on_open = function(term)
-            vim.cmd "startinsert!"
-            vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
-          end,
-        }):toggle(15)
-      end
+            -- Special toggle functions.
+            local function toggle_vertical()
+                Terminal:new({
+                    direction = "vertical",
+                    on_open = function(term)
+                        vim.cmd("startinsert!")
+                        vim.api.nvim_buf_set_keymap(
+                            term.bufnr,
+                            "n",
+                            "q",
+                            "<cmd>close<CR>",
+                            { noremap = true, silent = true }
+                        )
+                    end,
+                }):toggle(vim.o.columns * 0.4)
+            end
 
-      -- Keymaps.
-      local keymaps = {
-        { "<leader>tf", create_toggle_func "float_center", i18n.t "keymaps.terminal_float_center" },
-        { "<leader>tr", create_toggle_func "float_right", i18n.t "keymaps.terminal_float_right" },
-        { "<leader>tv", toggle_vertical, i18n.t "keymaps.terminal_vertical" },
-        { "<leader>th", toggle_horizontal, i18n.t "keymaps.terminal_horizontal" },
-      }
+            local function toggle_horizontal()
+                Terminal:new({
+                    direction = "horizontal",
+                    on_open = function(term)
+                        vim.cmd("startinsert!")
+                        vim.api.nvim_buf_set_keymap(
+                            term.bufnr,
+                            "n",
+                            "q",
+                            "<cmd>close<CR>",
+                            { noremap = true, silent = true }
+                        )
+                    end,
+                }):toggle(15)
+            end
 
-      if has_system_monitor then
-        table.insert(keymaps, { "<leader>ht", create_toggle_func "system_monitor", i18n.t "keymaps.system_monitor" })
-      else
-        table.insert(keymaps, {
-          "<leader>ht",
-          function()
-            audit.notify_missing(
-              { "htop", "btop" },
-              i18n.t "notifications.system_monitor_feature",
-              i18n.t "notifications.install_system_monitor_hint"
-            )
-          end,
-          i18n.t "keymaps.system_monitor_missing",
-        })
-      end
+            -- Keymaps.
+            local keymaps = {
+                { "<leader>tf", create_toggle_func("float_center"), i18n.t("keymaps.terminal_float_center") },
+                { "<leader>tr", create_toggle_func("float_right"), i18n.t("keymaps.terminal_float_right") },
+                { "<leader>tv", toggle_vertical, i18n.t("keymaps.terminal_vertical") },
+                { "<leader>th", toggle_horizontal, i18n.t("keymaps.terminal_horizontal") },
+            }
 
-      for _, keymap in ipairs(keymaps) do
-        vim.keymap.set("n", keymap[1], keymap[2], { noremap = true, silent = true, desc = keymap[3] })
-      end
-    end,
-  },
-  {
-    "nvim-tree/nvim-web-devicons",
-    config = function()
-      require("nvim-web-devicons").setup {
-        override = {
-          zsh = {
-            icon = "",
-            color = "#428850",
-            name = "Zsh",
-          },
-        },
-        color_icons = true,
-        default = true,
-      }
-    end,
-  },
+            if has_system_monitor then
+                table.insert(
+                    keymaps,
+                    { "<leader>ht", create_toggle_func("system_monitor"), i18n.t("keymaps.system_monitor") }
+                )
+            else
+                table.insert(keymaps, {
+                    "<leader>ht",
+                    function()
+                        audit.notify_missing(
+                            { "htop", "btop" },
+                            i18n.t("notifications.system_monitor_feature"),
+                            i18n.t("notifications.install_system_monitor_hint")
+                        )
+                    end,
+                    i18n.t("keymaps.system_monitor_missing"),
+                })
+            end
+
+            for _, keymap in ipairs(keymaps) do
+                vim.keymap.set("n", keymap[1], keymap[2], { noremap = true, silent = true, desc = keymap[3] })
+            end
+        end,
+    },
+    {
+        "nvim-tree/nvim-web-devicons",
+        config = function()
+            require("nvim-web-devicons").setup({
+                override = {
+                    zsh = {
+                        icon = "",
+                        color = "#428850",
+                        name = "Zsh",
+                    },
+                },
+                color_icons = true,
+                default = true,
+            })
+        end,
+    },
 }
