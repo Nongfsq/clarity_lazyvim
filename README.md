@@ -89,6 +89,17 @@ Clarity now separates maintainer surfaces from product surfaces on purpose:
 Version one localizes Clarity-owned help panels, key descriptions, notifications, command descriptions, and the inherited `<leader>` menu hints shown by `which-key`.
 It does not attempt to rewrite every upstream plugin UI.
 
+### Terminal-first stability defaults
+
+Clarity now prefers a steadier terminal experience over extra motion or decorative status rendering:
+
+- faster leader-menu response with a lower `timeoutlen`
+- no smooth scrolling in terminal workflows
+- no invisible-character markers by default
+- no custom `statuscolumn` in normal editing buffers
+
+The goal is simple: typing, vertical movement, and window motion should feel stable before they feel fancy.
+
 ### Windows + WSL workflow discipline
 
 The project documents and supports a simple operational rule:
@@ -280,6 +291,18 @@ It explains the difference between:
 `:ClarityLanguage` saves the new choice immediately.
 
 Some command menus and key descriptions are registered during startup, so restart Neovim after switching languages if you want a full refresh.
+
+### Typing or vertical movement feels laggy
+
+Current defaults are tuned for terminal stability.
+
+If motion still feels stale after an update:
+
+1. make sure Windows and WSL are on the same commit
+2. fully restart Neovim instead of reusing an old running instance
+3. if needed, compare `git rev-parse --short HEAD` in Windows and WSL before debugging plugins
+
+If you previously saw a stray `|` while moving, that was most likely terminal rendering noise from visual options that Clarity now disables by default.
 
 ### `:ClarityAudit` reports missing optional tools
 

@@ -5,8 +5,8 @@
 vim.opt.number = true -- Always show absolute line numbers in normal editing windows.
 vim.opt.relativenumber = false -- Disable relative line numbers for beginner-friendly navigation.
 
--- Set timeout for key mappings (in milliseconds)
--- vim.o.timeoutlen = 100
+-- Keep which-key responsive without making leader combos too hard to type.
+vim.o.timeoutlen = 200
 -- Set timeout for terminal key mappings (in milliseconds)
 -- vim.o.ttimeoutlen = 50
 
@@ -15,6 +15,12 @@ vim.opt.relativenumber = false -- Disable relative line numbers for beginner-fri
 
 -- --- Indentation Settings ---
 local opt = vim.opt
+
+-- Prefer a stable terminal experience over extra visual effects.
+opt.cursorline = false -- Avoid cursorline redraw churn in terminal-based workflows.
+opt.list = false -- Hide invisible markers to reduce visual noise and stray separator artifacts.
+opt.smoothscroll = false -- Disable smooth scrolling to keep motion snappy in terminals.
+opt.statuscolumn = "" -- Use the default status column to avoid custom terminal rendering artifacts.
 
 opt.tabstop = 4 -- Number of spaces that a <Tab> in the file counts for.
 opt.softtabstop = 4 -- Number of spaces that a <Tab> counts for while performing editing operations.

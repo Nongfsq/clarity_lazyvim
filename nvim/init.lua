@@ -39,6 +39,7 @@ local function apply_custom_colorscheme()
 end
 
 require "config.lazy"
+require "config.options"
 
 if not apply_custom_colorscheme() then
   pcall(vim.cmd.colorscheme, "habamax")

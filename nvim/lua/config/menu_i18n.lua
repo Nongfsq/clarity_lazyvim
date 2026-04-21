@@ -171,6 +171,14 @@ local function translate_group(group_id)
   return entry[i18n.get_locale()] or entry.en or group_id
 end
 
+local function is_leader_map(lhs)
+  if type(lhs) ~= "string" or lhs == "" then
+    return false
+  end
+
+  return lhs:find "^<leader>" ~= nil or lhs:find "^<Leader>" ~= nil or lhs:find "^<Space>" ~= nil or lhs:sub(1, 1) == " "
+end
+
 local function remap_with_desc(mode, lhs, translated_desc)
   local map = vim.fn.maparg(lhs, mode, false, true)
   if type(map) ~= "table" or vim.tbl_isempty(map) then
@@ -204,7 +212,7 @@ function M.apply_keymap_desc_overrides()
       local translated = translate_desc(desc)
       local id = mode .. "\0" .. map.lhs
 
-      if desc ~= "" and translated ~= desc and not seen[id] then
+      if desc ~= "" and translated ~= desc and is_leader_map(map.lhs) and not seen[id] then
         seen[id] = true
         remap_with_desc(mode, map.lhs, translated)
       end
@@ -239,11 +247,7 @@ function M.setup()
     group = group,
     pattern = "VeryLazy",
     callback = function()
-      for _, delay in ipairs { 0, 120, 300 } do
-        vim.defer_fn(function()
-          M.apply()
-        end, delay)
-      end
+      vim.schedule(M.apply)
     end,
   })
 end
