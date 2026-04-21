@@ -84,6 +84,7 @@
 当前已经支持切换的主要范围有：
 
 - `ClarityStart`、`ClarityClipboard`、`ClaritySync` 这些帮助面板
+- 按 `空格` 弹出的主菜单提示
 - Clarity 自己定义的快捷键说明
 - Clarity 自己定义的命令说明
 - Clarity 自己弹出的提示消息

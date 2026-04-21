@@ -149,8 +149,8 @@ def run() -> int:
         "results.keymap_gd = has_map('<leader>gd', 'n'); "
         "results.keymap_tf = has_map('<leader>tf', 'n'); "
         "results.keymap_hh = has_map('<leader>hh', 'n'); "
-        "results.gitsigns_head = vim.b.gitsigns_head ~= nil; "
         "vim.wait(1200, function() return vim.b.gitsigns_head ~= nil and vim.b.clarity_gitsigns_keymaps == true end); "
+        "results.gitsigns_head = vim.b.gitsigns_head ~= nil; "
         "results.gitsigns_keymaps = vim.b.clarity_gitsigns_keymaps == true; "
         "results.keymap_hs = has_map('<leader>hs', 'n'); "
         "results.clipboard_unnamedplus = option_contains(vim.opt.clipboard:get(), 'unnamedplus'); "
@@ -327,15 +327,18 @@ def run() -> int:
     )
 
     locale_specs = [
-        ("en", "Go to definition", "Search text"),
-        ("zh", "跳转到定义", "搜索文本"),
+        ("en", "Go to definition", "Search text", "Find Files (Root Dir)", "Delete Buffer", "Toggle Wrap"),
+        ("zh", "跳转到定义", "搜索文本", "查找文件（项目根目录）", "删除缓冲区", "切换自动换行"),
     ]
-    for locale_code, expected_gd, expected_fw in locale_specs:
+    for locale_code, expected_gd, expected_fw, expected_ff, expected_bd, expected_uw in locale_specs:
         locale_env = build_env(locale_code)
         locale_runtime_lua = (
             "local i18n = require('config.i18n'); "
             "local gd = vim.fn.maparg('gd', 'n', false, true); "
             "local fw = vim.fn.maparg('<leader>fw', 'n', false, true); "
+            "local ff = vim.fn.maparg('<leader>ff', 'n', false, true); "
+            "local bd = vim.fn.maparg('<leader>bd', 'n', false, true); "
+            "local uw = vim.fn.maparg('<leader>uw', 'n', false, true); "
             "local hh = vim.fn.maparg('<leader>hh', 'n', false, true); "
             "local report = i18n.get_validation_report(); "
             "print(vim.json.encode({ "
@@ -343,6 +346,9 @@ def run() -> int:
             "choice = i18n.get_state().choice, "
             "gd = gd.desc, "
             "fw = fw.desc, "
+            "ff = ff.desc, "
+            "bd = bd.desc, "
+            "uw = uw.desc, "
             "hh = hh.desc, "
             "language_cmd = (vim.fn.exists(':ClarityLanguage') == 2), "
             "translation_ok = report.ok, "
@@ -389,6 +395,30 @@ def run() -> int:
                 f"Locale {locale_code} keymap <leader>fw description",
                 locale_report.get("fw") == expected_fw,
                 f"desc={locale_report.get('fw')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} keymap <leader>ff description",
+                locale_report.get("ff") == expected_ff,
+                f"desc={locale_report.get('ff')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} keymap <leader>bd description",
+                locale_report.get("bd") == expected_bd,
+                f"desc={locale_report.get('bd')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} keymap <leader>uw description",
+                locale_report.get("uw") == expected_uw,
+                f"desc={locale_report.get('uw')}",
                 required=False,
             )
         )

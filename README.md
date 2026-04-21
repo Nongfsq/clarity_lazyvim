@@ -86,7 +86,7 @@ Clarity now separates maintainer surfaces from product surfaces on purpose:
 - Clarity-owned runtime UI can render in English or Chinese
 - the locale is controlled with `:ClarityLanguage auto|en|zh`
 
-Version one localizes Clarity-owned help panels, key descriptions, notifications, and command descriptions.
+Version one localizes Clarity-owned help panels, key descriptions, notifications, command descriptions, and the inherited `<leader>` menu hints shown by `which-key`.
 It does not attempt to rewrite every upstream plugin UI.
 
 ### Windows + WSL workflow discipline

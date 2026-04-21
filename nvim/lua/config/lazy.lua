@@ -61,6 +61,7 @@ require("lazy").setup {
 }
 
 require("config.i18n").setup()
+require("config.menu_i18n").setup()
 require("config.audit").setup()
 require("config.help").setup()
 require("config.validation").setup()
