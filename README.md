@@ -97,6 +97,7 @@ Clarity now prefers a steadier terminal experience over extra motion or decorati
 - no smooth scrolling in terminal workflows
 - no invisible-character markers by default
 - no custom `statuscolumn` in normal editing buffers
+- no indent or scope guide bars in normal editing buffers by default
 
 The goal is simple: typing, vertical movement, and window motion should feel stable before they feel fancy.
 
@@ -302,7 +303,7 @@ If motion still feels stale after an update:
 2. fully restart Neovim instead of reusing an old running instance
 3. if needed, compare `git rev-parse --short HEAD` in Windows and WSL before debugging plugins
 
-If you previously saw a stray `|` while moving, that was most likely terminal rendering noise from visual options that Clarity now disables by default.
+If you previously saw a stray `|` while moving or in blank indented lines, that was most likely an indent or scope guide being rendered by the UI layer. Clarity now disables those bars by default in normal editing buffers.
 
 ### `:ClarityAudit` reports missing optional tools
 

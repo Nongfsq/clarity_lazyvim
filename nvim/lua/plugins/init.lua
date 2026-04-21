@@ -7,4 +7,5 @@ return {
   require "plugins.neo-tree",
   require "plugins.toggleterm",
   require "plugins.treesitter",
+  require "plugins.ui",
 }
