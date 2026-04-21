@@ -48,6 +48,7 @@ It is a focused editor product for daily work.
 | Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
 | Git hunks | `<leader>hs`, `<leader>hr`, `<leader>hp` | Clear hunk ownership without overloading the global Git namespace |
 | Recovery | `:ClarityStart`, `<leader>hh` | A product-level "I forgot" path inside Neovim |
+| Language | `:ClarityLanguage` | Switch Clarity-owned UI between `auto`, `en`, and `zh` |
 | Audit | `:ClarityAudit` | Environment and dependency readiness in one command |
 | Validation | `:ClarityValidate` | Behavior checks, not just "is the binary installed?" |
 
@@ -76,6 +77,17 @@ Several inherited or optional power-user plugins are deliberately disabled to ke
 
 The first empty interactive startup opens a welcome guide automatically once per onboarding version.
 It teaches the top actions, points users to clipboard help, and explains how to recover from stale configs.
+
+### Bilingual runtime with English source governance
+
+Clarity now separates maintainer surfaces from product surfaces on purpose:
+
+- source comments stay English-only for long-term maintainability
+- Clarity-owned runtime UI can render in English or Chinese
+- the locale is controlled with `:ClarityLanguage auto|en|zh`
+
+Version one localizes Clarity-owned help panels, key descriptions, notifications, and command descriptions.
+It does not attempt to rewrite every upstream plugin UI.
 
 ### Windows + WSL workflow discipline
 
@@ -127,6 +139,7 @@ On first launch:
 3. Treesitter compiles parsers if a compiler is available.
 4. Copilot prefers a Node.js `22+` runtime.
 5. The Clarity welcome panel appears automatically on the first empty interactive startup.
+6. Use `:ClarityLanguage auto|en|zh` any time to inspect or change the Clarity UI language.
 
 ## First 5 Minutes
 
@@ -161,7 +174,8 @@ The project follows five hard rules:
 2. Optional tools must degrade gracefully.
 3. Formatter and provider requirements must be documented.
 4. The source of truth for plugin versions is the root [`lazy-lock.json`](lazy-lock.json).
-5. Public docs describe public behavior; local AI planning files stay out of the repo.
+5. Source comments stay English-only; Clarity-owned runtime UI may localize to English or Chinese.
+6. Public docs describe public behavior; local AI planning files stay out of the repo.
 
 ## Tech Stack
 
@@ -260,6 +274,12 @@ It explains the difference between:
 - terminal copy
 - Neovim yank
 - explicit system clipboard copy such as `"+y`
+
+### Language changed but some labels still look old
+
+`:ClarityLanguage` saves the new choice immediately.
+
+Some command menus and key descriptions are registered during startup, so restart Neovim after switching languages if you want a full refresh.
 
 ### `:ClarityAudit` reports missing optional tools
 

@@ -34,9 +34,11 @@ def resolve_nvim_binary() -> str:
     raise FileNotFoundError("Neovim executable not found. Set NVIM_BIN or add `nvim` to PATH.")
 
 
-def build_env() -> dict[str, str]:
+def build_env(locale: str | None = None) -> dict[str, str]:
     env = os.environ.copy()
     env["CLARITY_NONINTERACTIVE"] = "1"
+    if locale:
+        env["CLARITY_LOCALE"] = locale
 
     if os.name == "nt":
         compiler_bin = Path(
@@ -323,6 +325,89 @@ def run() -> int:
             required=False,
         )
     )
+
+    locale_specs = [
+        ("en", "Go to definition", "Search text"),
+        ("zh", "跳转到定义", "搜索文本"),
+    ]
+    for locale_code, expected_gd, expected_fw in locale_specs:
+        locale_env = build_env(locale_code)
+        locale_runtime_lua = (
+            "local i18n = require('config.i18n'); "
+            "local gd = vim.fn.maparg('gd', 'n', false, true); "
+            "local fw = vim.fn.maparg('<leader>fw', 'n', false, true); "
+            "local hh = vim.fn.maparg('<leader>hh', 'n', false, true); "
+            "local report = i18n.get_validation_report(); "
+            "print(vim.json.encode({ "
+            "effective = i18n.get_state().effective, "
+            "choice = i18n.get_state().choice, "
+            "gd = gd.desc, "
+            "fw = fw.desc, "
+            "hh = hh.desc, "
+            "language_cmd = (vim.fn.exists(':ClarityLanguage') == 2), "
+            "translation_ok = report.ok, "
+            "missing_in_en = #report.missing_in_en, "
+            "missing_in_zh = #report.missing_in_zh "
+            "}));"
+        )
+        locale_runtime = run_nvim(
+            repo_root,
+            nvim_bin,
+            ["+doautocmd User VeryLazy", "+lua vim.wait(150)", f"+lua {locale_runtime_lua}"],
+            locale_env,
+        )
+        locale_output = "\n".join(part for part in (locale_runtime.stdout, locale_runtime.stderr) if part)
+        if locale_runtime.returncode != 0:
+            checks.append(
+                CheckResult(
+                    f"Locale runtime ({locale_code})",
+                    False,
+                    locale_output or "command failed",
+                )
+            )
+            continue
+
+        locale_report = extract_last_json_object(locale_output)
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} effective selection",
+                locale_report.get("effective") == locale_code,
+                f"effective={locale_report.get('effective')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} keymap gd description",
+                locale_report.get("gd") == expected_gd,
+                f"desc={locale_report.get('gd')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} keymap <leader>fw description",
+                locale_report.get("fw") == expected_fw,
+                f"desc={locale_report.get('fw')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} ClarityLanguage command exists",
+                bool(locale_report.get("language_cmd")),
+                "expected true",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} translation parity",
+                bool(locale_report.get("translation_ok")),
+                f"missing_in_en={locale_report.get('missing_in_en')} missing_in_zh={locale_report.get('missing_in_zh')}",
+                required=False,
+            )
+        )
 
     required_failures = [check for check in checks if check.required and not check.ok]
     optional_failures = [check for check in checks if (not check.required) and (not check.ok)]

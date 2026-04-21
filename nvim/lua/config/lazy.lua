@@ -1,4 +1,4 @@
--- nvim/lua/config/lazy.lua (最终的、整合的、黄金标准版本)
+-- Final integrated lazy.nvim bootstrap for the Clarity runtime.
 
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
 local noninteractive = vim.env.CLARITY_NONINTERACTIVE == "1" or #vim.api.nvim_list_uis() == 0
@@ -38,18 +38,18 @@ require("lazy").setup {
       "LazyVim/LazyVim",
       import = "lazyvim.plugins",
       opts = {
-        -- 在这里配置 Mason
+        -- Configure Mason-managed tools here.
         mason = {
           ensure_installed = noninteractive and {} or mason_packages,
         },
       },
     },
 
-    -- 显式聚合自定义插件，避免在非标准 config 根目录下导入失败
+    -- Aggregate repo-owned plugins explicitly so nested config roots still load reliably.
     require "plugins",
   },
 
-  -- 其他 Lazy 配置
+  -- Remaining lazy.nvim defaults.
   defaults = { lazy = false, version = false },
   install = { colorscheme = { "habamax" } },
   checker = { enabled = not noninteractive },
@@ -60,6 +60,7 @@ require("lazy").setup {
   },
 }
 
+require("config.i18n").setup()
 require("config.audit").setup()
 require("config.help").setup()
 require("config.validation").setup()

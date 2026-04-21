@@ -1,4 +1,5 @@
 local audit = require "config.audit"
+local i18n = require "config.i18n"
 
 return {
   {
@@ -39,7 +40,7 @@ return {
       require("toggleterm").setup(opts)
       local has_system_monitor, system_monitor = audit.has { "htop", "btop" }
 
-      -- Terminal keymaps
+      -- Terminal keymaps.
       vim.api.nvim_create_autocmd("TermOpen", {
         pattern = "term://*",
         callback = function()
@@ -56,7 +57,7 @@ return {
 
       local Terminal = require("toggleterm.terminal").Terminal
 
-      -- Terminal configurations
+      -- Terminal configurations.
       local terminals = {
         float_center = {
           direction = "float",
@@ -99,20 +100,20 @@ return {
         }
       end
 
-      -- Create terminal instances
+      -- Create terminal instances.
       local term_instances = {}
       for name, config in pairs(terminals) do
         term_instances[name] = Terminal:new(config)
       end
 
-      -- Toggle functions
+      -- Toggle functions.
       local function create_toggle_func(term_name)
         return function()
           term_instances[term_name]:toggle()
         end
       end
 
-      -- Special toggle functions
+      -- Special toggle functions.
       local function toggle_vertical()
         Terminal:new({
           direction = "vertical",
@@ -133,23 +134,27 @@ return {
         }):toggle(15)
       end
 
-      -- Keymaps
+      -- Keymaps.
       local keymaps = {
-        { "<leader>tf", create_toggle_func "float_center", "Float Center Terminal" },
-        { "<leader>tr", create_toggle_func "float_right", "Float Right Terminal" },
-        { "<leader>tv", toggle_vertical, "Vertical Terminal" },
-        { "<leader>th", toggle_horizontal, "Horizontal Terminal" },
+        { "<leader>tf", create_toggle_func "float_center", i18n.t "keymaps.terminal_float_center" },
+        { "<leader>tr", create_toggle_func "float_right", i18n.t "keymaps.terminal_float_right" },
+        { "<leader>tv", toggle_vertical, i18n.t "keymaps.terminal_vertical" },
+        { "<leader>th", toggle_horizontal, i18n.t "keymaps.terminal_horizontal" },
       }
 
       if has_system_monitor then
-        table.insert(keymaps, { "<leader>ht", create_toggle_func "system_monitor", system_monitor })
+        table.insert(keymaps, { "<leader>ht", create_toggle_func "system_monitor", i18n.t "keymaps.system_monitor" })
       else
         table.insert(keymaps, {
           "<leader>ht",
           function()
-            audit.notify_missing({ "htop", "btop" }, "System monitor terminal", "Install `htop` or `btop` to enable `<leader>ht`.")
+            audit.notify_missing(
+              { "htop", "btop" },
+              i18n.t "notifications.system_monitor_feature",
+              i18n.t "notifications.install_system_monitor_hint"
+            )
           end,
-          "System monitor (missing dependency)",
+          i18n.t "keymaps.system_monitor_missing",
         })
       end
 

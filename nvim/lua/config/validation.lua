@@ -1,4 +1,5 @@
 local audit = require "config.audit"
+local i18n = require "config.i18n"
 
 local M = {}
 
@@ -120,6 +121,7 @@ function M.get_report()
   add_result(results, "commands", "clarity_clipboard_command", command_exists "ClarityClipboard", ":ClarityClipboard")
   add_result(results, "commands", "clarity_sync_command", command_exists "ClaritySync", ":ClaritySync")
   add_result(results, "commands", "clarity_validate_command", command_exists "ClarityValidate", ":ClarityValidate")
+  add_result(results, "commands", "clarity_language_command", command_exists "ClarityLanguage", ":ClarityLanguage")
 
   add_result(results, "keymaps", "leader_ff", has_map("<leader>ff", "n"), "<leader>ff")
   add_result(results, "keymaps", "leader_fw", has_map("<leader>fw", "n"), "<leader>fw")
@@ -155,6 +157,17 @@ function M.get_report()
   add_result(results, "integrations", "clipboard_provider_ready", clipboard_ready, "clipboard provider available")
   add_result(results, "integrations", "picker_backend_snacks", picker_ready, "search backend should resolve to Snacks")
   add_result(results, "integrations", "copilot_node_ready", copilot_ready, "Copilot node runtime must satisfy >=22")
+
+  local i18n_report = i18n.get_validation_report()
+  add_result(
+    results,
+    "i18n",
+    "translation_key_parity",
+    i18n_report.ok,
+    string.format("missing_in_en=%d missing_in_zh=%d", #i18n_report.missing_in_en, #i18n_report.missing_in_zh)
+  )
+  add_result(results, "i18n", "locale_en_available", vim.tbl_contains(i18n_report.locales, "en"), "en locale present")
+  add_result(results, "i18n", "locale_zh_available", vim.tbl_contains(i18n_report.locales, "zh"), "zh locale present")
 
   local total = #results
   local passed = 0
@@ -223,7 +236,7 @@ function M.setup()
     end
   end, {
     bang = true,
-    desc = "Validate critical Clarity commands, keymaps, and UI behavior",
+    desc = i18n.t "commands.validate",
   })
 end
 

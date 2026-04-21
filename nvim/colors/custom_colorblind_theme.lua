@@ -16,33 +16,33 @@ local theme = lush(function(injected_functions)
   local fg = hsl(220, 15, 80)
 
   return {
-    -- 基础颜色
-    Normal { bg = bg, fg = fg }, -- 深蓝灰背景，浅灰前景
+    -- Base colors.
+    Normal { bg = bg, fg = fg }, -- Deep blue-gray background with a light foreground.
     NormalFloat { bg = bg.lighten(5), fg = fg },
 
-    -- 光标移动到单词上的高亮
-    CursorWord { bg = hsl(200, 30, 30), fg = fg.lighten(10) }, -- 柔和的蓝色背景
+    -- Highlight the word under the cursor.
+    CursorWord { bg = hsl(200, 30, 30), fg = fg.lighten(10) }, -- Soft blue background.
 
-    -- Visual 模式选中
-    Visual { bg = hsl(60, 20, 35), fg = hsl(60, 10, 90) }, -- 柔和的黄褐色背景，近白色文本
-    Cursor { bg = hsl(50, 100, 50), fg = bg }, -- 光标
-    CursorLine { bg = bg.lighten(5) }, -- 当前行
-    CursorColumn { bg = bg.lighten(5) }, -- 当前列
-    LineNr { fg = fg.darken(30) }, -- 行号
-    CursorLineNr { fg = hsl(50, 100, 50), bold = true }, -- 当前行号
+    -- Visual-mode selection.
+    Visual { bg = hsl(60, 20, 35), fg = hsl(60, 10, 90) }, -- Soft amber background with near-white text.
+    Cursor { bg = hsl(50, 100, 50), fg = bg }, -- Cursor.
+    CursorLine { bg = bg.lighten(5) }, -- Current line.
+    CursorColumn { bg = bg.lighten(5) }, -- Current column.
+    LineNr { fg = fg.darken(30) }, -- Line numbers.
+    CursorLineNr { fg = hsl(50, 100, 50), bold = true }, -- Current line number.
 
-    -- 语法高亮
-    sym "@keyword" { fg = hsl(280, 50, 70), bold = true }, -- 关键字：紫色
-    sym "@function" { fg = hsl(210, 70, 70), bold = true }, -- 函数：蓝色
-    sym "@string" { fg = hsl(40, 70, 70) }, -- 字符串：黄色
-    sym "@number" { fg = hsl(340, 60, 70) }, -- 数字：粉红色
-    sym "@boolean" { fg = hsl(180, 60, 70) }, -- 布尔值：青色
-    sym "@comment" { fg = hsl(120, 20, 60), italic = true }, -- 注释：灰绿色
-    sym "@type" { fg = hsl(150, 50, 60), bold = true }, -- 类型：绿色
-    sym "@constant" { fg = hsl(30, 70, 70) }, -- 常量：橙色
-    sym "@special" { fg = hsl(300, 60, 70) }, -- 特殊字符：亮紫色
+    -- Syntax highlighting.
+    sym "@keyword" { fg = hsl(280, 50, 70), bold = true }, -- Keywords: purple.
+    sym "@function" { fg = hsl(210, 70, 70), bold = true }, -- Functions: blue.
+    sym "@string" { fg = hsl(40, 70, 70) }, -- Strings: yellow.
+    sym "@number" { fg = hsl(340, 60, 70) }, -- Numbers: pink.
+    sym "@boolean" { fg = hsl(180, 60, 70) }, -- Booleans: cyan.
+    sym "@comment" { fg = hsl(120, 20, 60), italic = true }, -- Comments: muted green.
+    sym "@type" { fg = hsl(150, 50, 60), bold = true }, -- Types: green.
+    sym "@constant" { fg = hsl(30, 70, 70) }, -- Constants: orange.
+    sym "@special" { fg = hsl(300, 60, 70) }, -- Special characters: bright purple.
 
-    -- 编辑器界面
+    -- Editor UI.
     StatusLine { bg = bg.lighten(10), fg = fg },
     WinSeparator { fg = bg.lighten(20) },
     TabLine { bg = bg.lighten(5), fg = fg.darken(10) },
@@ -50,18 +50,18 @@ local theme = lush(function(injected_functions)
     Pmenu { bg = bg.lighten(10), fg = fg },
     PmenuSel { bg = Visual.bg, fg = Visual.fg },
 
-    -- 诊断信息
+    -- Diagnostics.
     DiagnosticError { fg = hsl(0, 70, 60) },
     DiagnosticWarn { fg = hsl(60, 70, 60) },
     DiagnosticInfo { fg = hsl(200, 70, 60) },
     DiagnosticHint { fg = hsl(120, 70, 60) },
 
-    -- 搜索和匹配
+    -- Search and matches.
     Search { bg = hsl(60, 70, 50), fg = bg },
     IncSearch { bg = hsl(30, 70, 50), fg = bg },
     MatchParen { bg = hsl(180, 50, 50), fg = bg, bold = true },
   }
 end)
 
--- 应用主题
+-- Apply the theme.
 lush(theme)

@@ -1,4 +1,5 @@
 local M = {}
+local i18n = require "config.i18n"
 
 local tool_specs = {
   { id = "git", required = true, commands = { "git" }, feature = "bootstrap lazy.nvim and clone plugins" },
@@ -235,7 +236,10 @@ end
 
 function M.notify_missing(commands, feature, hint)
   local candidates = type(commands) == "table" and commands or { commands }
-  local message = string.format("%s is unavailable because `%s` is not installed.", feature, describe_commands(candidates))
+  local message = i18n.t("notifications.feature_unavailable", {
+    feature = feature,
+    commands = describe_commands(candidates),
+  })
 
   if hint and hint ~= "" then
     message = message .. " " .. hint
@@ -509,7 +513,7 @@ function M.setup()
     end
   end, {
     bang = true,
-    desc = "Audit layout and external dependency readiness for clarity_lazyvim",
+    desc = i18n.t "commands.audit",
   })
 end
 

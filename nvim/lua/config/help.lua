@@ -1,4 +1,5 @@
 local M = {}
+local i18n = require "config.i18n"
 
 local state = {
   buf = nil,
@@ -78,6 +79,10 @@ end
 
 local function short_repo_root()
   return vim.fn.fnamemodify(repo_root(), ":~")
+end
+
+local function locale_label()
+  return i18n.label(i18n.get_state().effective)
 end
 
 local function clipboard_provider()
@@ -176,8 +181,8 @@ local function open_float(lines, title)
     vim.keymap.set("n", lhs, rhs, { buffer = buf, nowait = true, silent = true, desc = desc })
   end
 
-  map("q", close_panel, "Close Clarity help")
-  map("<Esc>", close_panel, "Close Clarity help")
+  map("q", close_panel, i18n.t "help.map_close")
+  map("<Esc>", close_panel, i18n.t "help.map_close")
 
   return buf
 end
@@ -186,53 +191,53 @@ local function show_clipboard_help()
   local provider = clipboard_provider()
   local mode = clipboard_mode()
   local lines = {
-    "# Clarity Clipboard Help",
+    i18n.t "help.clipboard_header",
     "",
-    string.format("- Current clipboard mode: `%s`", mode),
-    string.format("- Current clipboard provider: `%s`", provider),
+    i18n.t("help.clipboard_current_mode", { mode = mode }),
+    i18n.t("help.clipboard_current_provider", { provider = provider }),
     "",
-    "## Three different copy paths",
+    i18n.t "help.clipboard_paths_header",
     "",
-    "1. Terminal copy",
-    "   Use mouse selection in Windows Terminal, then press `Ctrl + Shift + C`.",
+    i18n.t "help.clipboard_path_1",
+    i18n.t "help.clipboard_path_1_detail",
     "",
-    "2. Neovim copy inside the editor",
-    "   Use `y`, `yy`, `p`, `P` for normal yank and paste behavior.",
+    i18n.t "help.clipboard_path_2",
+    i18n.t "help.clipboard_path_2_detail",
     "",
-    "3. Force the system clipboard",
-    "   Use `\"+y`, `\"+yy`, `\"+p`, or `:%y+` when you want to be explicit.",
+    i18n.t "help.clipboard_path_3",
+    i18n.t "help.clipboard_path_3_detail",
     "",
-    "## What this config does",
+    i18n.t "help.clipboard_config_header",
     "",
-    "- `clipboard=unnamedplus` is enabled, so normal yanks usually target the system clipboard when the provider is healthy.",
-    "- If copy or paste feels wrong, run `:ClarityAudit` and check the clipboard provider line first.",
+    i18n.t "help.clipboard_config_line_1",
+    i18n.t "help.clipboard_config_line_2",
     "",
-    "## Windows + WSL practical rule",
+    i18n.t "help.clipboard_rule_header",
     "",
-    "- Copy from Neovim to Windows apps: yank text normally, or force with `\"+y`.",
-    "- Paste from Windows into Neovim running in the terminal: use `Ctrl + Shift + V`.",
-    "- `Ctrl + Shift + C` copies terminal selection, not an internal Neovim visual selection by itself.",
+    i18n.t "help.clipboard_rule_line_1",
+    i18n.t "help.clipboard_rule_line_2",
+    i18n.t "help.clipboard_rule_line_3",
     "",
-    "## Recovery",
+    i18n.t "help.clipboard_recovery_header",
     "",
-    "- `a` run `:ClarityAudit`",
-    "- `h` return to `:ClarityStart`",
-    "- `q` close this panel",
+    i18n.t "help.clipboard_recovery_line_1",
+    i18n.t "help.clipboard_recovery_line_2",
+    i18n.t "help.clipboard_recovery_line_3",
   }
 
-  local buf = open_float(lines, " Clarity Clipboard ")
+  local buf = open_float(lines, i18n.t "help.clipboard_title")
 
   vim.keymap.set("n", "a", function()
     run_after_close(function()
       vim.cmd "ClarityAudit"
     end)
-  end, { buffer = buf, nowait = true, silent = true, desc = "Run ClarityAudit" })
+  end, { buffer = buf, nowait = true, silent = true, desc = i18n.t "help.map_run_audit" })
 
   vim.keymap.set("n", "h", function()
     run_after_close(function()
       vim.cmd "ClarityStart"
     end)
-  end, { buffer = buf, nowait = true, silent = true, desc = "Return to ClarityStart" })
+  end, { buffer = buf, nowait = true, silent = true, desc = i18n.t "help.map_return_to_start" })
 end
 
 local function show_sync_help()
@@ -240,104 +245,106 @@ local function show_sync_help()
   local platform = string.format("%s %s", uname.sysname, uname.release)
   local current_repo = repo_root()
   local repo_note = uname.sysname == "Windows_NT"
-      and "- You are currently on Windows. This is the recommended source-of-truth editing environment."
-    or "- You are currently on Linux/WSL. Treat this clone as a runtime mirror unless your team decides otherwise."
+      and i18n.t "help.sync_repo_note_windows"
+    or i18n.t "help.sync_repo_note_wsl"
 
   local lines = {
-    "# Clarity Sync Workflow",
+    i18n.t "help.sync_header",
     "",
-    string.format("- Current platform: `%s`", platform),
-    string.format("- Current repo: `%s`", current_repo),
+    i18n.t("help.sync_platform", { platform = platform }),
+    i18n.t("help.sync_repo", { repo = current_repo }),
     repo_note,
     "",
-    "## Official rule for this project",
+    i18n.t "help.sync_rule_header",
     "",
-    "1. Keep one canonical repo that owns edits, commits, and pushes.",
-    "2. For the current team workflow, Windows is the source-of-truth workspace.",
-    "3. If you also run Neovim inside WSL, treat the WSL clone as the runtime mirror.",
+    i18n.t "help.sync_rule_1",
+    i18n.t "help.sync_rule_2",
+    i18n.t "help.sync_rule_3",
     "",
-    "## Recommended update flow",
+    i18n.t "help.sync_update_header",
     "",
-    "1. Edit, test, commit, and push from the Windows repo.",
-    "2. In WSL, run `git pull --ff-only` inside the mirror clone.",
-    "3. Restart Neovim after pulling when behavior still looks stale.",
+    i18n.t "help.sync_update_1",
+    i18n.t "help.sync_update_2",
+    i18n.t "help.sync_update_3",
     "",
-    "## If the editor still behaves like an old version",
+    i18n.t "help.sync_stale_header",
     "",
-    "- Run `:ClarityAudit`.",
-    "- Compare `git rev-parse --short HEAD` in Windows and WSL.",
-    "- Reopen Neovim after the pull completes.",
+    i18n.t "help.sync_stale_1",
+    i18n.t "help.sync_stale_2",
+    i18n.t "help.sync_stale_3",
     "",
-    "## Recovery",
+    i18n.t "help.sync_recovery_header",
     "",
-    "- `a` run `:ClarityAudit`",
-    "- `h` return to `:ClarityStart`",
-    "- `q` close this panel",
+    i18n.t "help.sync_recovery_line_1",
+    i18n.t "help.sync_recovery_line_2",
+    i18n.t "help.sync_recovery_line_3",
   }
 
-  local buf = open_float(lines, " Clarity Sync ")
+  local buf = open_float(lines, i18n.t "help.sync_title")
 
   vim.keymap.set("n", "a", function()
     run_after_close(function()
       vim.cmd "ClarityAudit"
     end)
-  end, { buffer = buf, nowait = true, silent = true, desc = "Run ClarityAudit" })
+  end, { buffer = buf, nowait = true, silent = true, desc = i18n.t "help.map_run_audit" })
 
   vim.keymap.set("n", "h", function()
     run_after_close(function()
       vim.cmd "ClarityStart"
     end)
-  end, { buffer = buf, nowait = true, silent = true, desc = "Return to ClarityStart" })
+  end, { buffer = buf, nowait = true, silent = true, desc = i18n.t "help.map_return_to_start" })
 end
 
 local function show_start(opts)
   opts = opts or {}
 
   local intro = opts.auto_open
-      and "This guide opened automatically because this is your first empty startup with the current onboarding version."
-    or "Use this panel whenever you forget the safest next step."
+      and i18n.t "help.start_intro_auto"
+    or i18n.t "help.start_intro_manual"
   local lines = {
-    "# Clarity Start",
+    i18n.t "help.start_header",
     "",
     intro,
-    "Reopen any time with `:ClarityStart` or `<leader>hh`.",
+    i18n.t "help.start_reopen",
     "",
-    string.format("- Platform: `%s`", platform_label()),
-    string.format("- Clipboard provider: `%s`", clipboard_provider()),
-    string.format("- Repo root: `%s`", short_repo_root()),
+    i18n.t("help.start_locale", { locale = locale_label() }),
+    i18n.t("help.start_platform", { platform = platform_label() }),
+    i18n.t("help.start_clipboard_provider", { provider = clipboard_provider() }),
+    i18n.t("help.start_repo_root", { root = short_repo_root() }),
     "",
-    "## Start with these 10 actions",
+    i18n.t "help.start_actions_header",
     "",
-    "1. `Space` then pause -> open the command menu",
-    "2. `f` Find files -> `<leader>ff`",
-    "3. `w` Search project text -> `<leader>fw`",
-    "4. `e` Toggle explorer -> `<leader>e`",
-    "5. `b` Switch open buffers -> `<leader>fb`",
-    "6. `t` Open the floating terminal -> `<leader>tf`",
-    "7. `gd` in code -> jump to definition",
-    "8. `gl` in code -> explain the current line diagnostic",
-    "9. `<leader>cf` -> format the current file",
-    "10. `<leader>cr` -> rename the current symbol",
+    i18n.t "help.start_action_1",
+    i18n.t "help.start_action_2",
+    i18n.t "help.start_action_3",
+    i18n.t "help.start_action_4",
+    i18n.t "help.start_action_5",
+    i18n.t "help.start_action_6",
+    i18n.t "help.start_action_7",
+    i18n.t "help.start_action_8",
+    i18n.t "help.start_action_9",
+    i18n.t "help.start_action_10",
     "",
-    "## Recovery if something feels wrong",
+    i18n.t "help.start_recovery_header",
     "",
-    "- `k` Search keymaps -> `<leader>sk`",
-    "- `a` Run `:ClarityAudit` for environment health",
-    "- `v` Run `:ClarityValidate` for behavior checks",
-    "- `c` Open clipboard help for Windows + WSL",
-    "- `s` Open repo sync help",
+    i18n.t "help.start_recovery_keymaps",
+    i18n.t "help.start_recovery_audit",
+    i18n.t "help.start_recovery_validate",
+    i18n.t "help.start_recovery_clipboard",
+    i18n.t "help.start_recovery_sync",
+    i18n.t "help.start_recovery_language",
     "",
-    "## If search looks stale or broken",
+    i18n.t "help.start_stale_header",
     "",
-    "- This config expects the Snacks picker, not Telescope.",
-    "- If `<leader>ff` or `<leader>fw` mention Telescope, pull the latest repo and open `:ClaritySync`.",
+    i18n.t "help.start_stale_line_1",
+    i18n.t "help.start_stale_line_2",
     "",
-    "## Close",
+    i18n.t "help.start_close_header",
     "",
-    "- `q` or `Esc` close this panel",
+    i18n.t "help.start_close_line",
   }
 
-  local buf = open_float(lines, opts.auto_open and " Clarity First Start " or " Clarity Start ")
+  local buf = open_float(lines, opts.auto_open and i18n.t "help.start_first_title" or i18n.t "help.start_title")
 
   local actions = {
     f = function()
@@ -382,6 +389,11 @@ local function show_start(opts)
     end,
     c = show_clipboard_help,
     s = show_sync_help,
+    l = function()
+      run_after_close(function()
+        vim.cmd "ClarityLanguage"
+      end)
+    end,
   }
 
   for lhs, action in pairs(actions) do
@@ -389,7 +401,7 @@ local function show_start(opts)
       buffer = buf,
       nowait = true,
       silent = true,
-      desc = "ClarityStart action",
+      desc = i18n.t "help.map_start_action",
     })
   end
 end
@@ -397,25 +409,25 @@ end
 function M.setup()
   if vim.fn.exists(":ClarityStart") ~= 2 then
     vim.api.nvim_create_user_command("ClarityStart", show_start, {
-      desc = "Open the Clarity in-editor onboarding panel",
+      desc = i18n.t "commands.start",
     })
   end
 
   if vim.fn.exists(":ClarityClipboard") ~= 2 then
     vim.api.nvim_create_user_command("ClarityClipboard", show_clipboard_help, {
-      desc = "Open clipboard help for Windows and WSL workflows",
+      desc = i18n.t "commands.clipboard",
     })
   end
 
   if vim.fn.exists(":ClaritySync") ~= 2 then
     vim.api.nvim_create_user_command("ClaritySync", show_sync_help, {
-      desc = "Open source-of-truth and repo sync guidance",
+      desc = i18n.t "commands.sync",
     })
   end
 
   vim.keymap.set("n", "<leader>hh", function()
     vim.cmd "ClarityStart"
-  end, { desc = "Help: Clarity start hub" })
+  end, { desc = i18n.t "keymaps.help_start_hub" })
 
   local group = vim.api.nvim_create_augroup("clarity_startup_guide", { clear = true })
   vim.api.nvim_create_autocmd("VimEnter", {

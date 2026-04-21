@@ -1,12 +1,12 @@
 -- Keymaps are automatically loaded on the VeryLazy event
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
--- nvim/lua/config/keymaps.lua (添加在文件末尾)
 
 local map = vim.keymap.set
+local i18n = require "config.i18n"
 local opts = { remap = true, desc = "" }
 
--- 模式: n=Normal, i=Insert, v=Visual, x=Visual Block, o=Operator pending
+-- Modes: n=Normal, i=Insert, v=Visual, x=Visual Block, o=Operator pending.
 
 local function pick(command, pick_opts)
   return function()
@@ -14,36 +14,36 @@ local function pick(command, pick_opts)
   end
 end
 
--- LSP & 诊断
-opts.desc = "跳转到 [声]明处"
+-- LSP and diagnostics.
+opts.desc = i18n.t "keymaps.declaration"
 map("n", "gD", vim.lsp.buf.declaration, opts)
-opts.desc = "跳转到 [定]义处"
+opts.desc = i18n.t "keymaps.definition"
 map("n", "gd", vim.lsp.buf.definition, opts)
-opts.desc = "[查]看文档 (Hover)"
+opts.desc = i18n.t "keymaps.hover"
 map("n", "K", vim.lsp.buf.hover, opts)
-opts.desc = "跳转到 [实]现处"
+opts.desc = i18n.t "keymaps.implementation"
 map("n", "gi", vim.lsp.buf.implementation, opts)
-opts.desc = "查找所有[引]用"
+opts.desc = i18n.t "keymaps.references"
 map("n", "gr", vim.lsp.buf.references, opts)
-opts.desc = "💡 [重]命名"
+opts.desc = i18n.t "keymaps.rename"
 map("n", "<leader>cr", vim.lsp.buf.rename, opts)
-opts.desc = "💡 代码[操]作"
+opts.desc = i18n.t "keymaps.code_action"
 map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
-opts.desc = "查看单行[错]误"
+opts.desc = i18n.t "keymaps.line_diagnostic"
 map("n", "gl", vim.diagnostic.open_float, opts)
-opts.desc = "上一个[错]误"
+opts.desc = i18n.t "keymaps.prev_diagnostic"
 map("n", "[d", vim.diagnostic.goto_prev, opts)
-opts.desc = "下一个[错]误"
+opts.desc = i18n.t "keymaps.next_diagnostic"
 map("n", "]d", vim.diagnostic.goto_next, opts)
 
--- 窗口管理
--- `<leader>-` / `<leader>|` / `<leader>wd` 由 LazyVim 默认映射提供主路径。
--- 这里只保留 `<leader>wo`，因为它表达的是“仅保留当前窗口”。
-opts.desc = "[窗]口 - 仅保留当前"
+-- Window management.
+-- `<leader>-` / `<leader>|` / `<leader>wd` remain the primary paths from LazyVim.
+-- Keep `<leader>wo` because it expresses a distinct "only keep current window" intent.
+opts.desc = i18n.t "keymaps.keep_only_window"
 map("n", "<leader>wo", "<C-w>o", opts)
 
--- 搜索
--- `<leader>ff` / `<leader>fg` 由 LazyVim 默认搜索器接管。
--- 这里只保留 `<leader>fw` 作为中文工作流里的文本搜索别名。
-opts.desc = "🔍 [查]找 - [文]本内容"
+-- Search.
+-- `<leader>ff` / `<leader>fg` are still owned by the default LazyVim picker.
+-- Keep `<leader>fw` as the repo-owned primary text-search path.
+opts.desc = i18n.t "keymaps.search_text"
 map("n", "<leader>fw", pick("live_grep"), opts)

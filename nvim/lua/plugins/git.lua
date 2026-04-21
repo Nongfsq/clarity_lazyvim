@@ -1,5 +1,7 @@
 -- nvim/lua/plugins/git.lua
 
+local i18n = require "config.i18n"
+
 local function setup_hunk_keymaps(bufnr)
   if vim.b[bufnr].clarity_gitsigns_keymaps then
     return
@@ -30,22 +32,22 @@ local function setup_hunk_keymaps(bufnr)
     end
   end
 
-  map("n", "]h", hunk_nav(true), "下一个 [块]级 Git 改动 (Hunk)")
-  map("n", "[h", hunk_nav(false), "上一个 [块]级 Git 改动 (Hunk)")
-  map("n", "]c", hunk_nav(true), "Legacy: 下一个 Git 改动块")
-  map("n", "[c", hunk_nav(false), "Legacy: 上一个 Git 改动块")
+  map("n", "]h", hunk_nav(true), i18n.t "keymaps.next_hunk")
+  map("n", "[h", hunk_nav(false), i18n.t "keymaps.prev_hunk")
+  map("n", "]c", hunk_nav(true), i18n.t "keymaps.legacy_next_hunk")
+  map("n", "[c", hunk_nav(false), i18n.t "keymaps.legacy_prev_hunk")
 
-  map({ "n", "v" }, "<leader>hs", ":Gitsigns stage_hunk<CR>", "Hunk: 暂存当前改动块")
-  map({ "n", "v" }, "<leader>hr", ":Gitsigns reset_hunk<CR>", "Hunk: 重置当前改动块")
-  map("n", "<leader>hS", gs.stage_buffer, "Hunk: 暂存整个缓冲区")
-  map("n", "<leader>hR", gs.reset_buffer, "Hunk: 重置整个缓冲区")
-  map("n", "<leader>hu", gs.undo_stage_hunk, "Hunk: 撤销上次暂存")
+  map({ "n", "v" }, "<leader>hs", ":Gitsigns stage_hunk<CR>", i18n.t "keymaps.stage_hunk")
+  map({ "n", "v" }, "<leader>hr", ":Gitsigns reset_hunk<CR>", i18n.t "keymaps.reset_hunk")
+  map("n", "<leader>hS", gs.stage_buffer, i18n.t "keymaps.stage_buffer")
+  map("n", "<leader>hR", gs.reset_buffer, i18n.t "keymaps.reset_buffer")
+  map("n", "<leader>hu", gs.undo_stage_hunk, i18n.t "keymaps.undo_stage_hunk")
 
-  map("n", "<leader>hp", gs.preview_hunk, "Hunk: 预览改动")
+  map("n", "<leader>hp", gs.preview_hunk, i18n.t "keymaps.preview_hunk")
   map("n", "<leader>hb", function()
     gs.blame_line({ full = true })
-  end, "Hunk: 查看当前行 blame")
-  map("n", "<leader>hd", gs.diffthis, "Hunk: 查看当前文件 diff")
+  end, i18n.t "keymaps.blame_line")
+  map("n", "<leader>hd", gs.diffthis, i18n.t "keymaps.diff_this")
 
   vim.b[bufnr].clarity_gitsigns_keymaps = true
 end
