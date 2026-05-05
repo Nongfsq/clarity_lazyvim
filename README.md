@@ -227,15 +227,16 @@ Inside Neovim:
 
 From the terminal:
 
-```powershell
-python scripts/run_clarity_audit.py
-python scripts/run_clarity_validate.py
+```sh
+python3 scripts/clarity_doctor.py
+python3 scripts/run_clarity_audit.py
+python3 scripts/run_clarity_validate.py
 ```
 
 Minimal smoke test:
 
-```powershell
-nvim --headless -u .\init.lua "+qall"
+```sh
+nvim --headless -u ./init.lua "+qall"
 ```
 
 Validation currently covers:
@@ -244,6 +245,8 @@ Validation currently covers:
 - keymap assertions for high-frequency paths
 - dashboard, `neo-tree`, and terminal UI behavior
 - clipboard, Python, Node, and Copilot provider readiness
+- Tree-sitter `vim` parser/query/highlighter health
+- local user-level parser override detection
 
 ## Prerequisites
 
@@ -260,12 +263,57 @@ Validation currently covers:
 2. `fd`
 3. Node.js `22+` and npm
 4. Python and pip
+5. `tree-sitter` CLI for parser diagnostics:
+   `npm install -g tree-sitter-cli`
 
 ### Optional
 
 1. `htop` or `btop`
 
 ## Troubleshooting
+
+### Start with Clarity Doctor
+
+Run:
+
+```sh
+python3 scripts/clarity_doctor.py
+```
+
+The doctor is a cross-platform dry-run check for macOS, Linux, and WSL. It reports:
+
+- required and recommended tools
+- provider packages
+- Neovim runtime paths
+- Tree-sitter `vim` parser/query/highlighter health
+- user-level parser overrides under Neovim `stdpath("data")`
+
+If it reports a safe local repair, apply it explicitly:
+
+```sh
+python3 scripts/clarity_doctor.py --apply
+```
+
+`--apply` only performs conservative local repairs. For stale user-level Tree-sitter parsers, it moves the parser and revision marker into a `.clarity-backup-YYYYMMDD-HHMMSS/` directory instead of deleting them.
+
+### Tree-sitter reports `Invalid node type "tab"`
+
+This usually means an old user-level `vim` parser is overriding the parser bundled with the current Neovim runtime.
+
+Run:
+
+```sh
+python3 scripts/clarity_doctor.py
+python3 scripts/clarity_doctor.py --apply
+python3 scripts/run_clarity_validate.py
+```
+
+Manual fallback:
+
+1. inspect `python3 scripts/clarity_doctor.py --json`
+2. find `user_parser` and `user_revision`
+3. move those files to a backup directory outside `site/parser` and `site/parser-info`
+4. restart Neovim and rerun validation
 
 ### Search mentions Telescope
 
@@ -339,6 +387,7 @@ When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatical
 │   │   └── plugins/
 │   └── init.lua
 ├── scripts/
+│   ├── clarity_doctor.py
 │   ├── run_clarity_audit.py
 │   └── run_clarity_validate.py
 ├── init.lua

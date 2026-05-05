@@ -68,6 +68,7 @@ nvim/colors/custom_colorblind_theme.lua
 doc/clarity_lazyvim_complete_guide_zh.md
 doc/clarity_architecture_governance.md
 scripts/run_clarity_audit.py
+scripts/clarity_doctor.py
 scripts/run_clarity_validate.py
 .github/workflows/clarity-validate.yml
 docs/ai/
@@ -101,10 +102,19 @@ AGENTS.md
 Primary commands:
 
 ```sh
+python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
 nvim --headless -u ./init.lua "+qall"
 ```
+
+Local safe repair command:
+
+```sh
+python3 scripts/clarity_doctor.py --apply
+```
+
+The doctor is cross-platform for macOS, Linux, and WSL. It dry-runs by default, reports exact dependency and parser health findings, and only performs conservative local backup moves with `--apply`.
 
 Inside Neovim:
 
@@ -126,11 +136,13 @@ CI:
 
 ## Current Local Validation Snapshot
 
-As of 2026-05-05 after local parser remediation:
+As of 2026-05-05 after adding cross-platform doctor/repair:
 
-- `python3 scripts/run_clarity_audit.py`: `Overall readiness: 100/100`
+- `python3 scripts/clarity_doctor.py`: no required failures; optional warnings for missing local `tree-sitter` CLI and Python provider package
+- `python3 scripts/run_clarity_audit.py`: `Overall readiness: 98/100` on the current macOS machine because `tree-sitter` CLI is an optional diagnostic dependency and is not installed locally
 - `python3 scripts/run_clarity_validate.py`: required failures `0`
 - optional warning: Python provider module `pynvim` is not installed for the local Python runtime
+- optional warning: `tree-sitter` CLI is not installed locally; install with `npm install -g tree-sitter-cli` if parser diagnostics are needed outside CI
 
 ## Local Issue Resolved On 2026-05-05
 
@@ -150,9 +162,16 @@ Local remediation:
 
 - moved stale parser to `/Users/meng/.local/share/nvim/site/parser/.clarity-backup-20260505/vim.so`
 - moved stale revision marker to `/Users/meng/.local/share/nvim/site/parser-info/.clarity-backup-20260505/vim.revision`
-- verified the current bundled parser reports `vim` metadata `0.8.1` and supports `"tab"`
+- verified the current bundled parser reports `vim` metadata `0.8.1` and passes query, parser, and highlighter checks for Vimscript samples such as `set tab`
 
 This was a local machine state issue, not a GitHub repository code issue.
+
+Repository-level prevention added after this incident:
+
+- `scripts/clarity_doctor.py` detects stale user-level `vim` parser overrides and supports safe `--apply` backup moves.
+- `:ClarityAudit` reports Tree-sitter CLI availability and `vim` parser/query/highlighter health.
+- `scripts/run_clarity_validate.py` treats `vim` parser health and stale user-level parser overrides as required validation checks.
+- README troubleshooting now starts with the doctor path and documents the `Invalid node type "tab"` recovery flow.
 
 ## Deployment
 

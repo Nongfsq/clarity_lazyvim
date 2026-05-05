@@ -64,6 +64,23 @@ def run_nvim(repo_root: Path, nvim_bin: str, commands: list[str], env: dict[str,
     )
 
 
+def run_doctor_json(repo_root: Path, env: dict[str, str]) -> dict:
+    result = subprocess.run(
+        [sys.executable, str(repo_root / "scripts" / "clarity_doctor.py"), "--json"],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    if result.returncode not in (0, 1):
+        raise RuntimeError((result.stderr or result.stdout).strip() or "doctor command failed")
+
+    return json.loads(result.stdout)
+
+
 def extract_last_json_object(text: str) -> dict:
     for line in reversed(text.splitlines()):
         candidate = line.strip()
@@ -325,6 +342,51 @@ def run() -> int:
             required=False,
         )
     )
+
+    try:
+        doctor_report = run_doctor_json(repo_root, env)
+        doctor_checks = {check.get("id"): check for check in doctor_report.get("checks", [])}
+        treesitter_parser = doctor_checks.get("vim_treesitter_parser", {})
+        user_override = doctor_checks.get("user_vim_parser_override", {})
+        tree_sitter_cli = doctor_checks.get("tree_sitter_cli", {})
+        checks.append(
+            CheckResult(
+                "Clarity doctor command",
+                True,
+                f"mode={doctor_report.get('mode')} platform={doctor_report.get('platform')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                "Tree-sitter vim parser health",
+                treesitter_parser.get("status") == "pass",
+                treesitter_parser.get("details", "missing doctor result"),
+            )
+        )
+        checks.append(
+            CheckResult(
+                "User-level stale vim parser override absent",
+                user_override.get("status") in ("pass", "warn"),
+                user_override.get("details", "missing doctor result"),
+            )
+        )
+        checks.append(
+            CheckResult(
+                "Tree-sitter CLI available for diagnostics",
+                tree_sitter_cli.get("status") == "pass",
+                tree_sitter_cli.get("details", "missing doctor result"),
+                required=False,
+            )
+        )
+    except Exception as exc:
+        checks.append(
+            CheckResult(
+                "Clarity doctor command",
+                False,
+                str(exc),
+            )
+        )
 
     locale_specs = [
         ("en", "Go to definition", "Search text", "Find Files (Root Dir)", "Delete Buffer", "Toggle Wrap"),

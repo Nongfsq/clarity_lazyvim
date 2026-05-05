@@ -23,10 +23,12 @@ Important project rule:
 AGENTS.md is stable rules, not project history; docs/ai/current-reality.md is current state.
 
 Validation:
+- python3 scripts/clarity_doctor.py
 - python3 scripts/run_clarity_audit.py
 - python3 scripts/run_clarity_validate.py
 - nvim --headless -u ./init.lua "+qall"
 
 If an issue is local cache/provider/parser state, fix it locally and do not commit repository changes.
+Use python3 scripts/clarity_doctor.py --apply only for safe local backup-based repairs.
 If an issue is repository code or documentation, update the repo and commit when authorized.
 ```

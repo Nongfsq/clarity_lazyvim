@@ -31,6 +31,12 @@ local tool_specs = {
         commands = { "pip3", "pip" },
         feature = "install Python provider packages manually",
     },
+    {
+        id = "tree_sitter_cli",
+        required = false,
+        commands = { "tree-sitter" },
+        feature = "diagnose Tree-sitter parser/query issues",
+    },
     { id = "system_monitor", required = false, commands = { "htop", "btop" }, feature = "system monitor terminal" },
 }
 
@@ -202,6 +208,72 @@ local function get_picker_status(plugin_report)
     }
 end
 
+local function get_treesitter_status()
+    local parser_suffix = vim.fn.has("win32") == 1 and ".dll" or ".so"
+    local data_path = vim.fn.stdpath("data")
+    local user_parser = data_path .. "/site/parser/vim" .. parser_suffix
+    local user_revision = data_path .. "/site/parser-info/vim.revision"
+    local ok_inspect, inspect_info = pcall(vim.treesitter.language.inspect, "vim")
+    local ok_query, query = pcall(vim.treesitter.query.get, "vim", "highlights")
+    local query_ok = ok_query and query ~= nil
+    local ok_parser, parser = pcall(vim.treesitter.get_string_parser, "set tab\n", "vim")
+    local parse_ok = false
+    local parse_error
+
+    if ok_parser then
+        local ok_parse, result = pcall(function()
+            return parser:parse()
+        end)
+        parse_ok = ok_parse
+        if not ok_parse then
+            parse_error = tostring(result)
+        end
+    end
+
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.bo[buf].buftype = "nofile"
+    vim.bo[buf].bufhidden = "wipe"
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "set tab", "tabnew" })
+    vim.bo[buf].filetype = "vim"
+
+    local ok_highlighter, highlighter = pcall(vim.treesitter.start, buf, "vim")
+    pcall(vim.treesitter.stop, buf)
+    pcall(vim.api.nvim_buf_delete, buf, { force = true })
+
+    local metadata = {}
+    local abi_version
+    if ok_inspect and type(inspect_info) == "table" then
+        metadata = inspect_info.metadata or {}
+        abi_version = inspect_info.abi_version
+    end
+
+    local user_parser_present = file_exists(user_parser)
+    local health_ok = ok_inspect and query_ok and parse_ok and ok_highlighter
+    local stale_user_override = user_parser_present and not health_ok
+
+    return {
+        health_ok = health_ok,
+        inspect_ok = ok_inspect,
+        query_ok = query_ok,
+        parse_ok = parse_ok,
+        highlighter_ok = ok_highlighter,
+        parser_metadata = metadata,
+        abi_version = abi_version,
+        user_parser = user_parser,
+        user_parser_present = user_parser_present,
+        user_revision = user_revision,
+        user_revision_present = file_exists(user_revision),
+        stale_user_override = stale_user_override,
+        error = (not ok_inspect and tostring(inspect_info))
+            or (not query_ok and tostring(query))
+            or (not ok_parser and tostring(parser))
+            or parse_error
+            or (not ok_highlighter and tostring(highlighter))
+            or nil,
+        repair_command = "python3 scripts/clarity_doctor.py --apply",
+    }
+end
+
 function M.has(commands)
     local candidates = type(commands) == "table" and commands or { commands }
 
@@ -350,6 +422,7 @@ function M.get_report()
     local python_provider_present, python_interpreter = find_python_module("pynvim")
     local node_provider_present, node_provider_version = find_global_npm_package("neovim")
     local picker = get_picker_status(report.plugins)
+    local treesitter = get_treesitter_status()
 
     report.integrations = {
         clipboard = clipboard,
@@ -372,6 +445,7 @@ function M.get_report()
             version = node_entry and node_entry.version or nil,
             minimum_major = 22,
         },
+        treesitter = treesitter,
     }
 
     local integration_total = 6
@@ -504,6 +578,38 @@ function M.render_report(report)
             report.integrations.copilot.minimum_major
         )
     )
+
+    local ts_status = report.integrations.treesitter.health_ok and "OK" or "CHECK"
+    local ts_metadata = report.integrations.treesitter.parser_metadata or {}
+    local ts_version = string.format(
+        "%s.%s.%s",
+        ts_metadata.major_version or 0,
+        ts_metadata.minor_version or 0,
+        ts_metadata.patch_version or 0
+    )
+    table.insert(
+        lines,
+        string.format(
+            "Tree-sitter vim parser: %s (metadata=%s, user_override=%s)",
+            ts_status,
+            ts_version,
+            report.integrations.treesitter.user_parser_present and "yes" or "no"
+        )
+    )
+    if report.integrations.treesitter.stale_user_override then
+        table.insert(
+            lines,
+            string.format(
+                "Warning: user-level vim parser appears stale. Run `%s`.",
+                report.integrations.treesitter.repair_command
+            )
+        )
+    elseif report.integrations.treesitter.user_parser_present then
+        table.insert(
+            lines,
+            "Note: a user-level vim parser is present and overrides the Neovim bundled parser."
+        )
+    end
 
     for _, tool in ipairs(report.tools) do
         local marker = tool.present and "OK" or "MISSING"
