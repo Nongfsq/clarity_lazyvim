@@ -136,13 +136,17 @@ CI:
 
 ## Current Local Validation Snapshot
 
-As of 2026-05-05 after adding cross-platform doctor/repair:
+As of 2026-05-05 after local dependency remediation:
 
-- `python3 scripts/clarity_doctor.py`: no required failures; optional warnings for missing local `tree-sitter` CLI and Python provider package
-- `python3 scripts/run_clarity_audit.py`: `Overall readiness: 98/100` on the current macOS machine because `tree-sitter` CLI is an optional diagnostic dependency and is not installed locally
+- `python3 scripts/clarity_doctor.py`: all checks passing
+- `python3 scripts/run_clarity_audit.py`: `Overall readiness: 100/100`
 - `python3 scripts/run_clarity_validate.py`: required failures `0`
-- optional warning: Python provider module `pynvim` is not installed for the local Python runtime
-- optional warning: `tree-sitter` CLI is not installed locally; install with `npm install -g tree-sitter-cli` if parser diagnostics are needed outside CI
+- optional warnings: `0`
+
+Local dependencies installed after the doctor work:
+
+- `pynvim 0.6.0` for the current Homebrew Python 3.14 runtime
+- `tree-sitter-cli 0.26.8` through global npm under `/opt/homebrew`
 
 ## Local Issue Resolved On 2026-05-05
 

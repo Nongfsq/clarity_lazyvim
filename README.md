@@ -167,16 +167,99 @@ If you only remember one workflow, remember this:
 
 ## Architecture
 
+Clarity is organized as a thin product layer over LazyVim. The goal is not to replace LazyVim, but to make a smaller, more auditable editor product with clear recovery paths.
+
 ```mermaid
-flowchart LR
-    A["Neovim 0.12+"] --> B["LazyVim foundation"]
-    B --> C["Clarity product layer"]
-    C --> D["Accessibility theme"]
-    C --> E["Minimal plugin policy"]
-    C --> F["Help + audit + validation"]
-    F --> G["Windows source-of-truth workflow"]
-    F --> H["WSL runtime mirror workflow"]
+flowchart TB
+    User["Editor User"] --> Entry["Neovim 0.12+"]
+    Entry --> Bootstrap["init.lua bootstrap"]
+    Bootstrap --> Lazy["lazy.nvim + LazyVim"]
+
+    subgraph Product["Clarity Product Layer"]
+        Theme["High-contrast accessibility theme"]
+        RuntimeUI["Bilingual help, menus, and notifications"]
+        Policy["Curated plugin policy"]
+        Doctor["Audit, validate, and doctor commands"]
+    end
+
+    Lazy --> Product
+
+    subgraph Plugins["Focused Runtime Surface"]
+        Picker["Snacks picker"]
+        Tree["neo-tree.nvim"]
+        Terminal["toggleterm.nvim"]
+        Git["gitsigns.nvim"]
+        Format["conform.nvim"]
+        Syntax["nvim-treesitter"]
+        AI["copilot.lua"]
+    end
+
+    Product --> Plugins
+    Doctor --> LocalState["Local data/cache/parser/provider state"]
+    Doctor --> CI["GitHub Actions validation"]
 ```
+
+### Runtime pipeline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant NVIM as Neovim
+    participant Lazy as lazy.nvim
+    participant Clarity as Clarity layer
+    participant Tools as External tools
+
+    User->>NVIM: nvim
+    NVIM->>Lazy: bootstrap plugins from lazy-lock.json
+    Lazy->>Clarity: load options, keymaps, theme, commands
+    Clarity->>Tools: detect git, compiler, Node, Python, providers
+    Clarity->>NVIM: register :ClarityStart, :ClarityAudit, :ClarityValidate
+    alt first empty interactive startup
+        Clarity->>User: show welcome and recovery guide
+    else normal startup
+        Clarity->>User: open editor with stable terminal-first defaults
+    end
+```
+
+### Recovery decision tree
+
+```mermaid
+flowchart TD
+    Problem["Something feels stale, broken, or noisy"] --> Doctor["Run python3 scripts/clarity_doctor.py"]
+    Doctor --> Required{"Required failure?"}
+    Required -->|Yes| FixRequired["Install/fix required runtime dependency"]
+    Required -->|No| Parser{"Tree-sitter parser/query failure?"}
+    Parser -->|Yes| Override{"User-level parser override detected?"}
+    Override -->|Yes| Apply["Run python3 scripts/clarity_doctor.py --apply"]
+    Override -->|No| ValidateParser["Run :ClarityAudit and inspect parser details"]
+    Parser -->|No| Optional{"Optional warning?"}
+    Optional -->|Yes| InstallOptional["Install only if you need that feature"]
+    Optional -->|No| Validate["Run python3 scripts/run_clarity_validate.py"]
+    FixRequired --> Doctor
+    Apply --> Validate
+    ValidateParser --> Validate
+    InstallOptional --> Validate
+    Validate --> Done["Required failures: 0"]
+```
+
+### Validation layers
+
+| Layer | Command | What it proves | Failure type |
+| --- | --- | --- | --- |
+| Local doctor | `python3 scripts/clarity_doctor.py` | Platform tools, providers, Neovim paths, parser health | Required failures block normal use; warnings are feature-specific |
+| Safe repair | `python3 scripts/clarity_doctor.py --apply` | Stale local parser overrides can be backed up without deleting files | Only runs conservative local repairs |
+| Runtime audit | `:ClarityAudit` or `python3 scripts/run_clarity_audit.py` | In-editor environment readiness and integration status | Missing required tools reduce readiness and should be fixed |
+| Behavior validation | `:ClarityValidate` or `python3 scripts/run_clarity_validate.py` | Keymaps, UI behavior, providers, parser health, localization parity | Required failures indicate a product/runtime regression |
+| CI baseline | GitHub Actions `clarity-validate` | Ubuntu and Windows reproducibility | Failing CI blocks trusted release state |
+
+### Platform model
+
+| Platform | Primary purpose | Clone target | Notes |
+| --- | --- | --- | --- |
+| Windows | Authoring and GitHub source-of-truth workflow | `%LOCALAPPDATA%\nvim` | Keep commits and pushes explicit; compare `HEAD` before debugging stale WSL behavior |
+| WSL / Linux | Daily terminal runtime | `~/.config/nvim` | Best match for terminal-first workflows and Linux developer tools |
+| macOS | Local UNIX-like runtime | `~/.config/nvim` | Uses Homebrew-friendly tooling; doctor reports local Python/npm provider status |
 
 ### Dependency strategy
 
@@ -209,12 +292,13 @@ The project follows seven hard rules:
 
 Current validated baseline:
 
-- Windows authoring environment: `94/100`
-- WSL runtime environment: `100/100`
-- Required validation checks: passing
+- macOS local runtime: `100/100`
+- GitHub Actions Ubuntu runtime: validated by `clarity-validate`
+- GitHub Actions Windows runtime: validated by `clarity-validate`
+- Required validation checks: passing locally and in CI when the workflow is green
 
-That does not mean Windows is broken.
-It means a few optional tools such as `fd` and `htop` / `btop` are still missing on the current authoring machine.
+If a local environment reports less than `100/100`, start with `python3 scripts/clarity_doctor.py`.
+Optional warnings are feature-specific; required failures need repair before trusting the runtime.
 
 ## Validation
 
