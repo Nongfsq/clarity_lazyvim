@@ -380,7 +380,7 @@ python3 scripts/clarity_doctor.py --apply
 
 `--apply` only performs conservative local repairs. For stale user-level Tree-sitter parsers, it moves the parser and revision marker into a `.clarity-backup-YYYYMMDD-HHMMSS/` directory instead of deleting them.
 
-### Tree-sitter reports `Invalid node type "tab"`
+### Tree-sitter reports `Invalid node type`
 
 This usually means an old user-level `vim` parser is overriding the parser bundled with the current Neovim runtime.
 
@@ -398,6 +398,8 @@ Manual fallback:
 2. find `user_parser` and `user_revision`
 3. move those files to a backup directory outside `site/parser` and `site/parser-info`
 4. restart Neovim and rerun validation
+
+If the old parser has already been moved and Neovim then reports `No parser for language "vim"`, check the doctor output for `parser_candidates`. On Ubuntu/Debian packaged Neovim builds, the bundled parser can live under a multiarch runtime directory such as `/usr/lib/x86_64-linux-gnu/nvim`. Clarity keeps that directory on `runtimepath` during `lazy.nvim` startup so the bundled parser remains visible after runtimepath reset.
 
 ### Search mentions Telescope
 

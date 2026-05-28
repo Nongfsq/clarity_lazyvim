@@ -2,6 +2,43 @@
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 local noninteractive = vim.env.CLARITY_NONINTERACTIVE == "1" or #vim.api.nvim_list_uis() == 0
+local function bundled_runtime_paths()
+    local paths = {}
+    local seen = {}
+
+    local function add(path)
+        if path and path ~= "" and vim.fn.isdirectory(path) == 1 and not seen[path] then
+            seen[path] = true
+            table.insert(paths, path)
+        end
+    end
+
+    local parser_suffix = vim.fn.has("win32") == 1 and ".dll" or ".so"
+    for _, parser in ipairs(vim.api.nvim_get_runtime_file("parser/vim" .. parser_suffix, true)) do
+        add(vim.fn.fnamemodify(parser, ":p:h:h"))
+    end
+
+    local lib = vim.fn.fnamemodify(vim.v.progpath, ":p:h:h") .. "/lib"
+    if vim.uv.fs_stat(lib .. "64") then
+        lib = lib .. "64"
+    end
+    add(lib .. "/nvim")
+
+    for _, pattern in ipairs({
+        "/usr/lib/*/nvim",
+        "/usr/local/lib/*/nvim",
+        "/usr/lib/nvim",
+        "/usr/local/lib/nvim",
+        "/opt/homebrew/lib/nvim",
+    }) do
+        for _, path in ipairs(vim.fn.glob(pattern, false, true)) do
+            add(path)
+        end
+    end
+
+    return paths
+end
+
 local mason_packages = {
     "lua_ls",
     "clangd",
@@ -55,6 +92,7 @@ require("lazy").setup({
     checker = { enabled = not noninteractive },
     performance = {
         rtp = {
+            paths = bundled_runtime_paths(),
             disabled_plugins = { "gzip", "tarPlugin", "tohtml", "tutor", "zipPlugin" },
         },
     },

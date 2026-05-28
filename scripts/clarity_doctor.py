@@ -165,6 +165,9 @@ def run_nvim_probe(repo_root: Path, nvim_bin: str, env: dict[str, str]) -> tuple
         "report.user_revision = report.std_data .. '/site/parser-info/vim.revision'; "
         "report.user_parser_present = vim.fn.filereadable(report.user_parser) == 1; "
         "report.user_revision_present = vim.fn.filereadable(report.user_revision) == 1; "
+        "report.runtimepath = vim.o.runtimepath; "
+        "report.vim_parser_candidates = vim.api.nvim_get_runtime_file('parser/vim' .. report.parser_suffix, true); "
+        "report.vim_query_candidates = vim.api.nvim_get_runtime_file('queries/vim/highlights.scm', true); "
         "report.vim = {}; "
         "local ok_inspect, info = pcall(vim.treesitter.language.inspect, 'vim'); "
         "report.vim.inspect_ok = ok_inspect; "
@@ -220,6 +223,42 @@ def run_nvim_probe(repo_root: Path, nvim_bin: str, env: dict[str, str]) -> tuple
             return json.loads(candidate), output
 
     raise RuntimeError(output or "nvim probe did not emit JSON")
+
+
+def parser_path_summary(probe: dict) -> str:
+    parser_candidates = probe.get("vim_parser_candidates") or []
+    query_candidates = probe.get("vim_query_candidates") or []
+    parts = [
+        "parser_candidates=" + (", ".join(parser_candidates) if parser_candidates else "none"),
+        "query_candidates=" + (", ".join(query_candidates) if query_candidates else "none"),
+    ]
+    return "; ".join(parts)
+
+
+def vim_parser_failure_hint(probe: dict, error: str, user_parser_present: bool) -> tuple[str, bool]:
+    normalized_error = error.lower()
+    parser_candidates = probe.get("vim_parser_candidates") or []
+
+    if user_parser_present:
+        return "Run python3 scripts/clarity_doctor.py --apply if a stale user parser is present.", True
+
+    if "no parser for language" in normalized_error or "no such language" in normalized_error:
+        return (
+            "No user-level parser override is present. Ensure lazy.nvim keeps the bundled Neovim parser runtime "
+            "directory on runtimepath, especially packaged Linux paths such as /usr/lib/*/nvim.",
+            False,
+        )
+
+    if not parser_candidates:
+        return (
+            "No vim parser was found on runtimepath. Check the Neovim installation and runtimepath parser directories.",
+            False,
+        )
+
+    return (
+        "No stale user parser override was detected. Inspect parser_candidates and query_candidates in --json output.",
+        False,
+    )
 
 
 def make_tool_checks(kind: str, env: dict[str, str]) -> list[Check]:
@@ -333,6 +372,7 @@ def treesitter_checks(probe: dict) -> list[Check]:
     highlighter_ok = bool(vim_info.get("highlighter_ok"))
     user_parser_present = bool(probe.get("user_parser_present"))
     user_parser = str(probe.get("user_parser") or "")
+    path_summary = parser_path_summary(probe)
 
     if inspect_ok and query_ok and parse_ok and highlighter_ok:
         metadata = vim_info.get("metadata") or {}
@@ -342,7 +382,7 @@ def treesitter_checks(probe: dict) -> list[Check]:
                 "vim_treesitter_parser",
                 "Vim Tree-sitter parser understands current queries",
                 "pass",
-                f"metadata={version}; query/highlighter/parser OK",
+                f"metadata={version}; query/highlighter/parser OK; {path_summary}",
             )
         )
     else:
@@ -361,14 +401,16 @@ def treesitter_checks(probe: dict) -> list[Check]:
         )
         if error:
             detail_parts.append(str(error))
+        detail_parts.append(path_summary)
+        hint, fixable = vim_parser_failure_hint(probe, str(error or ""), user_parser_present)
         checks.append(
             Check(
                 "vim_treesitter_parser",
                 "Vim Tree-sitter parser understands current queries",
                 "fail",
                 "; ".join(detail_parts),
-                "Run python3 scripts/clarity_doctor.py --apply if a stale user parser is present.",
-                fixable=user_parser_present,
+                hint,
+                fixable=fixable,
             )
         )
 
@@ -500,18 +542,27 @@ def main() -> int:
         if args.apply and stale_fixable:
             moved = backup_local_parser_files(probe)
             repaired_probe, _ = run_nvim_probe(repo_root, nvim_bin, env)
-            checks.extend(treesitter_checks(repaired_probe))
+            repaired_ts_checks = treesitter_checks(repaired_probe)
+            checks.extend(repaired_ts_checks)
+            repaired_ok = (
+                repaired_probe.get("vim", {}).get("inspect_ok")
+                and repaired_probe.get("vim", {}).get("query_ok")
+                and repaired_probe.get("vim", {}).get("parse_ok")
+                and repaired_probe.get("vim", {}).get("highlighter_ok")
+            )
+            failure_check = next(
+                (check for check in repaired_ts_checks if check.id == "vim_treesitter_parser" and check.status == "fail"),
+                None,
+            )
             checks.append(
                 Check(
                     "repair_verification",
                     "Repair verification",
-                    "pass"
-                    if repaired_probe.get("vim", {}).get("inspect_ok")
-                    and repaired_probe.get("vim", {}).get("query_ok")
-                    and repaired_probe.get("vim", {}).get("parse_ok")
-                    and repaired_probe.get("vim", {}).get("highlighter_ok")
-                    else "fail",
-                    "verified bundled parser after backup move",
+                    "pass" if repaired_ok else "fail",
+                    "verified bundled parser after backup move"
+                    if repaired_ok
+                    else "stale parser was backed up, but bundled parser verification still failed",
+                    "" if repaired_ok or failure_check is None else failure_check.hint,
                 )
             )
         else:

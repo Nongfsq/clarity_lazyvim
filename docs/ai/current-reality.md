@@ -177,6 +177,28 @@ Repository-level prevention added after this incident:
 - `scripts/run_clarity_validate.py` treats `vim` parser health and stale user-level parser overrides as required validation checks.
 - README troubleshooting now starts with the doctor path and documents the `Invalid node type "tab"` recovery flow.
 
+## Linux Parser Runtimepath Fix On 2026-05-28
+
+Observed issue:
+
+- A Linux server showed repeated Noice / Tree-sitter errors:
+  `Invalid node type "substitute"`
+- The stale user-level parser was backed up with `python3 scripts/clarity_doctor.py --apply`.
+- After the stale parser moved, user-config startup still failed parser verification with:
+  `No parser for language "vim"`
+
+Root cause:
+
+- The Neovim package bundled `vim.so` under `/usr/lib/x86_64-linux-gnu/nvim/parser/vim.so`.
+- `lazy.nvim` reset `runtimepath` during startup and did not preserve that multiarch runtime directory.
+- Clean Neovim could see the bundled parser, but Clarity's LazyVim startup could not.
+
+Repository-level prevention added after this incident:
+
+- `nvim/lua/config/lazy.lua` now preserves bundled Neovim parser runtime roots during `lazy.nvim` startup.
+- `scripts/clarity_doctor.py --json` records runtimepath, parser candidates, and query candidates.
+- Doctor output now distinguishes stale user parser overrides from packaged Linux runtimepath visibility failures.
+
 ## Deployment
 
 There is no hosted application deployment.
