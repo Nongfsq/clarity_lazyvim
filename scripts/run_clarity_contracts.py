@@ -24,6 +24,7 @@ from run_clarity_smoke import copy_candidate, copy_plugin_cache
 
 AUTHORITY_FILES = ("lazy-lock.json", "lazyvim.json")
 FAULT_MISSING_NESTED_RUNTIME = "missing_nested_runtime"
+FAULT_RAW_FOLD_ACTION = "raw_fold_action"
 
 
 def lua_string(value: str | Path) -> str:
@@ -31,7 +32,11 @@ def lua_string(value: str | Path) -> str:
 
 
 def discover_config_modules(repo_root: Path) -> set[str]:
-    return {f"config.{path.stem}" for path in (repo_root / "nvim" / "lua" / "config").glob("*.lua")}
+    config_root = repo_root / "nvim" / "lua" / "config"
+    return {
+        "config." + ".".join(path.relative_to(config_root).with_suffix("").parts)
+        for path in config_root.rglob("*.lua")
+    }
 
 
 def discover_task_ids(repo_root: Path) -> set[str]:
@@ -104,6 +109,15 @@ def hash_drift(before: dict[str, str], after: dict[str, str]) -> dict[str, dict[
 def apply_fault(candidate_root: Path, fault: str | None) -> None:
     if fault is None:
         return
+    if fault == FAULT_RAW_FOLD_ACTION:
+        keymaps_path = candidate_root / "nvim" / "lua" / "config" / "keymaps.lua"
+        keymaps_source = keymaps_path.read_text(encoding="utf-8")
+        old = 'map("n", "<leader>cz", require("config.actions.fold").toggle, opts)'
+        new = 'map("n", "<leader>cz", function()\n    vim.cmd("normal! za")\nend, opts) -- fault: raw fold action'
+        if old not in keymaps_source:
+            raise RuntimeError("Fault fixture could not locate the typed fold action mapping.")
+        keymaps_path.write_text(keymaps_source.replace(old, new, 1), encoding="utf-8")
+        return
     if fault != FAULT_MISSING_NESTED_RUNTIME:
         raise ValueError(f"Unknown fault: {fault}")
 
@@ -172,7 +186,7 @@ def process_context(cwd: Path, env: dict[str, str]) -> Iterator[None]:
         os.chdir(original_cwd)
 
 
-def attached_ui_behavior_lua() -> str:
+def attached_ui_behavior_setup_lua() -> str:
     return r'''
 local results = {}
 local wrap_map = vim.fn.maparg('<leader>uw', 'n', false, true)
@@ -192,7 +206,7 @@ end
 local original_foldmethod = vim.wo.foldmethod
 local original_foldenable = vim.wo.foldenable
 local original_foldlevel = vim.wo.foldlevel
-local scratch = vim.api.nvim_create_buf(false, true)
+local scratch = vim.api.nvim_create_buf(false, false)
 vim.api.nvim_win_set_buf(0, scratch)
 vim.api.nvim_buf_set_lines(scratch, 0, -1, false, { 'if true then', '  print(1)', 'end', 'print(2)' })
 vim.wo.foldmethod = 'manual'
@@ -201,18 +215,45 @@ vim.wo.foldlevel = 0
 vim.cmd('1,3fold')
 vim.api.nvim_win_set_cursor(0, { 1, 0 })
 results.fold_initially_closed = vim.fn.foldclosed(1) == 1
-if results.fold_callback then
-  fold_map.callback()
-  results.fold_opened = vim.fn.foldclosed(1) == -1
-  fold_map.callback()
-  results.fold_reclosed = vim.fn.foldclosed(1) == 1
-end
-vim.api.nvim_win_set_buf(0, original_buf)
-vim.wo.foldmethod = original_foldmethod
-vim.wo.foldenable = original_foldenable
-vim.wo.foldlevel = original_foldlevel
-vim.api.nvim_buf_delete(scratch, { force = true })
+_G.ClarityAttachedBehavior = {
+  original_buf = original_buf,
+  original_foldmethod = original_foldmethod,
+  original_foldenable = original_foldenable,
+  original_foldlevel = original_foldlevel,
+  scratch = scratch,
+}
 return results
+'''
+
+
+def attached_ui_fold_state_lua() -> str:
+    return r'''
+local events = require('config.diagnostics').events()
+local event = events[#events]
+return {
+  closed = vim.fn.foldclosed(1),
+  errmsg = vim.v.errmsg,
+  event_id = event and event.event_id or nil,
+  outcome = event and event.outcome or nil,
+  event_count = #events,
+  messages = vim.api.nvim_exec2('messages', { output = true }).output,
+}
+'''
+
+
+def attached_ui_behavior_cleanup_lua() -> str:
+    return r'''
+local state = _G.ClarityAttachedBehavior
+if not state then return false end
+vim.api.nvim_win_set_buf(0, state.original_buf)
+vim.wo.foldmethod = state.original_foldmethod
+vim.wo.foldenable = state.original_foldenable
+vim.wo.foldlevel = state.original_foldlevel
+if vim.api.nvim_buf_is_valid(state.scratch) then
+  vim.api.nvim_buf_delete(state.scratch, { force = true })
+end
+_G.ClarityAttachedBehavior = nil
+return true
 '''
 
 
@@ -252,7 +293,77 @@ def run_attached_ui(
         )
         snapshot = nvim.exec_lua("return dofile(...).snapshot('file_ui')", str(probe))
         snapshot["ready"] = ready
-        behavior = nvim.exec_lua(attached_ui_behavior_lua())
+        behavior = nvim.exec_lua(attached_ui_behavior_setup_lua())
+        messages_before = nvim.exec_lua("return vim.api.nvim_exec2('messages', { output = true }).output")
+
+        def input_fold(expected_closed: int | None, before_events: int) -> tuple[bool, str | None]:
+            try:
+                nvim.input(" cz")
+                settled = nvim.exec_lua(
+                    "local expected, before = ...; return vim.wait(500, function() "
+                    "local count = #require('config.diagnostics').events(); "
+                    "return (expected ~= nil and vim.fn.foldclosed(1) == expected) or count > before end, 20)",
+                    expected_closed,
+                    before_events,
+                )
+                return bool(settled), None
+            except Exception as exc:  # pynvim surfaces mapping errors as RPC failures on the next request
+                return False, str(exc)
+
+        before = nvim.exec_lua(attached_ui_fold_state_lua())
+        open_ok, open_error = input_fold(-1, before["event_count"])
+        opened = nvim.exec_lua(attached_ui_fold_state_lua())
+        close_ok, close_error = input_fold(1, opened["event_count"])
+        reclosed = nvim.exec_lua(attached_ui_fold_state_lua())
+        nvim.exec_lua("vim.cmd('normal! zE'); vim.v.errmsg = ''")
+        no_fold_ok, no_fold_rpc_error = input_fold(None, reclosed["event_count"])
+        no_fold = nvim.exec_lua(attached_ui_fold_state_lua())
+        behavior.update(
+            {
+                "fold_input": True,
+                "fold_open_input_ok": open_ok,
+                "fold_open_rpc_error": open_error,
+                "fold_opened": opened["closed"] == -1,
+                "fold_open_outcome": opened.get("outcome"),
+                "fold_close_input_ok": close_ok,
+                "fold_close_rpc_error": close_error,
+                "fold_reclosed": reclosed["closed"] == 1,
+                "fold_close_outcome": reclosed.get("outcome"),
+                "fold_no_fold_ok": no_fold_ok,
+                "fold_no_fold_rpc_error": no_fold_rpc_error,
+                "fold_no_fold_outcome": no_fold.get("outcome"),
+                "fold_no_fold_event_id": no_fold.get("event_id"),
+                "fold_no_fold_error": no_fold.get("errmsg", ""),
+                "fold_messages_delta": no_fold.get("messages", "")[len(messages_before) :],
+                "fold_cleanup": nvim.exec_lua(attached_ui_behavior_cleanup_lua()),
+            }
+        )
+        original_buffer = nvim.exec_lua("return vim.api.nvim_get_current_buf()")
+        nvim.ui_try_resize(60, 16)
+        nvim.command("ClarityLog")
+        log_small = nvim.exec_lua(
+            "local b=vim.api.nvim_get_current_buf(); return {"
+            "name=vim.api.nvim_buf_get_name(b), readonly=vim.bo[b].readonly, "
+            "modifiable=vim.bo[b].modifiable, lines=vim.api.nvim_buf_line_count(b)}"
+        )
+        nvim.ui_try_resize(80, 24)
+        nvim.command("ClarityLog tail")
+        log_tail = nvim.exec_lua(
+            "local b=vim.api.nvim_get_current_buf(); return {"
+            "line=vim.api.nvim_win_get_cursor(0)[1], lines=vim.api.nvim_buf_line_count(b)}"
+        )
+        behavior.update(
+            {
+                "log_small_ui": log_small.get("name") == "clarity://log" and log_small.get("lines", 0) > 0,
+                "log_readonly": log_small.get("readonly") is True and log_small.get("modifiable") is False,
+                "log_tail": log_tail.get("line") == log_tail.get("lines"),
+                "log_cleanup": nvim.exec_lua(
+                    "local b=...; if vim.api.nvim_buf_is_valid(b) then "
+                    "vim.api.nvim_win_set_buf(0,b); return true end; return false",
+                    original_buffer,
+                ),
+            }
+        )
         return snapshot, behavior
     finally:
         try:
@@ -325,19 +436,38 @@ def evaluate_snapshot(
             phase = module.get("first_seen")
             maps = snapshot.get("maps", {})
             sources = [maps.get(name, {}).get("source") for name in ("leader_uw", "leader_cz")]
-            owner_ok = all(source and str(source).replace("\\", "/").endswith("/nvim/lua/config/keymaps.lua") for source in sources)
+            normalized_sources = [str(source).replace("\\", "/") for source in sources]
+            owner_ok = bool(sources[0] and sources[1]) and normalized_sources[0].endswith(
+                "/nvim/lua/config/keymaps.lua"
+            ) and normalized_sources[1].endswith("/nvim/lua/config/actions/fold.lua")
             behavior = behavior or {}
-            behavior_ok = all(
-                behavior.get(name) is True
-                for name in (
-                    "wrap_callback",
-                    "fold_callback",
-                    "wrap_changed",
-                    "wrap_restored",
-                    "fold_initially_closed",
-                    "fold_opened",
-                    "fold_reclosed",
+            behavior_ok = (
+                all(
+                    behavior.get(name) is True
+                    for name in (
+                        "wrap_callback",
+                        "fold_callback",
+                        "fold_input",
+                        "fold_open_input_ok",
+                        "wrap_changed",
+                        "wrap_restored",
+                        "fold_initially_closed",
+                        "fold_opened",
+                        "fold_close_input_ok",
+                        "fold_reclosed",
+                        "fold_no_fold_ok",
+                        "fold_cleanup",
+                        "log_small_ui",
+                        "log_readonly",
+                        "log_tail",
+                        "log_cleanup",
+                    )
                 )
+                and behavior.get("fold_open_outcome") == "toggled"
+                and behavior.get("fold_close_outcome") == "toggled"
+                and behavior.get("fold_no_fold_outcome") == "no_fold"
+                and behavior.get("fold_no_fold_event_id") == "CLARITY_FOLD_NO_FOLD"
+                and behavior.get("fold_no_fold_error") == ""
             )
             actual = {
                 "loaded": module.get("loaded", False),
@@ -459,7 +589,7 @@ def main() -> int:
         choices=("empty_headless", "file_headless", "file_ui"),
         help="Scenario to run; repeatable. Defaults to empty_headless and file_headless.",
     )
-    parser.add_argument("--fault", choices=(FAULT_MISSING_NESTED_RUNTIME,))
+    parser.add_argument("--fault", choices=(FAULT_MISSING_NESTED_RUNTIME, FAULT_RAW_FOLD_ACTION))
     parser.add_argument("--expect-failure-id", action="append", default=[])
     parser.add_argument("--reuse-plugin-cache", type=Path)
     parser.add_argument("--nvim-bin")

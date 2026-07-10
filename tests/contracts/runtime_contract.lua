@@ -25,6 +25,9 @@ return {
         ["config.audit"] = { class = "eager_service", owner = "config.lazy" },
         ["config.help"] = { class = "eager_service", owner = "config.lazy" },
         ["config.validation"] = { class = "eager_service", owner = "config.lazy" },
+        ["config.commands"] = { class = "eager_service", owner = "config.lazy" },
+        ["config.diagnostics"] = { class = "on_demand", owner = "Clarity actions" },
+        ["config.actions.fold"] = { class = "on_demand", owner = "config.keymaps" },
     },
     capabilities = {
         file_search = {
@@ -50,7 +53,7 @@ return {
         },
         code_fold = {
             surface = "<leader>cz",
-            owner = "config.keymaps",
+            owner = "config.actions.fold",
             profile = "core",
             coverage = "covered",
         },
@@ -157,7 +160,7 @@ return {
             module = "config.keymaps",
             owner = "LazyVimKeymaps",
             scenarios = { "file_ui" },
-            expected = "loaded at User:LazyVimKeymaps; fold/wrap owned by config.keymaps and executable",
+            expected = "loaded at User:LazyVimKeymaps; wrap owned by config.keymaps; fold owned by config.actions.fold; both executable",
             repair = "Keep the nested runtime visible through UIEnter/VeryLazy and restore Clarity keymaps.",
         },
         {
@@ -172,6 +175,7 @@ return {
                 "config.audit",
                 "config.help",
                 "config.validation",
+                "config.commands",
             },
             scenarios = { "empty_headless", "file_headless", "file_ui" },
             expected = "all eager Clarity services loaded",

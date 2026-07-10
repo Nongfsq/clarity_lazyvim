@@ -59,6 +59,22 @@ class RuntimeContractTests(unittest.TestCase):
             self.assertIn("nested runtime removed", lazy.read_text(encoding="utf-8"))
             self.assertIn("do not restore the nested runtime", init.read_text(encoding="utf-8"))
 
+    def test_raw_fold_fault_restores_the_confirmed_false_green_callback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            candidate = Path(directory)
+            keymaps = candidate / "nvim" / "lua" / "config" / "keymaps.lua"
+            keymaps.parent.mkdir(parents=True)
+            keymaps.write_text(
+                'map("n", "<leader>cz", require("config.actions.fold").toggle, opts)\n',
+                encoding="utf-8",
+            )
+
+            contracts.apply_fault(candidate, contracts.FAULT_RAW_FOLD_ACTION)
+
+            source = keymaps.read_text(encoding="utf-8")
+            self.assertIn('vim.cmd("normal! za")', source)
+            self.assertIn("fault: raw fold action", source)
+
     def test_positive_and_fault_snapshots_have_distinct_contract_results(self) -> None:
         modules = {
             name: {"loaded": True, "first_seen": "User:LazyDone"}
@@ -80,17 +96,31 @@ class RuntimeContractTests(unittest.TestCase):
             "autocmds": {"absolute_line_numbers": 5},
             "maps": {
                 "leader_uw": {"source": "/repo/nvim/lua/config/keymaps.lua"},
-                "leader_cz": {"source": "/repo/nvim/lua/config/keymaps.lua"},
+                "leader_cz": {"source": "/repo/nvim/lua/config/actions/fold.lua"},
             },
         }
         behavior = {
             "wrap_callback": True,
             "fold_callback": True,
+            "fold_input": True,
+            "fold_open_input_ok": True,
             "wrap_changed": True,
             "wrap_restored": True,
             "fold_initially_closed": True,
             "fold_opened": True,
             "fold_reclosed": True,
+            "fold_open_outcome": "toggled",
+            "fold_close_outcome": "toggled",
+            "fold_close_input_ok": True,
+            "fold_no_fold_ok": True,
+            "fold_no_fold_outcome": "no_fold",
+            "fold_no_fold_event_id": "CLARITY_FOLD_NO_FOLD",
+            "fold_no_fold_error": "",
+            "fold_cleanup": True,
+            "log_small_ui": True,
+            "log_readonly": True,
+            "log_tail": True,
+            "log_cleanup": True,
         }
         self.assertFalse([result for result in contracts.evaluate_snapshot(self.catalog, positive, behavior) if not result["ok"]])
 

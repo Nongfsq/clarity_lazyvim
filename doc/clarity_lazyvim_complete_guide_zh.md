@@ -361,7 +361,7 @@ Esc
 - `空格` 看 which-key 分组
 - `空格 s k` 搜索快捷键
 
-### 6.4 另外四个你应该知道的帮助命令
+### 6.4 另外五个你应该知道的帮助命令
 
 如果你在 Windows 11 + WSL2 中长期使用，这 4 个命令非常值得记住：
 
@@ -373,6 +373,8 @@ Esc
   专门检查关键键位和特殊 UI 行为是不是仍然正常
 - `:ClarityLanguage`
   专门查看或切换 Clarity 自己的界面语言
+- `:ClarityLog`
+  查看最近的 Clarity 诊断事件；也可使用 `tail`、`path` 或 `export [路径]`
 
 ---
 
@@ -613,6 +615,9 @@ o
 
 视觉换行默认开启，只改变屏幕显示，不会向文件插入真实换行符；续行会保留可读缩进。
 `空格 u w` 可以只为当前编辑窗口临时关闭或重新开启。
+
+如果光标所在位置没有折叠，`空格 c z` 会给出普通提示，不会再弹出
+`E490` / `E5108` 错误。需要排查真正的异常时，运行 `:ClarityLog`。
 
 ---
 
@@ -1070,9 +1075,18 @@ python scripts/run_clarity_validate.py
 
 它会覆盖“行为正确性”，不仅是“工具是否安装”。
 
+也可以使用统一测试入口：
+
+```sh
+python3 scripts/run_clarity_tests.py fast
+python3 scripts/run_clarity_tests.py contracts --json
+uv run --with pynvim==0.6.0 python scripts/run_clarity_tests.py behavior --feature fold
+python3 scripts/run_clarity_tests.py faults --feature fold
+```
+
 当前验证覆盖：
 
-- Windows + Ubuntu (WSL) 启动 smoke test
+- Ubuntu、Windows、macOS CI 场景（远程证据仍待完成）
 - 核心命令断言：
   - `空格 f f`
   - `空格 f w`

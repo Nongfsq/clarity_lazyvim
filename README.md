@@ -53,6 +53,7 @@ It is a focused editor product for daily work.
 | Language | `:ClarityLanguage` | Switch Clarity-owned UI between `auto`, `en`, and `zh` |
 | Audit | `:ClarityAudit` | Environment and dependency readiness in one command |
 | Validation | `:ClarityValidate` | Behavior checks, not just "is the binary installed?" |
+| Diagnostics | `:ClarityLog` | Read recent Clarity events, locate the local log, or export sanitized evidence |
 
 ## Product Highlights
 
@@ -318,6 +319,7 @@ Inside Neovim:
 ```vim
 :ClarityAudit
 :ClarityValidate
+:ClarityLog
 ```
 
 From the terminal:
@@ -327,6 +329,7 @@ python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
 python3 scripts/run_clarity_contracts.py
+python3 scripts/run_clarity_tests.py fast
 python3 scripts/update_clarity_lock.py
 ```
 
@@ -342,6 +345,20 @@ For the attached-UI runtime contract, run:
 uv run --with pynvim python scripts/run_clarity_contracts.py \
   --scenario file_ui --reuse-plugin-cache ~/.local/share/nvim/lazy
 ```
+
+The stable command-driven suites are:
+
+```sh
+python3 scripts/run_clarity_tests.py fast
+python3 scripts/run_clarity_tests.py contracts --json
+uv run --with pynvim==0.6.0 python scripts/run_clarity_tests.py behavior --feature fold
+python3 scripts/run_clarity_tests.py faults --feature fold
+```
+
+Use `:ClarityLog`, `:ClarityLog tail`, `:ClarityLog path`, or
+`:ClarityLog export [path]` when a Clarity-owned action needs diagnosis. Events
+remain local and exclude buffer text, clipboard contents, environment values,
+tokens, command arguments, and raw provider payloads.
 
 `update_clarity_lock.py` is check-only by default: it normalizes a copied
 candidate, restarts it, requires core audit readiness, and reports drift without

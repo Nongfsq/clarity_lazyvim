@@ -9,10 +9,13 @@
 | 95+ quality review | [`reviews/2026-07-09-clarity-95-quality-review.md`](reviews/2026-07-09-clarity-95-quality-review.md) | Evidence inventory and baseline score |
 | Refactor architecture | [`architecture/2026-07-09-clarity-95-refactor-blueprint.md`](architecture/2026-07-09-clarity-95-refactor-blueprint.md) | Approved target boundaries and migration sequence |
 | Runtime verification architecture | [`architecture/2026-07-09-runtime-contract-verification-blueprint.md`](architecture/2026-07-09-runtime-contract-verification-blueprint.md) | Natural-lifecycle contract model, probes, and fault-injection boundary |
+| Observability/test architecture | [`architecture/2026-07-10-observability-and-test-system-blueprint.md`](architecture/2026-07-10-observability-and-test-system-blueprint.md) | Typed actions, structured diagnostics, real-input evidence, and command-driven testing |
 | Product/UX intent | [`product/clarity-95-experience-pm.md`](product/clarity-95-experience-pm.md) | User promise, minimum lovable scope, 95+ experience bar |
 | Runtime trust PM | [`product/clarity-runtime-trust-pm.md`](product/clarity-runtime-trust-pm.md) | User-facing runtime trust goals and acceptance outcomes |
+| Diagnostics/test PM | [`product/clarity-diagnostics-and-test-experience-pm.md`](product/clarity-diagnostics-and-test-experience-pm.md) | Calm action failure, recovery, privacy, and automated-test experience |
 | Active PLAN+TASK | [`../progress/2026-07-09-clarity-95-refactor-plan.md`](../progress/2026-07-09-clarity-95-refactor-plan.md) | Task IDs, dependencies, status, acceptance, validation |
 | Runtime verification PLAN+TASK | [`../progress/2026-07-09-runtime-contract-verification-plan.md`](../progress/2026-07-09-runtime-contract-verification-plan.md) | Runtime-contract task status, evidence, and phase gates |
+| Observability/test PLAN+TASK | [`../progress/2026-07-10-observability-and-test-system-plan.md`](../progress/2026-07-10-observability-and-test-system-plan.md) | Active diagnostic, fold-action, test-router, and CI task ledger |
 | Local agent contract | `AGENTS.md` at repository root | Durable local implementation rules; intentionally ignored by Git and therefore not a public repository link |
 
 ## Accepted Decisions

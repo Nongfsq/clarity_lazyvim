@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+import run_clarity_tests as runner  # noqa: E402
+
+
+class ClarityTestRouterTests(unittest.TestCase):
+    def test_output_truncation_is_bounded_and_marked(self) -> None:
+        value, truncated = runner.truncate_output("a" * 100, 40)
+        self.assertTrue(truncated)
+        self.assertLessEqual(len(value.encode()), 40)
+        self.assertIn("truncated", value)
+
+    def test_behavior_requires_the_fold_feature(self) -> None:
+        with self.assertRaisesRegex(ValueError, "--feature fold"):
+            runner.build_commands(REPO_ROOT, "behavior", "python", "nvim", None, [], None)
+
+    def test_contract_scenarios_are_forwarded(self) -> None:
+        commands = runner.build_commands(
+            REPO_ROOT, "contracts", "python", "nvim", None, ["file_headless"], None
+        )
+        self.assertEqual(commands[0]["command"].count("--scenario"), 1)
+        self.assertIn("file_headless", commands[0]["command"])
+
+    def test_artifact_contract_is_complete_and_parseable(self) -> None:
+        report = {
+            "generated_at": "2026-07-10T00:00:00+00:00",
+            "manifest": {"schema_version": 1, "suite": "unit", "status": "pass"},
+            "snapshot_before": {"authority_hashes": {}},
+            "snapshot_after": {"authority_hashes": {}},
+            "checks": [
+                {
+                    "check_id": "CLARITY_TEST",
+                    "ok": True,
+                    "returncode": 0,
+                    "output": "ok",
+                    "output_truncated": False,
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            runner.write_artifacts(target, report)
+            expected = {
+                "manifest.json",
+                "checks.json",
+                "events.jsonl",
+                "snapshot-before.json",
+                "snapshot-after.json",
+                "messages.txt",
+                "stdout.txt",
+                "stderr.txt",
+                "junit.xml",
+            }
+            self.assertEqual({path.name for path in target.iterdir()}, expected)
+            self.assertEqual(json.loads((target / "events.jsonl").read_text())["event_id"], "CLARITY_TEST")
+
+
+if __name__ == "__main__":
+    unittest.main()

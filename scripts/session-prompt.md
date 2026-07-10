@@ -35,6 +35,8 @@ Validation:
 - python3 scripts/run_clarity_audit.py
 - python3 scripts/run_clarity_validate.py
 - python3 scripts/run_clarity_contracts.py
+- python3 scripts/run_clarity_tests.py fast
+- python3 scripts/run_clarity_tests.py contracts --json
 - nvim --headless -u ./init.lua "+qall"
 
 If an issue is local cache/provider/parser state, fix it locally and do not commit repository changes.

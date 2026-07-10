@@ -53,6 +53,15 @@ Support scripts:
 - Python validation scripts in `scripts/`
 - GitHub Actions workflow in `.github/workflows/clarity-validate.yml`
 
+Clarity runtime diagnostics now has a dependency-free first slice:
+
+- `config.diagnostics`: schema-versioned bounded in-memory and JSONL events
+- `config.actions.fold`: typed fold outcomes instead of raw `normal! za`
+- persistence defaults to WARN/ERROR under isolated/user state roots
+- Noice and `vim.notify` remain presentation layers, not diagnostic authority
+- `:ClarityLog` exposes recent events, tail, path, and sanitized export
+- `scripts/run_clarity_tests.py` routes fast/contracts/behavior/faults/release
+
 ## Directory Map
 
 Important paths:
@@ -117,6 +126,7 @@ python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
 python3 scripts/run_clarity_contracts.py
+python3 scripts/run_clarity_tests.py fast
 nvim --headless -u ./init.lua "+qall"
 ```
 
@@ -137,6 +147,7 @@ Inside Neovim:
 :ClaritySync
 :ClarityClipboard
 :ClarityLanguage
+:ClarityLog
 ```
 
 CI:
@@ -176,6 +187,11 @@ As of 2026-07-09 on the current macOS runtime:
   startup pass; all 10 config modules are classified
 - negative runtimepath fixture: exactly four expected failures for options,
   autocmds, editing defaults, and keymap ownership/behavior
+- raw-fold fixture: exactly `CLARITY_RUNTIME_KEYMAP_CONTRACT`; the repaired
+  action returns `no_fold` without `E490/E5108` on a plain line
+- observability local implementation: 30 Python tests and 7 Lua policy tests
+  pass; all 13 current config/action modules are classified; fold is covered by
+  success, expected-edge, fault, restoration, and real-input evidence
 
 This snapshot is intentionally local-only. It must not be copied into a public
 cross-platform baseline until the clean-archive matrix in the active plan is
@@ -290,6 +306,23 @@ Trust foundation and runtime-contract status:
 5. `RUNTIME-001` through `RUNTIME-004` — done locally on 2026-07-10; natural
    lifecycle catalog/probe/runner and line-number positive/negative proof pass
 6. `RUNTIME-005` — pending owner evidence review
+7. `OBS-001` through `OBS-007` — done locally on 2026-07-10; diagnostic commands,
+   real-input fold evidence, unified router/artifacts, privacy, and restoration
+   hardening pass
+8. `OBS-008` — local workflow integration passes; remote Ubuntu/Windows/macOS
+   evidence pending
+9. `OBS-009` — pending remote evidence and final legacy/ADR closeout
 
-The implementation is stopped at the runtime-contract first-batch evidence gate.
-Do not begin `RUNTIME-005` or plugin ownership migration without approval.
+Platform evidence boundary for the next gate:
+
+- Ubuntu GitHub Actions evidence can be evaluated immediately.
+- Windows GitHub-hosted runner evidence, if produced, is CI evidence only.
+- Real remote Windows/server validation remains pending until the owner provides
+  the announced root access; do not mark that environment verified beforehand.
+
+The implementation is stopped at the remote observability CI evidence gate.
+Do not close `OBS-008`, begin `OBS-009`, resume `RUNTIME-005`, or start plugin
+ownership migration without exact commit-bound platform artifacts. The
+`nvim-lspconfig` drift was accepted through the backup-first atomic transaction;
+the current lock hash is
+`af8ad1dff2b125573e19a37c3a30af25a152450d2b9b1d0320ee78fd35db04d7`.

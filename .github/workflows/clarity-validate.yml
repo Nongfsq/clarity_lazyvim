@@ -51,7 +51,7 @@ jobs:
 
       - name: Validate Lua and repository contracts
         run: |
-          /tmp/stylua/stylua --check init.lua nvim tests/lua
+          /tmp/stylua/stylua --check init.lua nvim tests/lua tests/contracts
           python - <<'PY'
           import json
           from pathlib import Path
@@ -130,6 +130,39 @@ jobs:
           python scripts/run_clarity_smoke.py
           --timeout 300
           > artifacts/smoke.json
+
+      - name: Run fast test router
+        if: runner.os == 'Linux'
+        run: >-
+          python scripts/run_clarity_tests.py fast
+          --artifact-dir artifacts/clarity-fast
+          --json
+          > artifacts/clarity-fast-report.json
+
+      - name: Run natural runtime contracts
+        run: >-
+          python scripts/run_clarity_tests.py contracts
+          --scenario empty_headless
+          --scenario file_headless
+          --artifact-dir artifacts/clarity-contracts
+          --json
+          > artifacts/clarity-contracts-report.json
+
+      - name: Run real-input fold behavior
+        run: >-
+          python scripts/run_clarity_tests.py behavior
+          --feature fold
+          --artifact-dir artifacts/clarity-behavior
+          --json
+          > artifacts/clarity-behavior-report.json
+
+      - name: Run fold fault controls
+        run: >-
+          python scripts/run_clarity_tests.py faults
+          --feature fold
+          --artifact-dir artifacts/clarity-faults
+          --json
+          > artifacts/clarity-faults-report.json
 
       - name: Run audit
         run: >-

@@ -21,9 +21,11 @@ for name, module in pairs(catalog.modules) do
     assert_true(type(module.owner) == "string" and module.owner ~= "", "missing module owner for " .. name)
 end
 
-local config_files = vim.fn.glob(repo_root .. "/nvim/lua/config/*.lua", false, true)
+local config_files = vim.fn.glob(repo_root .. "/nvim/lua/config/**/*.lua", false, true)
+vim.list_extend(config_files, vim.fn.glob(repo_root .. "/nvim/lua/config/*.lua", false, true))
 for _, path in ipairs(config_files) do
-    local name = "config." .. vim.fn.fnamemodify(path, ":t:r")
+    local relative = path:sub(#(repo_root .. "/nvim/lua/config/") + 1):gsub("%.lua$", ""):gsub("/", ".")
+    local name = "config." .. relative
     assert_true(catalog.modules[name] ~= nil, "unclassified config module: " .. name)
 end
 

@@ -260,7 +260,7 @@ def run(argv: list[str] | None = None) -> int:
         "local original_foldmethod = vim.wo.foldmethod; "
         "local original_foldenable = vim.wo.foldenable; "
         "local original_foldlevel = vim.wo.foldlevel; "
-        "local scratch = vim.api.nvim_create_buf(false, true); "
+        "local scratch = vim.api.nvim_create_buf(false, false); "
         "vim.api.nvim_win_set_buf(0, scratch); "
         "vim.api.nvim_buf_set_lines(scratch, 0, -1, false, { 'if true then', '    print(1)', 'end', 'print(2)' }); "
         "vim.wo.foldmethod = 'manual'; "
@@ -270,10 +270,15 @@ def run(argv: list[str] | None = None) -> int:
         "vim.api.nvim_win_set_cursor(0, { 1, 0 }); "
         "results.fold_initially_closed = vim.fn.foldclosed(1) == 1; "
         "if results.fold_callback then "
-        "fold_map.callback(); "
+        "results.fold_open_outcome = fold_map.callback(); "
         "results.fold_opened = vim.fn.foldclosed(1) == -1; "
-        "fold_map.callback(); "
+        "results.fold_close_outcome = fold_map.callback(); "
         "results.fold_reclosed = vim.fn.foldclosed(1) == 1; "
+        "vim.cmd('normal! zE'); vim.v.errmsg = ''; "
+        "local no_fold_ok, no_fold_outcome = pcall(fold_map.callback); "
+        "results.fold_no_fold_ok = no_fold_ok; "
+        "results.fold_no_fold_outcome = no_fold_outcome; "
+        "results.fold_no_fold_error = vim.v.errmsg; "
         "end; "
         "vim.api.nvim_win_set_buf(0, original_buf); "
         "vim.wo.foldmethod = original_foldmethod; "
@@ -311,12 +316,20 @@ def run(argv: list[str] | None = None) -> int:
                     bool(editing_controls_report.get("fold_callback"))
                     and bool(editing_controls_report.get("fold_initially_closed"))
                     and bool(editing_controls_report.get("fold_opened"))
-                    and bool(editing_controls_report.get("fold_reclosed")),
+                    and bool(editing_controls_report.get("fold_reclosed"))
+                    and editing_controls_report.get("fold_open_outcome") == "toggled"
+                    and editing_controls_report.get("fold_close_outcome") == "toggled"
+                    and bool(editing_controls_report.get("fold_no_fold_ok"))
+                    and editing_controls_report.get("fold_no_fold_outcome") == "no_fold"
+                    and editing_controls_report.get("fold_no_fold_error") == "",
                     (
                         f"callback={editing_controls_report.get('fold_callback')} "
                         f"initially_closed={editing_controls_report.get('fold_initially_closed')} "
                         f"opened={editing_controls_report.get('fold_opened')} "
                         f"reclosed={editing_controls_report.get('fold_reclosed')}"
+                        f" no_fold_ok={editing_controls_report.get('fold_no_fold_ok')}"
+                        f" no_fold_outcome={editing_controls_report.get('fold_no_fold_outcome')}"
+                        f" no_fold_error={editing_controls_report.get('fold_no_fold_error')}"
                     ),
                 ),
             ]
