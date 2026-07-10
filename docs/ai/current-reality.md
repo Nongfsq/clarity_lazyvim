@@ -192,8 +192,9 @@ As of 2026-07-10 on the simplification candidate:
   autocmds, editing defaults, and keymap ownership/behavior
 - raw-fold fixture: exactly `CLARITY_RUNTIME_KEYMAP_CONTRACT`; the repaired
   action returns `no_fold` without `E490/E5108` on a plain line
-- agent-era candidate: 36 Python tests and 20 Lua policy files pass; the
-  full release router passes on macOS and manual Ubuntu 24.04; fold is covered by
+- agent-era candidate: 36 Python tests and 20 Lua policy files pass; the full
+  release router passes on macOS and manual Ubuntu at
+  `85d217029722d31e3b441ce5e9aa9410ad1becf1`; fold is covered by
   success, expected-edge, fault, restoration, and real-input evidence
 - empty headless startup loads 4 plugins instead of the reviewed baseline of 10
 - the resolved core set and lock each contain 23 plugins; Copilot, ToggleTerm,

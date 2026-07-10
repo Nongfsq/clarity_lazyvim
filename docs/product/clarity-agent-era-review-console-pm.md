@@ -1,7 +1,7 @@
 # Clarity Agent-Era Review Console PM
 
 Date: 2026-07-10
-Status: implemented locally; available-host and release evidence pending
+Status: implemented on local macOS and manual Ubuntu; Windows/WSL and release evidence pending
 
 ## Problem And Product Intent
 

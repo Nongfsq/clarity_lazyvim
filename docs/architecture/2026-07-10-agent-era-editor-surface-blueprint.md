@@ -274,4 +274,4 @@
 - Status: approved and implemented locally through
   `progress/2026-07-10-agent-era-review-console-plan.md`; Noice remains under the
   blueprint's parity rule because native messages failed the attached fault gate;
-  available-host and release evidence remain pending.
+  manual Ubuntu evidence passes; Windows/WSL and release evidence remain pending.

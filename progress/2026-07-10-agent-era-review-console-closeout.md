@@ -11,7 +11,9 @@ Date: 2026-07-10
 - Validation: 36 Python tests, 20 Lua policy files, Ruff, StyLua, clean lock
   normalization, and all seven local release checks passed.
 - Authority hashes remained unchanged during the successful release run.
+- Manual Ubuntu deployment at `85d217029722d31e3b441ce5e9aa9410ad1becf1`
+  passed the same seven release checks on Neovim 0.12.4 and Python 3.12.3.
 - Backups: agent stages under
   `~/.local/state/clarity_lazyvim/lock-backups/20260710T-agent*-lazy-lock.json`.
-- Pending: available Ubuntu revalidation, Windows/WSL evidence, commit-bound
-  release evidence; GitHub Actions was not triggered.
+- Pending: Windows/WSL and commit-bound release evidence; GitHub Actions was not
+  manually triggered or rerun.

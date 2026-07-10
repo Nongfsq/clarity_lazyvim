@@ -1,7 +1,7 @@
 # Clarity Agent-Era Review Console PLAN+TASK
 
 Date: 2026-07-10
-Status: implementation complete locally; available-host and release evidence pending
+Status: implementation complete on local macOS and manual Ubuntu; Windows/WSL and release evidence pending
 PM: `docs/product/clarity-agent-era-review-console-pm.md`
 Architecture: `docs/architecture/2026-07-10-agent-era-editor-surface-blueprint.md`
 
@@ -184,8 +184,8 @@ data migration exists; locale/onboarding/log state remains user-owned.
 
 ### AGENT-006: Reconcile Agent-Era Product Truth And Closeout
 
-- Status: done locally — 2026-07-10; Windows/WSL and commit-bound release
-  evidence remain pending
+- Status: done on local macOS and manual Ubuntu — 2026-07-10; Windows/WSL and
+  commit-bound release evidence remain pending
 - Depends on: AGENT-005
 - Files: `README.md`, Chinese guide, `docs/ai/current-reality.md`, product PM,
   architecture blueprint, dependency manifest, ADRs, document index, this plan,
@@ -215,6 +215,5 @@ data migration exists; locale/onboarding/log state remains user-owned.
   blocked the native-message embed channel. The plan's parity gate therefore
   required restoration. Health/help consolidation uses a unified routing facade
   and stable aliases rather than rewriting the already-passive collectors.
-- Status: all locally executable tasks are complete; owner pre-approved direct
-  execution. Available Ubuntu revalidation, Windows/WSL, commit/push, and remote
-  release evidence require their separate authority/evidence steps.
+- Status: implementation, commit, PR, and manual Ubuntu deployment validation are
+  complete. Windows/WSL and commit-bound release evidence remain pending.
