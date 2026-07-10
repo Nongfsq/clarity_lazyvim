@@ -1,37 +1,33 @@
+local development_enabled = vim.env.CLARITY_PROFILE == "development" and vim.env.CLARITY_NONINTERACTIVE ~= "1"
+
+local development_parsers = {
+    "bash",
+    "c",
+    "cmake",
+    "cpp",
+    "javascript",
+    "json",
+    "lua",
+    "markdown",
+    "markdown_inline",
+    "python",
+    "query",
+    "rust",
+    "tsx",
+    "typescript",
+    "vim",
+    "vimdoc",
+}
+
 return {
     {
         "nvim-treesitter/nvim-treesitter",
-        opts = function()
-            local noninteractive = vim.env.CLARITY_NONINTERACTIVE == "1" or #vim.api.nvim_list_uis() == 0
-
-            return {
-                ensure_installed = noninteractive and {} or {
-                    "c",
-                    "cpp",
-                    "cmake",
-                    "lua",
-                    "rust",
-                    "typescript",
-                    "javascript",
-                    "python",
-                    "json",
-                },
-                highlight = {
-                    enable = true,
-                    additional_vim_regex_highlighting = false,
-                },
-                indent = { enable = true },
-                context_commentstring = { enable = true, enable_autocmd = false },
-                incremental_selection = {
-                    enable = true,
-                    keymaps = {
-                        init_selection = "<C-space>",
-                        node_incremental = "<C-space>",
-                        scope_incremental = "<nop>",
-                        node_decremental = "<bs>",
-                    },
-                },
-            }
+        opts = function(_, opts)
+            -- The locked main generation is configured by LazyVim's native
+            -- setup/start/fold/indent lifecycle. Clarity only owns its parser
+            -- profile; legacy module-style options do not belong here.
+            opts.ensure_installed = development_enabled and vim.deepcopy(development_parsers) or {}
+            return opts
         end,
     },
 }

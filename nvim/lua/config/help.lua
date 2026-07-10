@@ -41,8 +41,13 @@ end
 local function mark_startup_seen()
     local path = startup_state_path()
     local dir = vim.fn.fnamemodify(path, ":h")
-    pcall(vim.fn.mkdir, dir, "p")
-    pcall(vim.fn.writefile, { STARTUP_GUIDE_VERSION }, path)
+    local made_dir = pcall(vim.fn.mkdir, dir, "p")
+    if not made_dir then
+        return false
+    end
+
+    local ok, result = pcall(vim.fn.writefile, { STARTUP_GUIDE_VERSION }, path)
+    return ok and result == 0
 end
 
 local function startup_buffer_ready()
@@ -86,15 +91,8 @@ local function locale_label()
 end
 
 local function clipboard_provider()
-    local ok, provider = pcall(function()
-        return vim.fn["provider#clipboard#Executable"]()
-    end)
-
-    if not ok or not provider or provider == "" then
-        return "missing"
-    end
-
-    return provider
+    local status = require("config.audit").get_clipboard_status()
+    return status.provider or status.kind
 end
 
 local function option_contains(option_value, expected)
@@ -129,7 +127,12 @@ end
 
 local function run_after_close(action)
     close_panel()
-    vim.schedule(action)
+    vim.schedule(function()
+        local ok = xpcall(action, debug.traceback)
+        if not ok then
+            vim.notify(i18n.t("help.action_failed"), vim.log.levels.WARN, { title = "Clarity" })
+        end
+    end)
 end
 
 local function feedkeys(keys)
@@ -137,26 +140,64 @@ local function feedkeys(keys)
     vim.api.nvim_feedkeys(termcodes, "mt", false)
 end
 
+local function float_layout(columns, lines, line_count)
+    columns = math.max(1, tonumber(columns) or 1)
+    lines = math.max(1, tonumber(lines) or 1)
+    line_count = math.max(1, tonumber(line_count) or 1)
+
+    local width = math.max(1, math.min(100, columns - 4))
+    local height = math.max(1, math.min(line_count, lines - 4))
+    local row = math.max(0, math.floor((lines - height - 2) / 2))
+    local col = math.max(0, math.floor((columns - width - 2) / 2))
+
+    return { width = width, height = height, row = row, col = col }
+end
+
+local function notify_failure(message)
+    vim.notify(message, vim.log.levels.WARN, { title = "Clarity" })
+end
+
+local function guarded_action(action)
+    return function()
+        local ok = xpcall(action, debug.traceback)
+        if not ok then
+            notify_failure(i18n.t("help.action_failed"))
+        end
+    end
+end
+
+local function complete_startup_open(show, mark, notify)
+    local shown = pcall(show, { auto_open = true })
+    if not shown then
+        notify(i18n.t("help.open_failed"))
+        return false
+    end
+
+    return mark()
+end
+
 local function open_float(lines, title)
     close_panel()
 
     local buf = vim.api.nvim_create_buf(false, true)
-    local width = math.min(math.max(84, vim.o.columns - 12), 110)
-    local height = math.min(#lines + 2, math.max(18, vim.o.lines - 6))
-    local row = math.max(1, math.floor((vim.o.lines - height) / 2) - 1)
-    local col = math.max(2, math.floor((vim.o.columns - width) / 2))
+    local content = vim.list_extend(vim.deepcopy(lines), { "", i18n.t("help.navigation_line") })
+    local layout = float_layout(vim.o.columns, vim.o.lines, #content)
 
-    local win = vim.api.nvim_open_win(buf, true, {
+    local ok, win = pcall(vim.api.nvim_open_win, buf, true, {
         relative = "editor",
         style = "minimal",
         border = "rounded",
         title = title,
         title_pos = "center",
-        width = width,
-        height = height,
-        row = row,
-        col = col,
+        width = layout.width,
+        height = layout.height,
+        row = layout.row,
+        col = layout.col,
     })
+    if not ok then
+        pcall(vim.api.nvim_buf_delete, buf, { force = true })
+        error(win)
+    end
 
     state.buf = buf
     state.win = win
@@ -167,14 +208,20 @@ local function open_float(lines, title)
     vim.bo[buf].filetype = "markdown"
     vim.bo[buf].modifiable = true
 
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    local populated, populate_error = pcall(vim.api.nvim_buf_set_lines, buf, 0, -1, false, content)
+    if not populated then
+        close_panel()
+        error(populate_error)
+    end
 
     vim.bo[buf].modifiable = false
     vim.wo[win].number = false
     vim.wo[win].relativenumber = false
     vim.wo[win].signcolumn = "no"
     vim.wo[win].cursorline = false
-    vim.wo[win].wrap = false
+    vim.wo[win].wrap = true
+    vim.wo[win].linebreak = true
+    vim.wo[win].breakindent = true
     vim.wo[win].conceallevel = 0
 
     local function map(lhs, rhs, desc)
@@ -183,6 +230,8 @@ local function open_float(lines, title)
 
     map("q", close_panel, i18n.t("help.map_close"))
     map("<Esc>", close_panel, i18n.t("help.map_close"))
+    map("<C-d>", "<C-d>", i18n.t("help.map_scroll_down"))
+    map("<C-u>", "<C-u>", i18n.t("help.map_scroll_up"))
 
     return buf
 end
@@ -394,7 +443,7 @@ local function show_start(opts)
     }
 
     for lhs, action in pairs(actions) do
-        vim.keymap.set("n", lhs, action, {
+        vim.keymap.set("n", lhs, guarded_action(action), {
             buffer = buf,
             nowait = true,
             silent = true,
@@ -435,15 +484,21 @@ function M.setup()
                 return
             end
 
-            mark_startup_seen()
-
             vim.defer_fn(function()
                 if startup_buffer_ready() then
-                    show_start({ auto_open = true })
+                    complete_startup_open(show_start, mark_startup_seen, notify_failure)
                 end
             end, 120)
         end,
     })
 end
+
+M._test = {
+    float_layout = float_layout,
+    mark_startup_seen = mark_startup_seen,
+    read_startup_state = read_startup_state,
+    complete_startup_open = complete_startup_open,
+    startup_guide_version = STARTUP_GUIDE_VERSION,
+}
 
 return M

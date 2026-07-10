@@ -115,7 +115,6 @@ def install_hint(tool_id: str, kind: str) -> str:
             "python": "brew install python",
             "pip": "python3 -m ensurepip --upgrade",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "brew install htop or brew install btop",
         },
         "linux": {
             "git": "sudo apt-get install -y git",
@@ -127,7 +126,6 @@ def install_hint(tool_id: str, kind: str) -> str:
             "python": "sudo apt-get install -y python3",
             "pip": "sudo apt-get install -y python3-pip",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "sudo apt-get install -y htop or sudo apt-get install -y btop",
         },
         "wsl": {
             "git": "sudo apt-get install -y git",
@@ -139,7 +137,6 @@ def install_hint(tool_id: str, kind: str) -> str:
             "python": "sudo apt-get install -y python3",
             "pip": "sudo apt-get install -y python3-pip",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "sudo apt-get install -y htop or sudo apt-get install -y btop",
         },
         "windows": {
             "git": "winget install --id Git.Git",
@@ -151,7 +148,6 @@ def install_hint(tool_id: str, kind: str) -> str:
             "python": "winget install --id Python.Python.3.12",
             "pip": "python -m ensurepip --upgrade",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "Install an optional Windows terminal monitor only when needed.",
         },
     }
 
@@ -262,7 +258,6 @@ def make_tool_checks(kind: str, env: dict[str, str]) -> list[Check]:
         ("python", "Python runtime for validation scripts", ["python3", "python"], False),
         ("pip", "pip for Python provider installs", ["pip3", "pip"], False),
         ("tree_sitter_cli", "Tree-sitter CLI for parser diagnostics", ["tree-sitter"], False),
-        ("system_monitor", "htop or btop terminal monitor", ["htop", "btop"], False),
     ]
 
     checks: list[Check] = []

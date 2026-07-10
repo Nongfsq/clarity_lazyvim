@@ -6,6 +6,7 @@ return {
     require("plugins.minimal"),
     require("plugins.neo-tree"),
     require("plugins.toggleterm"),
+    require("plugins.tooling"),
     require("plugins.treesitter"),
     require("plugins.ui"),
 }

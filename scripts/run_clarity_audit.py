@@ -8,12 +8,12 @@ from pathlib import Path
 from clarity_runtime import build_env, combined_output, extract_last_json_object, resolve_nvim_binary, run_nvim
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run the Clarity runtime capability audit.")
     parser.add_argument("--json", action="store_true", help="Emit only the machine-readable audit report.")
     parser.add_argument("--nvim-bin", help="Neovim executable; defaults to NVIM_BIN or PATH.")
     parser.add_argument("--timeout", type=float, default=120, help="Neovim timeout in seconds.")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parent.parent
     nvim = resolve_nvim_binary(args.nvim_bin)

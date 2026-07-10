@@ -71,7 +71,7 @@ return {
             task = "RUNTIME-006",
         },
         git_hunks = {
-            surface = "<leader>hs|hr|hp",
+            surface = "<leader>ghs|ghr|ghp",
             owner = "plugins.git",
             profile = "development",
             coverage = "planned",
@@ -79,7 +79,7 @@ return {
         },
         lsp_navigation = {
             surface = "gd|gr|gl",
-            owner = "config.keymaps",
+            owner = "LazyVim LSP keymaps",
             profile = "development",
             coverage = "planned",
             task = "RUNTIME-006",

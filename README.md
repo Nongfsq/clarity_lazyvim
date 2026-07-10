@@ -48,7 +48,7 @@ It is a focused editor product for daily work.
 | Code folding | `<leader>cz` | Toggle the fold containing the cursor without memorizing Vim's `z` commands |
 | Line wrapping | `<leader>uw` | Long lines wrap visually by default; toggle per editing window |
 | Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
-| Git hunks | `<leader>hs`, `<leader>hr`, `<leader>hp` | Clear hunk ownership without overloading the global Git namespace |
+| Git hunks | `<leader>ghs`, `<leader>ghr`, `<leader>ghp` | Git hunk actions live under the truthful `<leader>gh` group |
 | Recovery | `:ClarityStart`, `<leader>hh` | A product-level "I forgot" path inside Neovim |
 | Language | `:ClarityLanguage` | Switch Clarity-owned UI between `auto`, `en`, and `zh` |
 | Audit | `:ClarityAudit` | Environment and dependency readiness in one command |
@@ -72,7 +72,7 @@ The active stack stays intentionally small:
 - `gitsigns.nvim`
 - `conform.nvim`
 - `nvim-treesitter`
-- `copilot.lua`
+- optional `copilot.lua` when `CLARITY_COPILOT=1`
 
 Several inherited or optional power-user plugins are deliberately disabled to keep the public product easier to audit and maintain.
 
@@ -150,9 +150,11 @@ nvim
 On first launch:
 
 1. `lazy.nvim` bootstraps plugins.
-2. Mason installs configured language servers and formatter tooling.
-3. Treesitter compiles parsers if a compiler is available.
-4. Copilot prefers a Node.js `22+` runtime.
+2. The core profile starts without background language-tool installation.
+3. Set `CLARITY_PROFILE=development` before starting Neovim when you want the
+   curated Mason servers, formatters, and Tree-sitter parsers installed.
+4. Set `CLARITY_COPILOT=1` to opt into Copilot; it uses the active `node` from
+   `PATH` and requires Node.js `22+`.
 5. The Clarity welcome panel appears automatically on the first empty interactive startup.
 6. Use `:ClarityLanguage auto|en|zh` any time to inspect or change the Clarity UI language.
 
@@ -400,10 +402,6 @@ Validation currently covers:
 3. Node.js `22+` and npm for Copilot/Node-provider features
 4. Python, pip, and `pynvim` for Python-provider features
 
-### Optional
-
-1. `htop` or `btop`
-
 ## Troubleshooting
 
 ### Start with Clarity Doctor
@@ -497,8 +495,10 @@ The related features warn and degrade gracefully instead of crashing the editor.
 
 ### Copilot says Node.js `22+` is required
 
-Install a modern Node runtime with `fnm`, `nvm`, or `volta`.
-When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatically before falling back to `PATH`.
+Copilot is disabled in the core profile. Install a modern Node runtime, then
+start Neovim with `CLARITY_COPILOT=1`. Clarity uses the `node` executable from
+the active `PATH`; it does not scan version-manager directories or claim core
+completion keys.
 
 ## Documentation
 

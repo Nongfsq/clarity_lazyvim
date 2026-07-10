@@ -16,6 +16,9 @@
 | Active PLAN+TASK | [`../progress/2026-07-09-clarity-95-refactor-plan.md`](../progress/2026-07-09-clarity-95-refactor-plan.md) | Task IDs, dependencies, status, acceptance, validation |
 | Runtime verification PLAN+TASK | [`../progress/2026-07-09-runtime-contract-verification-plan.md`](../progress/2026-07-09-runtime-contract-verification-plan.md) | Runtime-contract task status, evidence, and phase gates |
 | Observability/test PLAN+TASK | [`../progress/2026-07-10-observability-and-test-system-plan.md`](../progress/2026-07-10-observability-and-test-system-plan.md) | Active diagnostic, fold-action, test-router, and CI task ledger |
+| Interaction/dependency review | [`reviews/2026-07-10-interaction-dependency-modernization-review.md`](reviews/2026-07-10-interaction-dependency-modernization-review.md) | Keymap, feature, dependency, and current-workflow evidence |
+| Resolved dependency manifest | [`reviews/2026-07-10-resolved-dependency-manifest.md`](reviews/2026-07-10-resolved-dependency-manifest.md) | Active/locked set, retention rationale, lock rollback evidence |
+| Simplification PLAN+TASK | [`../progress/2026-07-10-interaction-dependency-simplification-plan.md`](../progress/2026-07-10-interaction-dependency-simplification-plan.md) | Completed local/manual-Ubuntu execution ledger; Windows/release evidence pending |
 | Local agent contract | `AGENTS.md` at repository root | Durable local implementation rules; intentionally ignored by Git and therefore not a public repository link |
 
 ## Accepted Decisions
@@ -24,6 +27,7 @@
 - [`decisions/0002-readiness-signals.md`](decisions/0002-readiness-signals.md)
 - [`decisions/0003-ci-evidence-boundary.md`](decisions/0003-ci-evidence-boundary.md)
 - [`decisions/0004-natural-lifecycle-runtime-contracts.md`](decisions/0004-natural-lifecycle-runtime-contracts.md)
+- [`decisions/0005-thin-upstream-ownership-and-explicit-profiles.md`](decisions/0005-thin-upstream-ownership-and-explicit-profiles.md)
 
 ## Public Product Documentation
 

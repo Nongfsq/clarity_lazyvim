@@ -126,24 +126,53 @@ local function find_global_npm_package(package_name)
     return false, nil
 end
 
-local function get_clipboard_status()
+function M.classify_clipboard(input)
+    input = input or {}
+    local provider = input.provider
+    local provider_name = tostring(provider or ""):lower():gsub("%s+", "")
+    local ssh = input.ssh == true
+    local wsl = input.wsl == true
+
+    if provider_name == "osc52" or (ssh and input.forced_osc52) then
+        return "ssh_osc52", true, false
+    end
+    if wsl and provider and provider ~= "" then
+        return "wsl", true, true
+    end
+    if provider and provider ~= "" then
+        return "desktop", true, true
+    end
+    return "missing", false, false
+end
+
+function M.get_clipboard_status(session)
     local ok, provider = pcall(function()
         return vim.fn["provider#clipboard#Executable"]()
     end)
     local clipboard = vim.opt.clipboard:get()
     local unnamedplus = option_contains(clipboard, "unnamedplus")
 
-    if not ok or not provider or provider == "" then
-        return {
-            present = false,
-            provider = nil,
-            unnamedplus = unnamedplus,
-        }
+    session = session or {}
+    local ssh = session.ssh or (vim.env.SSH_CONNECTION or "") ~= "" or (vim.env.SSH_TTY or "") ~= ""
+    local wsl = session.wsl or vim.fn.has("wsl") == 1
+    local configured = vim.g.clipboard
+    if configured == "osc52" then
+        provider = "osc52"
+        ok = true
     end
+    local kind, supports_copy, supports_paste = M.classify_clipboard({
+        provider = ok and provider or nil,
+        ssh = ssh,
+        wsl = wsl,
+        forced_osc52 = configured == "osc52",
+    })
 
     return {
-        present = true,
-        provider = provider,
+        present = supports_copy,
+        provider = ok and provider ~= "" and provider or nil,
+        kind = kind,
+        supports_copy = supports_copy,
+        supports_paste = supports_paste,
         unnamedplus = unnamedplus,
     }
 end
@@ -193,16 +222,6 @@ local function get_treesitter_status()
         end
     end
 
-    local buf = vim.api.nvim_create_buf(false, true)
-    vim.bo[buf].buftype = "nofile"
-    vim.bo[buf].bufhidden = "wipe"
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "set tab", "tabnew" })
-    vim.bo[buf].filetype = "vim"
-
-    local ok_highlighter, highlighter = pcall(vim.treesitter.start, buf, "vim")
-    pcall(vim.treesitter.stop, buf)
-    pcall(vim.api.nvim_buf_delete, buf, { force = true })
-
     local metadata = {}
     local abi_version
     if ok_inspect and type(inspect_info) == "table" then
@@ -211,7 +230,7 @@ local function get_treesitter_status()
     end
 
     local user_parser_present = file_exists(user_parser)
-    local health_ok = ok_inspect and query_ok and parse_ok and ok_highlighter
+    local health_ok = ok_inspect and query_ok and parse_ok
     local stale_user_override = user_parser_present and not health_ok
 
     return {
@@ -219,7 +238,9 @@ local function get_treesitter_status()
         inspect_ok = ok_inspect,
         query_ok = query_ok,
         parse_ok = parse_ok,
-        highlighter_ok = ok_highlighter,
+        -- Starting a highlighter requires a live buffer and belongs to the
+        -- isolated runtime-contract suite, not passive session collection.
+        highlighter_ok = nil,
         parser_metadata = metadata,
         abi_version = abi_version,
         user_parser = user_parser,
@@ -231,7 +252,6 @@ local function get_treesitter_status()
             or (not query_ok and tostring(query))
             or (not ok_parser and tostring(parser))
             or parse_error
-            or (not ok_highlighter and tostring(highlighter))
             or nil,
         repair_command = "python3 scripts/clarity_doctor.py --apply",
     }
@@ -308,9 +328,6 @@ function M.notify_missing(commands, feature, hint)
 end
 
 function M.get_report()
-    pcall(vim.cmd, "doautocmd User VeryLazy")
-    vim.wait(100)
-
     local repo_root = get_repo_root()
     local nvim_dir = get_nvim_dir()
     local root_lock = repo_root .. "/lazy-lock.json"
@@ -435,8 +452,12 @@ function M.get_report()
     })
 
     local node_entry
+    local copilot_enabled = vim.env.CLARITY_COPILOT == "1"
 
     for _, spec in ipairs(tool_specs) do
+        if spec.profile == "copilot" and not copilot_enabled then
+            goto continue
+        end
         local present, detected = M.has(spec.commands)
         local version = present and M.get_command_version(detected) or nil
         local version_major = parse_major(version)
@@ -472,9 +493,10 @@ function M.get_report()
             impact = spec.impact,
             repair = spec.repair,
         })
+        ::continue::
     end
 
-    local clipboard = get_clipboard_status()
+    local clipboard = M.get_clipboard_status()
     local python_provider_present, python_interpreter = find_python_module("pynvim")
     local node_provider_present, node_provider_version = find_global_npm_package("neovim")
     local picker = get_picker_status(report.plugins)
@@ -495,6 +517,7 @@ function M.get_report()
         },
         picker = picker,
         copilot = {
+            enabled = copilot_enabled,
             present = node_entry and node_entry.present or false,
             satisfied = node_entry and node_entry.present or false,
             detected = node_entry and node_entry.detected or nil,
@@ -518,7 +541,7 @@ function M.get_report()
         profile = "core",
         required = true,
         status = treesitter.health_ok and "pass" or "fail",
-        detail = treesitter.health_ok and "parser/query/highlighter ready"
+        detail = treesitter.health_ok and "parser/query ready; highlighter behavior delegated to runtime contracts"
             or (treesitter.error or "health check failed"),
         impact = "Core syntax parsing can fail or emit repeated runtime errors.",
         repair = treesitter.repair_command,
@@ -534,7 +557,7 @@ function M.get_report()
     })
     add_check({
         id = "clipboard_unnamedplus",
-        profile = "core",
+        profile = "clipboard",
         required = true,
         status = clipboard.unnamedplus and "pass" or "fail",
         detail = clipboard.unnamedplus and "enabled" or "disabled",
@@ -646,7 +669,8 @@ function M.render_report(report)
         string.format("Search backend: %s (%s)", report.integrations.picker.backend, report.integrations.picker.reason)
     )
 
-    local copilot_status = report.integrations.copilot.satisfied and "OK" or "MISSING"
+    local copilot_status = not report.integrations.copilot.enabled and "DISABLED"
+        or (report.integrations.copilot.satisfied and "OK" or "MISSING")
     local copilot_version = report.integrations.copilot.version and (" (" .. report.integrations.copilot.version .. ")")
         or ""
     table.insert(

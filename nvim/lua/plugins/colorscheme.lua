@@ -2,9 +2,11 @@ return {
     {
         "LazyVim/LazyVim",
         opts = {
-            colorscheme = "habamax",
+            colorscheme = "custom_colorblind_theme",
         },
     },
+    -- The colorscheme uses Lush's HSL and theme DSL directly. Keep this eager so
+    -- it is available when LazyVim applies the startup colorscheme.
     {
         "rktjmp/lush.nvim",
         lazy = false,

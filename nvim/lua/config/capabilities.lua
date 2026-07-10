@@ -85,15 +85,6 @@ M.tool_specs = {
         impact = "Python provider packages cannot be installed with pip.",
         repair = "Install pip only when Python provider packages are needed.",
     },
-    {
-        id = "system_monitor",
-        profile = "utilities",
-        required = false,
-        commands = { "htop", "btop" },
-        feature = "optional system monitor terminal",
-        impact = "The optional system-monitor shortcut shows install guidance.",
-        repair = "Install htop or btop only when this optional utility is desired.",
-    },
 }
 
 local function compare_version(left, right)

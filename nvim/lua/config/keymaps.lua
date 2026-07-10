@@ -14,29 +14,10 @@ local function pick(command, pick_opts)
     end
 end
 
--- LSP and diagnostics.
-opts.desc = i18n.t("keymaps.declaration")
-map("n", "gD", vim.lsp.buf.declaration, opts)
-opts.desc = i18n.t("keymaps.definition")
-map("n", "gd", vim.lsp.buf.definition, opts)
-opts.desc = i18n.t("keymaps.hover")
-map("n", "K", vim.lsp.buf.hover, opts)
-opts.desc = i18n.t("keymaps.implementation")
-map("n", "gi", vim.lsp.buf.implementation, opts)
-opts.desc = i18n.t("keymaps.references")
-map("n", "gr", vim.lsp.buf.references, opts)
-opts.desc = i18n.t("keymaps.rename")
-map("n", "<leader>cr", vim.lsp.buf.rename, opts)
-opts.desc = i18n.t("keymaps.code_action")
-map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+-- LazyVim owns LSP and diagnostic mappings through buffer-local, capability-aware
+-- handlers. Clarity only adds product-specific editing actions here.
 opts.desc = i18n.t("keymaps.toggle_fold")
 map("n", "<leader>cz", require("config.actions.fold").toggle, opts)
-opts.desc = i18n.t("keymaps.line_diagnostic")
-map("n", "gl", vim.diagnostic.open_float, opts)
-opts.desc = i18n.t("keymaps.prev_diagnostic")
-map("n", "[d", vim.diagnostic.goto_prev, opts)
-opts.desc = i18n.t("keymaps.next_diagnostic")
-map("n", "]d", vim.diagnostic.goto_next, opts)
 
 -- Window management.
 -- `<leader>-` / `<leader>|` / `<leader>wd` remain the primary paths from LazyVim.
