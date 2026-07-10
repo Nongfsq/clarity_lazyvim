@@ -329,8 +329,8 @@ renumbering them, and introduces only the missing task IDs.
 ### DEPS-001: Prune Proven Dead Dependency Surface
 
 - Status: done — 2026-07-10; devicons removed by validated atomic lock
-  transaction; policy tombstones and optional Copilot retention documented;
-  exact backup and clean post-transaction normalization verified
+  transaction; 12 product exclusions separated from the lock; optional Copilot
+  retained; exact backups and clean post-transaction normalization verified
 - Depends on: NVIM-007, TERM-001, COPILOT-001, THEME-001
 - Files: `nvim/lua/plugins/minimal.lua`, affected specs, `lazy-lock.json`,
   dependency manifest, migration/rollback note

@@ -192,12 +192,13 @@ As of 2026-07-10 on the simplification candidate:
   autocmds, editing defaults, and keymap ownership/behavior
 - raw-fold fixture: exactly `CLARITY_RUNTIME_KEYMAP_CONTRACT`; the repaired
   action returns `no_fold` without `E490/E5108` on a plain line
-- simplification candidate: 37 Python tests and 20 Lua policy files pass; the
+- simplification candidate: 37 Python tests and 21 Lua policy files pass; the
   full release router passes on macOS and manual Ubuntu 24.04; fold is covered by
   success, expected-edge, fault, restoration, and real-input evidence
 - empty headless startup loads 4 plugins instead of the reviewed baseline of 10
-- the resolved core set is 25 plugins; the normalized lock has 38 entries, with
-  policy tombstones and optional Copilot documented separately
+- the resolved core set is 25 plugins; the lock has 26 entries: active/transitive
+  dependencies plus optional Copilot, while 12 product exclusions live only in
+  `nvim/lua/plugins/minimal.lua`
 
 This snapshot is intentionally local-only. It must not be copied into a public
 cross-platform baseline until the clean-archive matrix in the active plan is
@@ -340,4 +341,4 @@ progress/2026-07-10-interaction-dependency-simplification-plan.md
 
 The `nvim-lspconfig` drift was accepted through the backup-first atomic
 transaction; the current lock hash is
-`4f702e2bde3020465ffa2b28c3a681f4b56b415b6164171d73151c8aa717a6db`.
+`33ec35118884af5ebdada829196672d4d7e25c2a0d4084418a3505b2c3bafcdc`.

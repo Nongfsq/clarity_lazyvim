@@ -9,7 +9,7 @@ Base: `b072da5049092ab495cfa6f6c6a0152dfbdfba45`
 - Resolved enabled plugins in the core noninteractive profile: 25.
 - Loaded at empty headless startup: 4 (`LazyVim`, `lazy.nvim`, `lush.nvim`,
   `snacks.nvim`), down from the reviewed baseline of 10.
-- Lock entries after the atomic normalization transaction: 38, down from 39.
+- Lock entries after policy/lock separation: 26, down from 39.
 - Removed lock entry: `nvim-web-devicons`; LazyVim's `mini.icons` compatibility
   satisfies Neo-tree without a second icon implementation.
 - Lock transaction backup:
@@ -25,10 +25,10 @@ Base: `b072da5049092ab495cfa6f6c6a0152dfbdfba45`
 `noice.nvim`, `nui.nvim`, `plenary.nvim`, `ts-comments.nvim`, and
 `which-key.nvim`.
 
-## Retained Policy And Optional Lock Entries
+## Product Exclusions And Optional Lock Entries
 
-The following entries are not unexplained dead dependencies. Their disabled specs
-prevent LazyVim defaults from re-expanding the public product surface:
+The following plugins remain explicit `enabled = false` product exclusions in
+`nvim/lua/plugins/minimal.lua`, but are no longer lock entries:
 
 - `bufferline.nvim`
 - `catppuccin`
@@ -65,9 +65,13 @@ intentional so the optional profile remains reproducible.
 - `update_clarity_lock.py --apply` validated the copied candidate before replacing
   the source lock.
 - Old hash: `af8ad1dff2b125573e19a37c3a30af25a152450d2b9b1d0320ee78fd35db04d7`.
-- New hash: `4f702e2bde3020465ffa2b28c3a681f4b56b415b6164171d73151c8aa717a6db`.
-- The exact old bytes remain in the backup path above.
-- Rollback is an atomic replacement from that backup followed by copied-candidate
-  smoke and release validation; the backup was hash-verified and was not applied
-  during this review.
-
+- Post-normalization hash:
+  `4f702e2bde3020465ffa2b28c3a681f4b56b415b6164171d73151c8aa717a6db`.
+- Policy-separated hash:
+  `33ec35118884af5ebdada829196672d4d7e25c2a0d4084418a3505b2c3bafcdc`.
+- Pre-prune backup:
+  `/Users/frank/.local/state/clarity_lazyvim/lock-backups/20260710T224848Z-pre-policy-prune-lazy-lock.json`.
+- Both predecessor locks remain in the listed backups. Rollback is an atomic
+  replacement from the pre-prune backup followed by copied-candidate smoke and
+  release validation; the backup was hash-verified and was not applied during
+  this review.

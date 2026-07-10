@@ -22,15 +22,16 @@ secondary product paths while preserving the core editor jobs.
 - desktop/WSL/SSH/missing clipboard classification and OSC52 copy-only truth;
 - lazy-loaded default restored, reducing empty-headless loaded plugins 10 → 4;
 - `nvim-web-devicons` removed through a validated atomic lock transaction;
-- 12 policy tombstones and optional Copilot retained with explicit rationale.
+- 12 product exclusions moved out of the lock contract; optional Copilot alone
+  remains locked for a reproducible explicit profile.
 
 ## Validation
 
 - Python unit suite: 37 tests passed.
-- Lua policy suite: 20 test files passed.
+- Lua policy suite: 21 test files passed.
 - StyLua check: passed for `init.lua`, `nvim/`, and Lua tests/contracts.
 - Check-only lock normalization: clean at
-  `4f702e2bde3020465ffa2b28c3a681f4b56b415b6164171d73151c8aa717a6db`.
+  `33ec35118884af5ebdada829196672d4d7e25c2a0d4084418a3505b2c3bafcdc`.
 - Full local release router: all seven checks passed on Neovim 0.12.4.
 - Attached UI: floating terminal opens at 60x16; Clarity help is 56x12 at
   60x16 and 76x20 at 80x24, wrapped and read-only.
@@ -44,9 +45,9 @@ secondary product paths while preserving the core editor jobs.
 - Previous hash:
   `af8ad1dff2b125573e19a37c3a30af25a152450d2b9b1d0320ee78fd35db04d7`.
 - Current hash:
-  `4f702e2bde3020465ffa2b28c3a681f4b56b415b6164171d73151c8aa717a6db`.
+  `33ec35118884af5ebdada829196672d4d7e25c2a0d4084418a3505b2c3bafcdc`.
 - Exact backup:
-  `/Users/frank/.local/state/clarity_lazyvim/lock-backups/20260710T223518.375284Z-lazy-lock.json`.
+  `/Users/frank/.local/state/clarity_lazyvim/lock-backups/20260710T224848Z-pre-policy-prune-lazy-lock.json`.
 - Rollback restores that file atomically and reruns copied-candidate smoke and
   the release router.
 
@@ -58,4 +59,3 @@ secondary product paths while preserving the core editor jobs.
 - No push, merge, tag, release, or 95+ certification was performed.
 - `CI-002`, `OBS-008`, and final cross-platform release/quality tasks remain open
   for those external evidence requirements.
-

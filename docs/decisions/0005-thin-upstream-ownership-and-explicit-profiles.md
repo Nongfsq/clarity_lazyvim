@@ -24,8 +24,9 @@ conflicts, and host dependencies without more core user value.
   promises outbound copy, not remote clipboard read/paste.
 - lazy.nvim's lazy default is restored. Every eager exception or retained
   dependency requires a named product or transitive contract.
-- Resolved specs are runtime dependency authority; policy tombstones may remain
-  locked when they prevent LazyVim defaults from re-expanding the product.
+- Product exclusions live in `nvim/lua/plugins/minimal.lua`; the lock contains active
+  dependencies and explicitly supported optional profiles only. A policy test
+  prevents disabled defaults from returning or accumulating stale lock pins.
 
 ## Rejected Alternatives
 
@@ -35,8 +36,8 @@ conflicts, and host dependencies without more core user value.
   becomes startup state and cross-platform burden.
 - Multiple terminal layouts and system monitor integration: rejected because
   they weaken the one-obvious-path promise.
-- Removing all disabled lock entries: rejected because several specs are product
-  policy that disables inherited LazyVim defaults.
+- Using disabled lock entries as policy: rejected because lazy.nvim preserves
+  existing disabled pins but does not use them to enforce `enabled = false`.
 - Adding a clipboard plugin: rejected because Neovim providers and OSC52 cover
   the required paths with a smaller surface.
 - Migrating to `vim.pack`: rejected while LazyVim uses lazy.nvim contracts.
@@ -55,4 +56,3 @@ Revisit when LazyVim changes its package/profile model, Snacks terminal proves a
 strict dependency-removing parity win, native Neovim features are adopted by
 LazyVim, or measured user evidence shows the explicit profile model harms the
 primary experience.
-
