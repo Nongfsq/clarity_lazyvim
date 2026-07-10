@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+import argparse
 import json
-import os
 import re
 import shutil
-import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
+
+from clarity_runtime import (
+    build_env,
+    combined_output,
+    extract_last_json_object,
+    resolve_nvim_binary,
+    run_command,
+    run_nvim,
+)
 
 
 @dataclass
@@ -17,76 +25,24 @@ class CheckResult:
     details: str
     required: bool = True
 
-
-def resolve_nvim_binary() -> str:
-    configured = os.environ.get("NVIM_BIN")
-    if configured:
-        return configured
-
-    explicit_candidate = Path(r"C:\Program Files\Neovim\bin\nvim.exe")
-    if explicit_candidate.exists():
-        return str(explicit_candidate)
-
-    resolved = shutil.which("nvim")
-    if resolved and "WindowsApps" not in resolved:
-        return resolved
-
-    raise FileNotFoundError("Neovim executable not found. Set NVIM_BIN or add `nvim` to PATH.")
-
-
-def build_env(locale: str | None = None) -> dict[str, str]:
-    env = os.environ.copy()
-    env["CLARITY_NONINTERACTIVE"] = "1"
-    if locale:
-        env["CLARITY_LOCALE"] = locale
-
-    if os.name == "nt":
-        compiler_bin = Path(
-            os.environ["LOCALAPPDATA"]
-        ) / "Microsoft" / "WinGet" / "Packages" / "BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe" / "mingw64" / "bin"
-        if compiler_bin.exists():
-            env["PATH"] = str(compiler_bin) + os.pathsep + env.get("PATH", "")
-
-    return env
-
-
-def run_nvim(repo_root: Path, nvim_bin: str, commands: list[str], env: dict[str, str], *args: str) -> subprocess.CompletedProcess[str]:
-    init_path = repo_root / "init.lua"
-    command = [nvim_bin, "--headless", "-u", str(init_path), *args, *commands, "+qall"]
-    return subprocess.run(
-        command,
-        cwd=repo_root,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
+    @property
+    def id(self) -> str:
+        normalized = re.sub(r"[^A-Z0-9]+", "_", self.name.upper()).strip("_")
+        return "CLARITY_VALIDATE_" + normalized
 
 
 def run_doctor_json(repo_root: Path, env: dict[str, str]) -> dict:
-    result = subprocess.run(
+    result = run_command(
         [sys.executable, str(repo_root / "scripts" / "clarity_doctor.py"), "--json"],
         cwd=repo_root,
         env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
+        timeout=120,
     )
 
     if result.returncode not in (0, 1):
         raise RuntimeError((result.stderr or result.stdout).strip() or "doctor command failed")
 
     return json.loads(result.stdout)
-
-
-def extract_last_json_object(text: str) -> dict:
-    for line in reversed(text.splitlines()):
-        candidate = line.strip()
-        if candidate.startswith("{") and candidate.endswith("}"):
-            return json.loads(candidate)
-    raise RuntimeError("Could not locate JSON output in command logs.")
 
 
 def parse_node_major(version_text: str) -> int | None:
@@ -98,10 +54,15 @@ def resolve_executable(name: str) -> str | None:
     return shutil.which(name)
 
 
-def run() -> int:
+def run(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run Clarity behavior validation.")
+    parser.add_argument("--json", action="store_true", help="Emit a machine-readable validation report.")
+    parser.add_argument("--nvim-bin", help="Neovim executable; defaults to NVIM_BIN or PATH.")
+    args = parser.parse_args(argv)
+
     repo_root = Path(__file__).resolve().parent.parent
     env = build_env()
-    nvim_bin = resolve_nvim_binary()
+    nvim_bin = resolve_nvim_binary(args.nvim_bin)
     checks: list[CheckResult] = []
 
     startup = run_nvim(
@@ -125,20 +86,20 @@ def run() -> int:
         return 1
 
     audit = run_nvim(repo_root, nvim_bin, ["+ClarityAudit!"], env)
-    audit_output = "\n".join(part for part in (audit.stdout, audit.stderr) if part)
+    audit_output = combined_output(audit)
     if audit.returncode != 0:
         checks.append(CheckResult("ClarityAudit command", False, audit_output or "command failed"))
         report = {}
     else:
         report = extract_last_json_object(audit_output)
-        required = report.get("summary", {}).get("required", {})
-        required_ok = required.get("ok", 0)
-        required_total = required.get("total", 0)
+        core = report.get("summary", {}).get("core", {})
+        required_ok = core.get("passed", 0)
+        required_total = core.get("total", 0)
         checks.append(
             CheckResult(
                 name="ClarityAudit command",
                 ok=True,
-                details=f"overall={report.get('summary', {}).get('scores', {}).get('overall', 'n/a')}",
+                details=f"core={core.get('status', 'unknown')}",
             )
         )
         checks.append(
@@ -196,7 +157,7 @@ def run() -> int:
         env,
         str(repo_root / "README.md"),
     )
-    runtime_output = "\n".join(part for part in (runtime.stdout, runtime.stderr) if part)
+    runtime_output = combined_output(runtime)
     if runtime.returncode != 0:
         checks.append(CheckResult("Runtime assertions", False, runtime_output or "command failed"))
     else:
@@ -293,9 +254,7 @@ def run() -> int:
         ["+doautocmd User VeryLazy", "+lua vim.wait(150)", f"+lua {editing_controls_lua}"],
         env,
     )
-    editing_controls_output = "\n".join(
-        part for part in (editing_controls.stdout, editing_controls.stderr) if part
-    )
+    editing_controls_output = combined_output(editing_controls)
     if editing_controls.returncode != 0:
         checks.append(CheckResult("Editing control behavior", False, editing_controls_output or "command failed"))
     else:
@@ -350,9 +309,7 @@ def run() -> int:
         env,
         str(repo_root),
     )
-    directory_start_output = "\n".join(
-        part for part in (directory_start.stdout, directory_start.stderr) if part
-    )
+    directory_start_output = combined_output(directory_start)
     if directory_start.returncode != 0:
         checks.append(CheckResult("Directory startup explorer behavior", False, directory_start_output or "command failed"))
     else:
@@ -381,7 +338,7 @@ def run() -> int:
         ],
         env,
     )
-    dashboard_output = "\n".join(part for part in (dashboard.stdout, dashboard.stderr) if part)
+    dashboard_output = combined_output(dashboard)
     if dashboard.returncode != 0:
         checks.append(CheckResult("Dashboard line-number behavior", False, dashboard_output or "command failed"))
     else:
@@ -394,14 +351,11 @@ def run() -> int:
             )
         )
 
-    pynvim_check = subprocess.run(
+    pynvim_check = run_command(
         [sys.executable, "-c", "import importlib.util; print(importlib.util.find_spec('pynvim') is not None)"],
         cwd=repo_root,
         env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
+        timeout=30,
     )
     pynvim_ok = pynvim_check.returncode == 0 and pynvim_check.stdout.strip().lower() == "true"
     checks.append(
@@ -417,14 +371,11 @@ def run() -> int:
     npm_ok = False
     npm_details = "npm executable not found"
     if npm_exe:
-        npm_neovim_check = subprocess.run(
+        npm_neovim_check = run_command(
             [npm_exe, "list", "-g", "neovim", "--depth=0", "--json"],
             cwd=repo_root,
             env=env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
+            timeout=30,
         )
         npm_details = npm_neovim_check.stdout.strip() or npm_neovim_check.stderr.strip() or "unknown"
         if npm_neovim_check.stdout:
@@ -447,14 +398,11 @@ def run() -> int:
 
     node_exe = resolve_executable("node")
     if node_exe:
-        node_version_check = subprocess.run(
+        node_version_check = run_command(
             [node_exe, "--version"],
             cwd=repo_root,
             env=env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
+            timeout=30,
         )
         node_major = parse_node_major(node_version_check.stdout.strip()) if node_version_check.returncode == 0 else None
         node_details = node_version_check.stdout.strip() or node_version_check.stderr.strip() or "unknown"
@@ -577,7 +525,7 @@ def run() -> int:
             ["+doautocmd User VeryLazy", "+lua vim.wait(150)", f"+lua {locale_runtime_lua}"],
             locale_env,
         )
-        locale_output = "\n".join(part for part in (locale_runtime.stdout, locale_runtime.stderr) if part)
+        locale_output = combined_output(locale_runtime)
         if locale_runtime.returncode != 0:
             checks.append(
                 CheckResult(
@@ -665,14 +613,32 @@ def run() -> int:
     required_failures = [check for check in checks if check.required and not check.ok]
     optional_failures = [check for check in checks if (not check.required) and (not check.ok)]
 
-    print("Clarity Runtime Validation")
-    for check in checks:
-        marker = "PASS" if check.ok else ("WARN" if not check.required else "FAIL")
-        requirement = "required" if check.required else "optional"
-        print(f"[{marker}] {check.name} ({requirement}) -> {check.details}")
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "check_id": "CLARITY-VALIDATE-001",
+                    "status": "fail" if required_failures else "pass",
+                    "summary": {
+                        "required_failures": len(required_failures),
+                        "optional_warnings": len(optional_failures),
+                        "total": len(checks),
+                    },
+                    "checks": [{"id": check.id, **asdict(check)} for check in checks],
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+    else:
+        print("Clarity Runtime Validation")
+        for check in checks:
+            marker = "PASS" if check.ok else ("WARN" if not check.required else "FAIL")
+            requirement = "required" if check.required else "optional"
+            print(f"[{marker}] {check.id}: {check.name} ({requirement}) -> {check.details}")
 
-    print(f"Required failures: {len(required_failures)}")
-    print(f"Optional warnings: {len(optional_failures)}")
+        print(f"Required failures: {len(required_failures)}")
+        print(f"Optional warnings: {len(optional_failures)}")
 
     return 1 if required_failures else 0
 

@@ -1,5 +1,11 @@
 # Clarity LazyVim 产品体验与架构评估报告
 
+> 历史快照：本文保留 2026-04-21 时的评估与分数，仅用于追溯，不代表当前
+> 质量或 CI 状态。当前权威评估请见
+> [`../docs/reviews/2026-07-09-clarity-95-quality-review.md`](../docs/reviews/2026-07-09-clarity-95-quality-review.md)，
+> 当前架构与执行计划请从
+> [`../docs/DOCUMENT_INDEX.md`](../docs/DOCUMENT_INDEX.md) 进入。
+
 最后更新：2026-04-21（菜单本地化与终端稳定性轮）
 仓库：`E:\Project\clarity_lazyvim`
 

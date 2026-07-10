@@ -1,44 +1,7 @@
 local M = {}
 local i18n = require("config.i18n")
-
-local tool_specs = {
-    { id = "git", required = true, commands = { "git" }, feature = "bootstrap lazy.nvim and clone plugins" },
-    {
-        id = "compiler",
-        required = true,
-        commands = { "cl", "gcc", "clang", "cc", "zig" },
-        feature = "build Treesitter parsers",
-    },
-    { id = "ripgrep", required = false, commands = { "rg" }, feature = "fast text search" },
-    { id = "fd", required = false, commands = { "fd", "fdfind" }, feature = "fast file search" },
-    {
-        id = "node",
-        required = false,
-        commands = { "node" },
-        feature = "Node provider and Copilot runtime",
-        minimum_major = 22,
-    },
-    { id = "npm", required = false, commands = { "npm" }, feature = "install provider packages manually" },
-    {
-        id = "python",
-        required = false,
-        commands = { "python3", "python" },
-        feature = "Python provider and Python-based tools",
-    },
-    {
-        id = "pip",
-        required = false,
-        commands = { "pip3", "pip" },
-        feature = "install Python provider packages manually",
-    },
-    {
-        id = "tree_sitter_cli",
-        required = false,
-        commands = { "tree-sitter" },
-        feature = "diagnose Tree-sitter parser/query issues",
-    },
-    { id = "system_monitor", required = false, commands = { "htop", "btop" }, feature = "system monitor terminal" },
-}
+local capabilities = require("config.capabilities")
+local tool_specs = capabilities.tool_specs
 
 local function source_path()
     return debug.getinfo(1, "S").source:sub(2)
@@ -352,8 +315,16 @@ function M.get_report()
     local nvim_dir = get_nvim_dir()
     local root_lock = repo_root .. "/lazy-lock.json"
     local nested_lock = nvim_dir .. "/lazy-lock.json"
+    local root_json = repo_root .. "/lazyvim.json"
+    local nested_json = nvim_dir .. "/lazyvim.json"
+    local checks = {}
+
+    local function add_check(spec)
+        table.insert(checks, capabilities.check(spec))
+    end
 
     local report = {
+        report_id = "CLARITY-AUDIT-001",
         generated_at = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         platform = vim.loop.os_uname(),
         nvim = vim.version(),
@@ -367,16 +338,102 @@ function M.get_report()
             root_lock = file_exists(root_lock),
             nested_lock = file_exists(nested_lock),
             duplicate_lockfiles = file_exists(root_lock) and file_exists(nested_lock),
+            root_json = file_exists(root_json),
+            nested_json = file_exists(nested_json),
+            duplicate_json = file_exists(root_json) and file_exists(nested_json),
             nvim_dir_present = directory_exists(nvim_dir),
         },
         plugins = M.get_plugin_report(),
         tools = {},
+        checks = checks,
     }
 
-    local required_total = 0
-    local required_ok = 0
-    local optional_total = 0
-    local optional_ok = 0
+    local nvim_supported = capabilities.nvim_supported(report.nvim)
+    add_check({
+        id = "nvim_version",
+        profile = "core",
+        required = true,
+        status = nvim_supported and "pass" or "fail",
+        detail = string.format(
+            "%d.%d.%d (requires >=%d.%d.%d)",
+            report.nvim.major,
+            report.nvim.minor,
+            report.nvim.patch,
+            capabilities.minimum_nvim.major,
+            capabilities.minimum_nvim.minor,
+            capabilities.minimum_nvim.patch
+        ),
+        impact = "Clarity and the locked LazyVim generation may fail at startup or behave incorrectly.",
+        repair = "Install the supported Neovim release and rerun the audit.",
+    })
+
+    local layout_checks = {
+        {
+            id = "root_init",
+            ok = report.layout.root_init,
+            detail = repo_root .. "/init.lua",
+            impact = "The public repository entrypoint is missing.",
+        },
+        {
+            id = "nested_runtime",
+            ok = report.layout.nested_init and report.layout.nvim_dir_present,
+            detail = nvim_dir .. "/init.lua",
+            impact = "The Clarity runtime cannot be loaded from the repository entrypoint.",
+        },
+        {
+            id = "canonical_lockfile",
+            ok = report.layout.root_lock and not report.layout.duplicate_lockfiles,
+            detail = root_lock,
+            impact = "Plugin versions are not controlled by one repository lockfile.",
+        },
+        {
+            id = "canonical_lazyvim_json",
+            ok = report.layout.root_json and not report.layout.duplicate_json,
+            detail = root_json,
+            impact = "LazyVim extras/state can drift between root and nested files.",
+        },
+    }
+    for _, item in ipairs(layout_checks) do
+        add_check({
+            id = item.id,
+            profile = "core",
+            required = true,
+            status = item.ok and "pass" or "fail",
+            detail = item.detail,
+            impact = item.impact,
+            repair = "Restore the tracked repository layout and rerun :ClarityAudit.",
+        })
+    end
+
+    local ok_lazy, lazy_config = pcall(require, "lazy.core.config")
+    local actual_lock = ok_lazy and lazy_config.options and lazy_config.options.lockfile or nil
+    local actual_json = LazyVim and LazyVim.config and LazyVim.config.json and LazyVim.config.json.path or nil
+    local expected_lock = vim.fs.normalize(root_lock)
+    local expected_json = vim.fs.normalize(root_json)
+    local lock_matches = actual_lock and vim.fs.normalize(actual_lock) == expected_lock or false
+    local json_matches = actual_json and vim.fs.normalize(actual_json) == expected_json or false
+    report.paths.lockfile = actual_lock
+    report.paths.lazyvim_json = actual_json
+
+    add_check({
+        id = "runtime_lockfile_authority",
+        profile = "core",
+        required = true,
+        status = lock_matches and "pass" or "fail",
+        detail = string.format("expected=%s actual=%s", expected_lock, actual_lock or "missing"),
+        impact = "The running plugin set may not match the repository lockfile.",
+        repair = "Use the repository bootstrap, which must pass the root lockfile explicitly to lazy.nvim.",
+    })
+    add_check({
+        id = "runtime_lazyvim_json_authority",
+        profile = "core",
+        required = true,
+        status = json_matches and "pass" or "fail",
+        detail = string.format("expected=%s actual=%s", expected_json, actual_json or "missing"),
+        impact = "The running LazyVim extras/state may differ from the committed repository contract.",
+        repair = "Set vim.g.lazyvim_json to the repository root file before importing LazyVim.",
+    })
+
     local node_entry
 
     for _, spec in ipairs(tool_specs) do
@@ -391,6 +448,7 @@ function M.get_report()
         local entry = {
             id = spec.id,
             required = spec.required,
+            profile = spec.profile,
             commands = spec.commands,
             feature = spec.feature,
             present = present,
@@ -405,17 +463,15 @@ function M.get_report()
             node_entry = entry
         end
 
-        if spec.required then
-            required_total = required_total + 1
-            if present then
-                required_ok = required_ok + 1
-            end
-        else
-            optional_total = optional_total + 1
-            if present then
-                optional_ok = optional_ok + 1
-            end
-        end
+        add_check({
+            id = "tool_" .. spec.id,
+            profile = spec.profile,
+            required = spec.required,
+            status = present and "pass" or (spec.required and "fail" or "warn"),
+            detail = present and string.format("%s%s", detected, version and (" " .. version) or "") or "missing",
+            impact = spec.impact,
+            repair = spec.repair,
+        })
     end
 
     local clipboard = get_clipboard_status()
@@ -448,60 +504,71 @@ function M.get_report()
         treesitter = treesitter,
     }
 
-    local integration_total = 6
-    local integration_ok = 0
+    add_check({
+        id = "picker_backend",
+        profile = "core",
+        required = true,
+        status = picker.backend == "snacks" and "pass" or "fail",
+        detail = picker.backend .. ": " .. picker.reason,
+        impact = "The promoted file/text search workflows do not have their expected backend.",
+        repair = "Restore the locked Snacks picker configuration and rerun the audit.",
+    })
+    add_check({
+        id = "treesitter_vim_health",
+        profile = "core",
+        required = true,
+        status = treesitter.health_ok and "pass" or "fail",
+        detail = treesitter.health_ok and "parser/query/highlighter ready"
+            or (treesitter.error or "health check failed"),
+        impact = "Core syntax parsing can fail or emit repeated runtime errors.",
+        repair = treesitter.repair_command,
+    })
+    add_check({
+        id = "clipboard_provider",
+        profile = "clipboard",
+        required = true,
+        status = clipboard.present and "pass" or "fail",
+        detail = clipboard.provider or "missing",
+        impact = "System clipboard integration is unavailable in this host/session.",
+        repair = "Run :ClarityClipboard for platform-specific setup guidance.",
+    })
+    add_check({
+        id = "clipboard_unnamedplus",
+        profile = "core",
+        required = true,
+        status = clipboard.unnamedplus and "pass" or "fail",
+        detail = clipboard.unnamedplus and "enabled" or "disabled",
+        impact = "Clarity's documented clipboard mode is not active.",
+        repair = "Restore the Clarity clipboard option and rerun the audit.",
+    })
+    add_check({
+        id = "provider_python",
+        profile = "providers",
+        required = false,
+        status = python_provider_present and "pass" or "warn",
+        detail = python_provider_present and (python_interpreter or "python") or "pynvim missing",
+        impact = "Optional Python-backed integrations are unavailable.",
+        repair = "Install pynvim for the active Python interpreter when needed.",
+    })
+    add_check({
+        id = "provider_node",
+        profile = "providers",
+        required = false,
+        status = node_provider_present and "pass" or "warn",
+        detail = node_provider_present and (node_provider_version or "installed") or "npm neovim package missing",
+        impact = "Optional Node provider integrations are unavailable.",
+        repair = "Run `npm install -g neovim` when the Node provider is needed.",
+    })
 
-    if report.integrations.clipboard.present then
-        integration_ok = integration_ok + 1
-    end
-    if report.integrations.clipboard.unnamedplus then
-        integration_ok = integration_ok + 1
-    end
-    if report.integrations.python_provider.present then
-        integration_ok = integration_ok + 1
-    end
-    if report.integrations.node_provider.present then
-        integration_ok = integration_ok + 1
-    end
-    if report.integrations.picker.backend == "snacks" then
-        integration_ok = integration_ok + 1
-    end
-    if report.integrations.copilot.satisfied then
-        integration_ok = integration_ok + 1
-    end
-
-    local layout_score = 100
-    if not report.layout.root_init then
-        layout_score = layout_score - 40
-    end
-    if not report.layout.nested_init then
-        layout_score = layout_score - 20
-    end
-    if report.layout.duplicate_lockfiles then
-        layout_score = layout_score - 25
-    end
-    if not report.layout.nvim_dir_present then
-        layout_score = layout_score - 15
-    end
-    layout_score = math.max(layout_score, 0)
-
-    report.summary = {
-        required = { ok = required_ok, total = required_total },
-        optional = { ok = optional_ok, total = optional_total },
-        integrations = { ok = integration_ok, total = integration_total },
-        scores = {
-            required = score(required_ok, required_total),
-            optional = score(optional_ok, optional_total),
-            layout = layout_score,
-            integrations = score(integration_ok, integration_total),
-        },
+    report.summary = capabilities.summarize(checks)
+    report.summary.required = {
+        ok = report.summary.core.passed,
+        total = report.summary.core.total,
     }
-
-    report.summary.scores.overall = round(
-        (report.summary.scores.required * 0.5)
-            + (report.summary.scores.optional * 0.2)
-            + (report.summary.scores.layout * 0.3)
-    )
+    report.summary.scores = {
+        core = score(report.summary.core.passed, report.summary.core.total),
+    }
+    report.ok = report.summary.core.status == "ready"
 
     return report
 end
@@ -509,19 +576,33 @@ end
 function M.render_report(report)
     local lines = {
         "Clarity Audit",
-        string.format("Overall readiness: %d/100", report.summary.scores.overall),
-        string.format("Required tools: %d/%d", report.summary.required.ok, report.summary.required.total),
-        string.format("Optional tools: %d/%d", report.summary.optional.ok, report.summary.optional.total),
-        string.format("Layout hygiene: %d/100", report.summary.scores.layout),
         string.format(
-            "Integration readiness: %d/100 (%d/%d)",
-            report.summary.scores.integrations,
-            report.summary.integrations.ok,
-            report.summary.integrations.total
+            "Core readiness: %s (%d/%d checks)",
+            report.summary.core.status,
+            report.summary.core.passed,
+            report.summary.core.total
         ),
+        string.format("Host capability: %s", report.summary.host.status),
+        string.format("Release quality: %s — %s", report.summary.release.status, report.summary.release.explanation),
         string.format("Repository root: %s", report.paths.repo_root),
-        string.format("Nested nvim dir: %s", report.paths.nvim_dir),
+        string.format("Plugin lockfile: %s", report.paths.lockfile or "missing"),
+        string.format("LazyVim state: %s", report.paths.lazyvim_json or "missing"),
     }
+
+    for _, profile in ipairs({ "development", "copilot", "providers", "clipboard", "utilities" }) do
+        local item = report.summary.profiles[profile]
+        table.insert(
+            lines,
+            string.format(
+                "Profile %s: %s (%d passed, %d failed, %d warnings)",
+                profile,
+                item.status,
+                item.passed,
+                item.failed,
+                item.warnings
+            )
+        )
+    end
 
     if report.plugins and report.plugins.available then
         table.insert(lines, string.format("Active plugins: %d", report.plugins.active_count))
@@ -605,15 +686,12 @@ function M.render_report(report)
             )
         )
     elseif report.integrations.treesitter.user_parser_present then
-        table.insert(
-            lines,
-            "Note: a user-level vim parser is present and overrides the Neovim bundled parser."
-        )
+        table.insert(lines, "Note: a user-level vim parser is present and overrides the Neovim bundled parser.")
     end
 
     for _, tool in ipairs(report.tools) do
         local marker = tool.present and "OK" or "MISSING"
-        local kind = tool.required and "required" or "optional"
+        local kind = string.format("%s/%s", tool.profile, tool.required and "required" or "optional")
         local detected = tool.present and string.format(" -> %s", tool.detected) or ""
         local version = tool.version and string.format(" (%s)", tool.version) or ""
         local minimum = tool.minimum_major and string.format("; requires >=%d", tool.minimum_major) or ""
@@ -621,6 +699,23 @@ function M.render_report(report)
             lines,
             string.format("- [%s] %s (%s): %s%s%s%s", marker, tool.id, kind, tool.feature, detected, version, minimum)
         )
+    end
+
+    for _, check in ipairs(report.checks or {}) do
+        if check.status ~= "pass" then
+            table.insert(
+                lines,
+                string.format(
+                    "- [%s] %s: %s | Impact: %s | Repair: %s | Recheck: %s",
+                    check.status:upper(),
+                    check.id,
+                    check.detail,
+                    check.impact,
+                    check.repair,
+                    check.recheck
+                )
+            )
+        end
     end
 
     return lines

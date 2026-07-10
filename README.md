@@ -292,17 +292,24 @@ The project follows seven hard rules:
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" />
 </p>
 
-## Verified Baseline
+## Current Validation Status
 
-Current validated baseline:
+As of 2026-07-09:
 
-- macOS local runtime: `100/100`
-- GitHub Actions Ubuntu runtime: validated by `clarity-validate`
-- GitHub Actions Windows runtime: validated by `clarity-validate`
-- Required validation checks: passing locally and in CI when the workflow is green
+- the current macOS machine passes required local runtime validation, with an
+  optional `pynvim` warning;
+- the local audit reports `core=ready`; optional profiles are reported separately
+  and local release quality remains `unverified`;
+- the public GitHub Actions history has no successful completed Ubuntu/Windows
+  baseline, so cross-platform release validation is not currently claimed;
+- the evidence-backed project review is `58/100`, with a target of at least
+  `95/100` and no open P0/P1 findings.
 
-If a local environment reports less than `100/100`, start with `python3 scripts/clarity_doctor.py`.
-Optional warnings are feature-specific; required failures need repair before trusting the runtime.
+See the [current quality review](docs/reviews/2026-07-09-clarity-95-quality-review.md)
+and [active refactor plan](progress/2026-07-09-clarity-95-refactor-plan.md).
+Use `python3 scripts/clarity_doctor.py` for local environment diagnosis and
+`python3 scripts/run_clarity_smoke.py` for an isolated candidate boot; local
+success does not replace the required remote CI evidence.
 
 ## Validation
 
@@ -319,17 +326,26 @@ From the terminal:
 python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
+python3 scripts/update_clarity_lock.py
 ```
 
 Minimal smoke test:
 
 ```sh
-nvim --headless -u ./init.lua "+qall"
+python3 scripts/run_clarity_smoke.py
 ```
+
+`update_clarity_lock.py` is check-only by default: it normalizes a copied
+candidate, restarts it, requires core audit readiness, and reports drift without
+writing the checkout. Use `python3 scripts/update_clarity_lock.py --apply` only
+when intentionally updating plugin pins; it first stores the exact old lock under
+the user state directory and then atomically replaces the repository lockfile.
+Review the resulting Git diff before committing.
 
 Validation currently covers:
 
-- startup smoke checks on Windows and WSL
+- copied-candidate first boot/restart with authority-file hash checks
+- a required Ubuntu/Windows/macOS workflow matrix (remote evidence pending)
 - keymap assertions for high-frequency paths
 - single-explorer directory startup and code fold/line-wrap behavior
 - dashboard, `neo-tree`, and terminal UI behavior
@@ -343,17 +359,20 @@ Validation currently covers:
 
 1. Neovim `0.12+`
 2. Git
-3. A C compiler for Treesitter
-4. A Nerd Font
+3. `ripgrep` for the promoted project text-search workflow
 
-### Recommended
+### Development profile
 
-1. `ripgrep`
-2. `fd`
-3. Node.js `22+` and npm
-4. Python and pip
-5. `tree-sitter` CLI for parser diagnostics:
+1. A C compiler for Tree-sitter parsers and native extensions
+2. `tree-sitter` CLI for parser installation and diagnostics:
    `npm install -g tree-sitter-cli`
+
+### Recommended / optional profiles
+
+1. A Nerd Font
+2. `fd`
+3. Node.js `22+` and npm for Copilot/Node-provider features
+4. Python, pip, and `pynvim` for Python-provider features
 
 ### Optional
 
@@ -458,7 +477,11 @@ When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatical
 ## Documentation
 
 - Chinese complete guide: [doc/clarity_lazyvim_complete_guide_zh.md](doc/clarity_lazyvim_complete_guide_zh.md)
-- Product evaluation and architecture report: [doc/clarity_architecture_governance.md](doc/clarity_architecture_governance.md)
+- Documentation index: [docs/DOCUMENT_INDEX.md](docs/DOCUMENT_INDEX.md)
+- Current 95+ quality review: [docs/reviews/2026-07-09-clarity-95-quality-review.md](docs/reviews/2026-07-09-clarity-95-quality-review.md)
+- Approved refactor architecture: [docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md](docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md)
+- Product and UX plan: [docs/product/clarity-95-experience-pm.md](docs/product/clarity-95-experience-pm.md)
+- The older [product evaluation](doc/clarity_architecture_governance.md) is retained as a historical snapshot.
 
 ## Project Structure
 
@@ -471,6 +494,11 @@ When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatical
 │   ├── assets/
 │   ├── clarity_architecture_governance.md
 │   └── clarity_lazyvim_complete_guide_zh.md
+├── docs/
+│   ├── ai/
+│   ├── architecture/
+│   ├── product/
+│   └── reviews/
 ├── nvim/
 │   ├── colors/
 │   ├── lua/
@@ -481,6 +509,7 @@ When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatical
 │   ├── clarity_doctor.py
 │   ├── run_clarity_audit.py
 │   └── run_clarity_validate.py
+├── progress/
 ├── init.lua
 └── lazy-lock.json
 ```

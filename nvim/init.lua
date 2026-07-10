@@ -3,6 +3,7 @@ local nvim_dir = vim.fn.fnamemodify(source, ":p:h"):gsub("\\", "/")
 
 vim.g.clarity_nvim_dir = nvim_dir
 vim.g.clarity_repo_root = vim.fn.fnamemodify(nvim_dir, ":h")
+vim.g.lazyvim_json = vim.g.clarity_repo_root .. "/lazyvim.json"
 
 if vim.fn.isdirectory(nvim_dir .. "/lua") == 1 then
     vim.opt.rtp:prepend(nvim_dir)
@@ -39,7 +40,6 @@ local function apply_custom_colorscheme()
 end
 
 require("config.lazy")
-require("config.options")
 
 if not apply_custom_colorscheme() then
     pcall(vim.cmd.colorscheme, "habamax")

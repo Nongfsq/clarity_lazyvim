@@ -202,11 +202,13 @@ function M.get_report()
         },
         checks = results,
         audit = {
-            overall = audit_report.summary and audit_report.summary.scores and audit_report.summary.scores.overall
+            core_status = audit_report.summary and audit_report.summary.core and audit_report.summary.core.status
                 or nil,
-            integration_score = audit_report.summary
-                    and audit_report.summary.scores
-                    and audit_report.summary.scores.integrations
+            host_status = audit_report.summary and audit_report.summary.host and audit_report.summary.host.status
+                or nil,
+            release_status = audit_report.summary
+                    and audit_report.summary.release
+                    and audit_report.summary.release.status
                 or nil,
         },
     }
@@ -219,12 +221,12 @@ function M.render_report(report)
         string.format("Checks failed: %d", report.summary.failed),
     }
 
-    if report.audit.overall then
-        table.insert(lines, string.format("Audit overall readiness: %d/100", report.audit.overall))
+    if report.audit.core_status then
+        table.insert(lines, string.format("Audit core readiness: %s", report.audit.core_status))
     end
 
-    if report.audit.integration_score then
-        table.insert(lines, string.format("Audit integration readiness: %d/100", report.audit.integration_score))
+    if report.audit.release_status then
+        table.insert(lines, string.format("Audit release quality: %s", report.audit.release_status))
     end
 
     for _, item in ipairs(report.checks) do

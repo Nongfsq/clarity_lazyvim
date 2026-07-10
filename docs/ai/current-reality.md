@@ -77,7 +77,7 @@ progress/
 
 ## Source Of Truth
 
-Plugin lockfile source of truth:
+Trust-foundation branch runtime authority:
 
 ```text
 lazy-lock.json
@@ -88,6 +88,17 @@ Do not keep or commit:
 ```text
 nvim/lazy-lock.json
 ```
+
+On `codex/20260709-clarity-trust-foundation`:
+
+- lazy.nvim receives root `lazy-lock.json` explicitly;
+- `vim.g.lazyvim_json` points LazyVim at root `lazyvim.json` before import;
+- nested `nvim/lazyvim.json` is removed;
+- the copied-candidate smoke verifies both paths and source/candidate hashes.
+
+The normalized lock snapshot is accepted through the explicit lock transaction.
+The branch still lacks remote matrix evidence and has not been merged. The
+accepted boundary is recorded in ADR-0001.
 
 Local AI implementation rules:
 
@@ -114,7 +125,7 @@ Local safe repair command:
 python3 scripts/clarity_doctor.py --apply
 ```
 
-The doctor is cross-platform for macOS, Linux, and WSL. It dry-runs by default, reports exact dependency and parser health findings, and only performs conservative local backup moves with `--apply`.
+The doctor is cross-platform for macOS, Linux, WSL, and Windows. It dry-runs by default, reports exact dependency and parser health findings, and only performs conservative local backup moves with `--apply`.
 
 Inside Neovim:
 
@@ -130,21 +141,40 @@ Inside Neovim:
 CI:
 
 - `.github/workflows/clarity-validate.yml`
-- runs on Ubuntu and Windows
-- installs Neovim, Python, Node 22, provider packages, and `tree-sitter-cli`
+- defines Ubuntu 24.04, Windows 2022, and macOS 14 jobs
+- installs checksummed official Neovim 0.12.4, Python 3.12, Node 22, pinned
+  provider packages, and `tree-sitter-cli`
+- uses isolated config/data/state/cache paths and a copied candidate repository
+- has bounded jobs/processes, static checks, immutable action SHAs, and artifacts
 - runs audit and runtime validation
 - asserts that directory startup opens one Neo-tree and no Snacks Explorer
 - executes the code-fold and line-wrap mappings, including state restoration
+
+Important evidence boundary:
+
+- local audit and validation results describe the current local machine and its
+  caches; they are not release evidence for a clean clone;
+- the public GitHub Actions history inspected on 2026-07-09 has no successful
+  completed `clarity-validate` run;
+- the historical Windows executable and Ubuntu version/timeout defects are fixed
+  in the branch workflow, but no remote matrix has run for this branch;
+- audit now separates core, optional profiles, and release quality. A local audit
+  never certifies release quality.
 
 ## Current Local Validation Snapshot
 
 As of 2026-07-09 on the current macOS runtime:
 
 - `python3 scripts/clarity_doctor.py`: required checks passing; optional warning for `pynvim`
-- `python3 scripts/run_clarity_audit.py`: `Overall readiness: 100/100`
+- `python3 scripts/run_clarity_audit.py`: core readiness `ready` (`12/12`), release
+  quality `unverified`, provider profile degraded only by missing `pynvim`
 - `python3 scripts/run_clarity_validate.py`: required failures `0`
 - optional warnings: `1` (`pynvim` is missing for the active Python runtime)
 - directory startup: one Neo-tree window and zero Snacks Explorer windows
+
+This snapshot is intentionally local-only. It must not be copied into a public
+cross-platform baseline until the clean-archive matrix in the active plan is
+green.
 
 Current runtime details:
 
@@ -218,6 +248,17 @@ Public documentation currently includes:
 - `doc/clarity_lazyvim_complete_guide_zh.md`
 - `doc/clarity_architecture_governance.md`
 
+Canonical refactor documentation:
+
+- `docs/DOCUMENT_INDEX.md`
+- `docs/reviews/2026-07-09-clarity-95-quality-review.md`
+- `docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md`
+- `docs/product/clarity-95-experience-pm.md`
+- `progress/2026-07-09-clarity-95-refactor-plan.md`
+
+The older `doc/clarity_architecture_governance.md` is retained for historical
+traceability. Its score and platform snapshots are not current authority.
+
 AI workflow documentation lives under:
 
 ```text
@@ -227,3 +268,20 @@ scripts/session-prompt.md
 ```
 
 `AGENTS.md` remains local-only unless the project owner explicitly changes the ignore policy.
+
+## Active Refactor
+
+The 95+ review and architecture direction were approved on 2026-07-09. The first
+trust-foundation batch is implemented locally on
+`codex/20260709-clarity-trust-foundation`.
+
+First execution gate after explicit plan approval:
+
+1. `QA-001` — done locally
+2. `VALIDATE-002` — done locally
+3. `NVIM-002` — done; normalized lock accepted with an explicit validated,
+   backed-up, atomic update transaction
+4. `CI-002` — local workflow checks pass; remote three-platform run required
+
+The implementation must stop after this trust-foundation batch for evidence
+review before migrating plugin ownership.

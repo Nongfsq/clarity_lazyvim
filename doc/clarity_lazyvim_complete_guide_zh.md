@@ -1104,17 +1104,15 @@ python scripts/run_clarity_validate.py
 - `:ClarityValidate`
   更像“行为验收”，看命令和界面有没有回归
 
-当前项目的真实状态是：
+现在不再使用一个加权总分表示所有质量。你会看到三类结果：
 
-- Windows 主开发环境：`94/100`
-- WSL 运行环境：`100/100`
+- `Core readiness`：文件/文本搜索、插件锁、基础解析等核心能力是否可用
+- `Profile ...`：开发工具、Copilot、provider、剪贴板和实用工具是否可用
+- `Release quality`：必须由绑定具体提交的跨平台 CI 证明，本地始终显示
+  `unverified`
 
-这不是说 Windows 不能用，而是说当前 Windows 上还缺少两个可选项：
-
-- `fd`
-- `htop` / `btop`
-
-它们不会阻止你工作，只会让某些体验没有达到“最完整状态”。
+缺少 `fd`、`pynvim`、Copilot 或系统监控工具不会伪装成核心故障；缺少
+Neovim 0.12、Git 或 `ripgrep` 等核心条件则会明确阻断，并给出修复和复查路径。
 
 ---
 
