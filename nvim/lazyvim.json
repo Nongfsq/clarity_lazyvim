@@ -1,9 +1,0 @@
-{
-  "extras": [
-    "lazyvim.plugins.extras.ai.copilot"
-  ],
-  "news": {
-    "NEWS.md": "11866"
-  },
-  "version": 8
-}

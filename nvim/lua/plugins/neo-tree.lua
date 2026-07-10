@@ -95,36 +95,5 @@ return {
                 },
             },
         })
-
-        -- Open Neo-tree automatically when Neovim starts on a directory.
-        vim.api.nvim_create_autocmd("VimEnter", {
-            callback = function(data)
-                -- Check whether Neovim was launched with a directory path.
-                local directory = vim.fn.isdirectory(data.file) == 1
-
-                if not directory then
-                    return
-                end
-
-                -- Change into that directory.
-                vim.cmd.cd(data.file)
-
-                -- Open Neo-tree.
-                vim.cmd("Neotree")
-                vim.schedule(function()
-                    -- Find the Neo-tree window and enforce numberless UI state.
-                    for _, win in ipairs(vim.api.nvim_list_wins()) do
-                        local buf = vim.api.nvim_win_get_buf(win)
-                        if vim.bo[buf].filetype == "neo-tree" then
-                            vim.wo[win].number = false
-                            vim.wo[win].relativenumber = false
-                            vim.wo[win].signcolumn = "auto"
-                            vim.api.nvim_win_set_width(win, WIDTH)
-                            break
-                        end
-                    end
-                end)
-            end,
-        })
     end,
 }

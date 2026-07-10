@@ -1,95 +1,47 @@
 from __future__ import annotations
 
+import argparse
 import json
-import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
-
-def resolve_nvim_binary() -> str:
-    configured = os.environ.get("NVIM_BIN")
-    if configured:
-        return configured
-
-    explicit_candidate = Path(r"C:\Program Files\Neovim\bin\nvim.exe")
-    if explicit_candidate.exists():
-        return str(explicit_candidate)
-
-    resolved = shutil.which("nvim")
-    if resolved and "WindowsApps" not in resolved:
-        return resolved
-
-    raise FileNotFoundError("Neovim executable not found. Set NVIM_BIN or add `nvim` to PATH.")
-
-
-def build_env() -> dict[str, str]:
-    env = os.environ.copy()
-    env["CLARITY_NONINTERACTIVE"] = "1"
-
-    if os.name == "nt":
-        compiler_bin = Path(
-            os.environ["LOCALAPPDATA"]
-        ) / "Microsoft" / "WinGet" / "Packages" / "BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe" / "mingw64" / "bin"
-        if compiler_bin.exists():
-            env["PATH"] = str(compiler_bin) + os.pathsep + env.get("PATH", "")
-
-    return env
+from clarity_runtime import build_env, combined_output, extract_last_json_object, resolve_nvim_binary, run_nvim
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Run the Clarity runtime capability audit.")
+    parser.add_argument("--json", action="store_true", help="Emit only the machine-readable audit report.")
+    parser.add_argument("--nvim-bin", help="Neovim executable; defaults to NVIM_BIN or PATH.")
+    parser.add_argument("--timeout", type=float, default=120, help="Neovim timeout in seconds.")
+    args = parser.parse_args()
+
     repo_root = Path(__file__).resolve().parent.parent
-    init_path = repo_root / "init.lua"
-    nvim = resolve_nvim_binary()
+    nvim = resolve_nvim_binary(args.nvim_bin)
     env = build_env()
-
-    command = [
-        nvim,
-        "--headless",
-        "-u",
-        str(init_path),
-        "+ClarityAudit!",
-        "+qall",
-    ]
-
-    result = subprocess.run(
-        command,
-        cwd=repo_root,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
+    result = run_nvim(repo_root, nvim, ["+ClarityAudit!"], env, timeout=args.timeout)
 
     if result.returncode != 0:
         sys.stderr.write(result.stderr or result.stdout)
         return result.returncode
 
-    combined_output = "\n".join(part for part in (result.stdout, result.stderr) if part)
-    report_line = ""
-    for line in reversed(combined_output.splitlines()):
-        candidate = line.strip()
-        if candidate.startswith("{") and candidate.endswith("}"):
-            report_line = candidate
-            break
-
-    if not report_line:
-        raise RuntimeError("Could not locate JSON audit output from Neovim.")
-
-    report = json.loads(report_line)
+    report = extract_last_json_object(combined_output(result))
 
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    print(f"Overall readiness: {report['summary']['scores']['overall']}/100")
+    if args.json:
+        return 0 if report.get("ok") else 1
+
+    core = report["summary"]["core"]
+    print(f"Core readiness: {core['status']} ({core['passed']}/{core['total']})")
+    print(f"Host capability: {report['summary']['host']['status']}")
+    print(f"Release quality: {report['summary']['release']['status']}")
     print(
-        f"Required tools: {report['summary']['required']['ok']}/{report['summary']['required']['total']}"
-    )
-    print(
-        f"Optional tools: {report['summary']['optional']['ok']}/{report['summary']['optional']['total']}"
+        "Profiles: "
+        + ", ".join(
+            f"{name}={profile['status']}" for name, profile in sorted(report["summary"]["profiles"].items())
+        )
     )
 
-    return 0
+    return 0 if report.get("ok") else 1
 
 
 if __name__ == "__main__":

@@ -29,6 +29,8 @@ opts.desc = i18n.t("keymaps.rename")
 map("n", "<leader>cr", vim.lsp.buf.rename, opts)
 opts.desc = i18n.t("keymaps.code_action")
 map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+opts.desc = i18n.t("keymaps.toggle_fold")
+map("n", "<leader>cz", require("config.actions.fold").toggle, opts)
 opts.desc = i18n.t("keymaps.line_diagnostic")
 map("n", "gl", vim.diagnostic.open_float, opts)
 opts.desc = i18n.t("keymaps.prev_diagnostic")
@@ -47,3 +49,9 @@ map("n", "<leader>wo", "<C-w>o", opts)
 -- Keep `<leader>fw` as the repo-owned primary text-search path.
 opts.desc = i18n.t("keymaps.search_text")
 map("n", "<leader>fw", pick("live_grep"), opts)
+
+-- Keep the inherited LazyVim path stable while making the behavior Clarity-owned.
+opts.desc = i18n.t("keymaps.toggle_wrap")
+map("n", "<leader>uw", function()
+    vim.wo.wrap = not vim.wo.wrap
+end, opts)

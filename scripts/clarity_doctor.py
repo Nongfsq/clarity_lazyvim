@@ -4,13 +4,22 @@ import argparse
 import json
 import os
 import platform
+import re
 import shutil
-import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 
+from clarity_runtime import (
+    CommandTimeoutError,
+    build_env as runtime_env,
+    combined_output,
+    extract_last_json_object,
+    resolve_nvim_binary,
+    run_command,
+    run_nvim,
+)
 
 @dataclass
 class Check:
@@ -22,28 +31,8 @@ class Check:
     fixable: bool = False
 
 
-def resolve_nvim_binary(configured: str | None = None) -> str:
-    if configured:
-        return configured
-
-    env_configured = os.environ.get("NVIM_BIN")
-    if env_configured:
-        return env_configured
-
-    explicit_candidate = Path(r"C:\Program Files\Neovim\bin\nvim.exe")
-    if explicit_candidate.exists():
-        return str(explicit_candidate)
-
-    resolved = shutil.which("nvim")
-    if resolved and "WindowsApps" not in resolved:
-        return resolved
-
-    raise FileNotFoundError("Neovim executable not found. Set NVIM_BIN or add `nvim` to PATH.")
-
-
 def build_env() -> dict[str, str]:
-    env = os.environ.copy()
-    env["CLARITY_NONINTERACTIVE"] = "1"
+    env = runtime_env()
 
     if os.name == "nt":
         compiler_bin = Path(
@@ -86,19 +75,23 @@ def platform_kind() -> str:
 
 def command_version(command: str, env: dict[str, str]) -> str:
     try:
-        result = subprocess.run(
+        result = run_command(
             [command, "--version"],
+            cwd=Path.cwd(),
             env=env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
             timeout=15,
         )
-    except (OSError, subprocess.TimeoutExpired):
+    except (OSError, CommandTimeoutError):
         return "version unavailable"
 
     return (result.stdout or result.stderr).strip() or "version unavailable"
+
+
+def parse_nvim_version(version_text: str) -> tuple[int, int, int] | None:
+    match = re.search(r"NVIM v(\d+)\.(\d+)\.(\d+)", version_text)
+    if not match:
+        return None
+    return tuple(int(part) for part in match.groups())
 
 
 def first_executable(commands: list[str]) -> str | None:
@@ -148,13 +141,24 @@ def install_hint(tool_id: str, kind: str) -> str:
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
             "system_monitor": "sudo apt-get install -y htop or sudo apt-get install -y btop",
         },
+        "windows": {
+            "git": "winget install --id Git.Git",
+            "compiler": "choco install zig -y",
+            "ripgrep": "winget install --id BurntSushi.ripgrep.MSVC",
+            "fd": "winget install --id sharkdp.fd",
+            "node": "Install Node 22+ with fnm, nvm-windows, volta, or winget.",
+            "npm": "Install Node.js 22+; npm ships with the official distribution.",
+            "python": "winget install --id Python.Python.3.12",
+            "pip": "python -m ensurepip --upgrade",
+            "tree_sitter_cli": "npm install -g tree-sitter-cli",
+            "system_monitor": "Install an optional Windows terminal monitor only when needed.",
+        },
     }
 
     return hints.get(kind, hints["linux"]).get(tool_id, "Install this tool with your platform package manager.")
 
 
 def run_nvim_probe(repo_root: Path, nvim_bin: str, env: dict[str, str]) -> tuple[dict, str]:
-    init_path = repo_root / "init.lua"
     lua = (
         "local report = {}; "
         "report.std_data = vim.fn.stdpath('data'); "
@@ -202,27 +206,13 @@ def run_nvim_probe(repo_root: Path, nvim_bin: str, env: dict[str, str]) -> tuple
         "pcall(vim.api.nvim_buf_delete, buf, { force = true }); "
         "print(vim.json.encode(report));"
     )
-    command = [nvim_bin, "--headless", "-u", str(init_path), "+lua " + lua, "+qall"]
-    result = subprocess.run(
-        command,
-        cwd=repo_root,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    result = run_nvim(repo_root, nvim_bin, ["+lua " + lua], env, timeout=120)
+    output = combined_output(result)
 
     if result.returncode != 0:
         raise RuntimeError(output or "nvim probe failed")
 
-    for line in reversed(output.splitlines()):
-        candidate = line.strip()
-        if candidate.startswith("{") and candidate.endswith("}"):
-            return json.loads(candidate), output
-
-    raise RuntimeError(output or "nvim probe did not emit JSON")
+    return extract_last_json_object(output), output
 
 
 def parser_path_summary(probe: dict) -> str:
@@ -264,8 +254,8 @@ def vim_parser_failure_hint(probe: dict, error: str, user_parser_present: bool) 
 def make_tool_checks(kind: str, env: dict[str, str]) -> list[Check]:
     tool_specs = [
         ("git", "Git", ["git"], True),
-        ("compiler", "C compiler for Treesitter parser builds", ["cl", "gcc", "clang", "cc", "zig"], True),
-        ("ripgrep", "ripgrep for fast text search", ["rg"], False),
+        ("ripgrep", "ripgrep for primary project text search", ["rg"], True),
+        ("compiler", "C compiler for the development profile", ["cl", "gcc", "clang", "cc", "zig"], False),
         ("fd", "fd for fast file search", ["fd", "fdfind"], False),
         ("node", "Node.js runtime for Copilot/provider support", ["node"], False),
         ("npm", "npm for provider package installs", ["npm"], False),
@@ -299,13 +289,11 @@ def make_tool_checks(kind: str, env: dict[str, str]) -> list[Check]:
 
 def provider_checks(env: dict[str, str]) -> list[Check]:
     checks: list[Check] = []
-    pynvim_check = subprocess.run(
+    pynvim_check = run_command(
         [sys.executable, "-c", "import importlib.util; print(importlib.util.find_spec('pynvim') is not None)"],
+        cwd=Path.cwd(),
         env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
+        timeout=30,
     )
     pynvim_ok = pynvim_check.returncode == 0 and pynvim_check.stdout.strip().lower() == "true"
     checks.append(
@@ -331,13 +319,11 @@ def provider_checks(env: dict[str, str]) -> list[Check]:
         )
         return checks
 
-    npm_check = subprocess.run(
+    npm_check = run_command(
         [npm, "list", "-g", "neovim", "--depth=0", "--json"],
+        cwd=Path.cwd(),
         env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
+        timeout=30,
     )
     npm_ok = False
     npm_details = npm_check.stderr.strip() or "not installed"
@@ -534,7 +520,18 @@ def main() -> int:
 
     try:
         nvim_bin = resolve_nvim_binary(args.nvim_bin)
-        checks.append(Check("nvim", "Neovim executable", "pass", nvim_bin))
+        nvim_version_text = command_version(nvim_bin, env)
+        nvim_version = parse_nvim_version(nvim_version_text)
+        nvim_supported = nvim_version is not None and nvim_version >= (0, 12, 0)
+        checks.append(
+            Check(
+                "nvim",
+                "Neovim >= 0.12.0",
+                "pass" if nvim_supported else "fail",
+                nvim_version_text.splitlines()[0],
+                "Install the supported Neovim release and rerun the doctor." if not nvim_supported else "",
+            )
+        )
         probe, _ = run_nvim_probe(repo_root, nvim_bin, env)
         ts_checks = treesitter_checks(probe)
 

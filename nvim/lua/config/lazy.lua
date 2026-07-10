@@ -1,7 +1,20 @@
 -- Final integrated lazy.nvim bootstrap for the Clarity runtime.
 
+-- Clarity owns Neo-tree as its only file explorer. LazyVim 8 otherwise selects
+-- Snacks Explorer by default, which makes both explorers handle directory startup.
+vim.g.lazyvim_explorer = "neo-tree"
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 local noninteractive = vim.env.CLARITY_NONINTERACTIVE == "1" or #vim.api.nvim_list_uis() == 0
+
+local function bootstrap_fail(message)
+    vim.api.nvim_err_writeln(message)
+    if noninteractive then
+        vim.cmd("cquit 1")
+    end
+    error(message)
+end
+
 local function bundled_runtime_paths()
     local paths = {}
     local seen = {}
@@ -58,7 +71,14 @@ local mason_packages = {
 }
 
 if not vim.loop.fs_stat(lazypath) then
-    vim.fn.system({
+    if vim.fn.executable("git") ~= 1 then
+        bootstrap_fail(
+            "Clarity bootstrap failed: Git is required to install lazy.nvim. "
+                .. "Install Git 2.19+ and start Neovim again."
+        )
+    end
+
+    local output = vim.fn.system({
         "git",
         "clone",
         "--filter=blob:none",
@@ -66,10 +86,26 @@ if not vim.loop.fs_stat(lazypath) then
         "--branch=stable",
         lazypath,
     })
+
+    if vim.v.shell_error ~= 0 or not vim.loop.fs_stat(lazypath) then
+        bootstrap_fail(
+            "Clarity bootstrap failed while cloning lazy.nvim into "
+                .. lazypath
+                .. ". Check network/Git access, remove only the incomplete lazy.nvim directory, and retry.\n"
+                .. vim.trim(output)
+        )
+    end
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup({
+local ok_lazy, lazy = pcall(require, "lazy")
+if not ok_lazy then
+    bootstrap_fail(
+        "Clarity bootstrap failed: lazy.nvim could not be loaded from " .. lazypath .. ". " .. tostring(lazy)
+    )
+end
+
+lazy.setup({
     spec = {
         {
             "LazyVim/LazyVim",
@@ -87,12 +123,16 @@ require("lazy").setup({
     },
 
     -- Remaining lazy.nvim defaults.
+    lockfile = vim.g.clarity_repo_root .. "/lazy-lock.json",
     defaults = { lazy = false, version = false },
     install = { colorscheme = { "habamax" } },
     checker = { enabled = not noninteractive },
     performance = {
         rtp = {
-            paths = bundled_runtime_paths(),
+            -- Keep the nested Clarity runtime discoverable while lazy.nvim
+            -- rebuilds runtimepath. LazyVim loads config.options before plugin
+            -- setup and file-argument autocmds before VeryLazy.
+            paths = vim.list_extend({ vim.g.clarity_nvim_dir }, bundled_runtime_paths()),
             disabled_plugins = { "gzip", "tarPlugin", "tohtml", "tutor", "zipPlugin" },
         },
     },
@@ -103,3 +143,4 @@ require("config.menu_i18n").setup()
 require("config.audit").setup()
 require("config.help").setup()
 require("config.validation").setup()
+require("config.commands").setup()

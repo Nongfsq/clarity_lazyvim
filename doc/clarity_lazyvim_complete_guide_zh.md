@@ -361,7 +361,7 @@ Esc
 - `空格` 看 which-key 分组
 - `空格 s k` 搜索快捷键
 
-### 6.4 另外四个你应该知道的帮助命令
+### 6.4 另外五个你应该知道的帮助命令
 
 如果你在 Windows 11 + WSL2 中长期使用，这 4 个命令非常值得记住：
 
@@ -373,6 +373,8 @@ Esc
   专门检查关键键位和特殊 UI 行为是不是仍然正常
 - `:ClarityLanguage`
   专门查看或切换 Clarity 自己的界面语言
+- `:ClarityLog`
+  查看最近的 Clarity 诊断事件；也可使用 `tail`、`path` 或 `export [路径]`
 
 ---
 
@@ -605,6 +607,17 @@ o
 ### 10.8 推荐额外记住
 
 `Ctrl + s` 也能保存文件。
+
+### 10.9 代码折叠与视觉换行
+
+- 切换光标所在的代码折叠：`空格 c z`
+- 切换当前编辑窗口的视觉换行：`空格 u w`
+
+视觉换行默认开启，只改变屏幕显示，不会向文件插入真实换行符；续行会保留可读缩进。
+`空格 u w` 可以只为当前编辑窗口临时关闭或重新开启。
+
+如果光标所在位置没有折叠，`空格 c z` 会给出普通提示，不会再弹出
+`E490` / `E5108` 错误。需要排查真正的异常时，运行 `:ClarityLog`。
 
 ---
 
@@ -1062,14 +1075,27 @@ python scripts/run_clarity_validate.py
 
 它会覆盖“行为正确性”，不仅是“工具是否安装”。
 
+也可以使用统一测试入口：
+
+```sh
+python3 scripts/run_clarity_tests.py fast
+python3 scripts/run_clarity_tests.py contracts --json
+uv run --with pynvim==0.6.0 python scripts/run_clarity_tests.py behavior --feature fold
+python3 scripts/run_clarity_tests.py faults --feature fold
+```
+
 当前验证覆盖：
 
-- Windows + Ubuntu (WSL) 启动 smoke test
+- Ubuntu、Windows、macOS CI 场景（远程证据仍待完成）
 - 核心命令断言：
   - `空格 f f`
   - `空格 f w`
   - `空格 g d`
+  - `空格 c z`
+  - `空格 u w`
   - `空格 h s`
+- 目录启动只打开一个 Neo-tree，不再同时打开 Snacks Explorer
+- 代码折叠与视觉换行会实际切换状态并恢复
 - 特殊界面行为检查：
   - dashboard
   - neo-tree
@@ -1093,17 +1119,15 @@ python scripts/run_clarity_validate.py
 - `:ClarityValidate`
   更像“行为验收”，看命令和界面有没有回归
 
-当前项目的真实状态是：
+现在不再使用一个加权总分表示所有质量。你会看到三类结果：
 
-- Windows 主开发环境：`94/100`
-- WSL 运行环境：`100/100`
+- `Core readiness`：文件/文本搜索、插件锁、基础解析等核心能力是否可用
+- `Profile ...`：开发工具、Copilot、provider、剪贴板和实用工具是否可用
+- `Release quality`：必须由绑定具体提交的跨平台 CI 证明，本地始终显示
+  `unverified`
 
-这不是说 Windows 不能用，而是说当前 Windows 上还缺少两个可选项：
-
-- `fd`
-- `htop` / `btop`
-
-它们不会阻止你工作，只会让某些体验没有达到“最完整状态”。
+缺少 `fd`、`pynvim`、Copilot 或系统监控工具不会伪装成核心故障；缺少
+Neovim 0.12、Git 或 `ripgrep` 等核心条件则会明确阻断，并给出修复和复查路径。
 
 ---
 
