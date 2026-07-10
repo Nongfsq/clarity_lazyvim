@@ -21,6 +21,9 @@ opt.cursorline = false -- Avoid cursorline redraw churn in terminal-based workfl
 opt.list = false -- Hide invisible markers to reduce visual noise and stray separator artifacts.
 opt.smoothscroll = false -- Disable smooth scrolling to keep motion snappy in terminals.
 opt.statuscolumn = "" -- Use the default status column to avoid custom terminal rendering artifacts.
+opt.wrap = true -- Visually wrap long lines without inserting newlines into the file.
+opt.linebreak = true -- Prefer wrapping at word boundaries when possible.
+opt.breakindent = true -- Preserve indentation on visually wrapped continuation lines.
 
 opt.tabstop = 4 -- Number of spaces that a <Tab> in the file counts for.
 opt.softtabstop = 4 -- Number of spaces that a <Tab> counts for while performing editing operations.

@@ -1,6 +1,6 @@
 # Current Reality
 
-Last updated: 2026-07-09
+Last updated: 2026-07-10
 
 ## Product
 
@@ -116,6 +116,7 @@ Primary commands:
 python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
+python3 scripts/run_clarity_contracts.py
 nvim --headless -u ./init.lua "+qall"
 ```
 
@@ -171,6 +172,10 @@ As of 2026-07-09 on the current macOS runtime:
 - `python3 scripts/run_clarity_validate.py`: required failures `0`
 - optional warnings: `1` (`pynvim` is missing for the active Python runtime)
 - directory startup: one Neo-tree window and zero Snacks Explorer windows
+- natural runtime contracts: empty headless, file headless, and attached-UI file
+  startup pass; all 10 config modules are classified
+- negative runtimepath fixture: exactly four expected failures for options,
+  autocmds, editing defaults, and keymap ownership/behavior
 
 This snapshot is intentionally local-only. It must not be copied into a public
 cross-platform baseline until the clean-archive matrix in the active plan is
@@ -275,13 +280,16 @@ The 95+ review and architecture direction were approved on 2026-07-09. The first
 trust-foundation batch is implemented locally on
 `codex/20260709-clarity-trust-foundation`.
 
-First execution gate after explicit plan approval:
+Trust foundation and runtime-contract status:
 
 1. `QA-001` — done locally
 2. `VALIDATE-002` — done locally
 3. `NVIM-002` — done; normalized lock accepted with an explicit validated,
    backed-up, atomic update transaction
 4. `CI-002` — local workflow checks pass; remote three-platform run required
+5. `RUNTIME-001` through `RUNTIME-004` — done locally on 2026-07-10; natural
+   lifecycle catalog/probe/runner and line-number positive/negative proof pass
+6. `RUNTIME-005` — pending owner evidence review
 
-The implementation must stop after this trust-foundation batch for evidence
-review before migrating plugin ownership.
+The implementation is stopped at the runtime-contract first-batch evidence gate.
+Do not begin `RUNTIME-005` or plugin ownership migration without approval.

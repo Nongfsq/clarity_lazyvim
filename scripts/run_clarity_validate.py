@@ -129,6 +129,13 @@ def run(argv: list[str] | None = None) -> int:
         "results.keymap_uw = has_map('<leader>uw', 'n'); "
         "results.keymap_tf = has_map('<leader>tf', 'n'); "
         "results.keymap_hh = has_map('<leader>hh', 'n'); "
+        "results.absolute_number = vim.wo.number; "
+        "results.relative_number = vim.wo.relativenumber; "
+        "results.wrap_default = vim.wo.wrap; "
+        "results.options_loaded = package.loaded['config.options'] ~= nil; "
+        "results.autocmds_loaded = package.loaded['config.autocmds'] ~= nil; "
+        "results.keymaps_loaded = package.loaded['config.keymaps'] ~= nil; "
+        "results.absolute_number_autocmd = vim.fn.exists('#clarity_absolute_line_numbers#BufEnter') == 1; "
         "vim.wait(1200, function() return vim.b.gitsigns_head ~= nil and vim.b.clarity_gitsigns_keymaps == true end); "
         "results.gitsigns_head = vim.b.gitsigns_head ~= nil; "
         "results.gitsigns_keymaps = vim.b.clarity_gitsigns_keymaps == true; "
@@ -171,6 +178,33 @@ def run(argv: list[str] | None = None) -> int:
                 CheckResult("Keymap <leader>uw exists", bool(runtime_report.get("keymap_uw")), "expected true"),
                 CheckResult("Keymap <leader>hs exists", bool(runtime_report.get("keymap_hs")), "expected true"),
                 CheckResult("Keymap <leader>tf exists", bool(runtime_report.get("keymap_tf")), "expected true"),
+                CheckResult(
+                    "Editing windows use absolute line numbers",
+                    runtime_report.get("absolute_number") is True
+                    and runtime_report.get("relative_number") is False,
+                    (
+                        f"number={runtime_report.get('absolute_number')} "
+                        f"relativenumber={runtime_report.get('relative_number')}"
+                    ),
+                ),
+                CheckResult(
+                    "Visual line wrapping is enabled by default",
+                    runtime_report.get("wrap_default") is True,
+                    f"wrap={runtime_report.get('wrap_default')}",
+                ),
+                CheckResult(
+                    "Clarity startup modules are loaded",
+                    bool(runtime_report.get("options_loaded"))
+                    and bool(runtime_report.get("autocmds_loaded"))
+                    and bool(runtime_report.get("keymaps_loaded"))
+                    and bool(runtime_report.get("absolute_number_autocmd")),
+                    (
+                        f"options={runtime_report.get('options_loaded')} "
+                        f"autocmds={runtime_report.get('autocmds_loaded')} "
+                        f"keymaps={runtime_report.get('keymaps_loaded')} "
+                        f"number_autocmd={runtime_report.get('absolute_number_autocmd')}"
+                    ),
+                ),
                 CheckResult(
                     "Keymap <leader>hh exists (T-006)",
                     bool(runtime_report.get("keymap_hh")),

@@ -129,7 +129,10 @@ lazy.setup({
     checker = { enabled = not noninteractive },
     performance = {
         rtp = {
-            paths = bundled_runtime_paths(),
+            -- Keep the nested Clarity runtime discoverable while lazy.nvim
+            -- rebuilds runtimepath. LazyVim loads config.options before plugin
+            -- setup and file-argument autocmds before VeryLazy.
+            paths = vim.list_extend({ vim.g.clarity_nvim_dir }, bundled_runtime_paths()),
             disabled_plugins = { "gzip", "tarPlugin", "tohtml", "tutor", "zipPlugin" },
         },
     },

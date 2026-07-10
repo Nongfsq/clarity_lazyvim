@@ -46,7 +46,7 @@ It is a focused editor product for daily work.
 | File search | `<leader>ff` | Fast project entry without depending on file trees for everything |
 | Text search | `<leader>fw` | One obvious search path backed by Snacks picker |
 | Code folding | `<leader>cz` | Toggle the fold containing the cursor without memorizing Vim's `z` commands |
-| Line wrapping | `<leader>uw` | Toggle visual wrapping in the current editing window |
+| Line wrapping | `<leader>uw` | Long lines wrap visually by default; toggle per editing window |
 | Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
 | Git hunks | `<leader>hs`, `<leader>hr`, `<leader>hp` | Clear hunk ownership without overloading the global Git namespace |
 | Recovery | `:ClarityStart`, `<leader>hh` | A product-level "I forgot" path inside Neovim |
@@ -326,6 +326,7 @@ From the terminal:
 python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
+python3 scripts/run_clarity_contracts.py
 python3 scripts/update_clarity_lock.py
 ```
 
@@ -333,6 +334,13 @@ Minimal smoke test:
 
 ```sh
 python3 scripts/run_clarity_smoke.py
+```
+
+For the attached-UI runtime contract, run:
+
+```sh
+uv run --with pynvim python scripts/run_clarity_contracts.py \
+  --scenario file_ui --reuse-plugin-cache ~/.local/share/nvim/lazy
 ```
 
 `update_clarity_lock.py` is check-only by default: it normalizes a copied
@@ -345,6 +353,7 @@ Review the resulting Git diff before committing.
 Validation currently covers:
 
 - copied-candidate first boot/restart with authority-file hash checks
+- natural startup lifecycle, config-module ownership, and promoted behavior contracts
 - a required Ubuntu/Windows/macOS workflow matrix (remote evidence pending)
 - keymap assertions for high-frequency paths
 - single-explorer directory startup and code fold/line-wrap behavior
@@ -508,6 +517,7 @@ When `fnm` is present, Clarity prefers the newest `fnm`-managed Node automatical
 ├── scripts/
 │   ├── clarity_doctor.py
 │   ├── run_clarity_audit.py
+│   ├── run_clarity_contracts.py
 │   └── run_clarity_validate.py
 ├── progress/
 ├── init.lua

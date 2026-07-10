@@ -1,9 +1,13 @@
 # Clarity LazyVim 95+ Refactor PLAN+TASK
 
 Date: 2026-07-09
-Status: trust-foundation local implementation complete; remote CI evidence pending
+Status: runtime-contract first batch complete locally; evidence review pending
 Architecture:
 [`../docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md`](../docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md)
+Runtime verification architecture:
+[`../docs/architecture/2026-07-09-runtime-contract-verification-blueprint.md`](../docs/architecture/2026-07-09-runtime-contract-verification-blueprint.md)
+Runtime verification PLAN+TASK:
+[`2026-07-09-runtime-contract-verification-plan.md`](2026-07-09-runtime-contract-verification-plan.md)
 Product intent:
 [`../docs/product/clarity-95-experience-pm.md`](../docs/product/clarity-95-experience-pm.md)
 Evidence baseline:
@@ -21,9 +25,8 @@ not a revised self-scoring formula.
 
 ### Execution Rules
 
-- Preserve the pre-existing user-owned `lazy-lock.json` modification and
-  untracked `lazyvim.json` until `NVIM-002` explicitly reconciles them with an
-  evidence snapshot and user review.
+- Preserve the accepted root `lazy-lock.json` and `lazyvim.json` hashes; runtime
+  contract work must not change either authority file.
 - Do not stage, clean, overwrite, or normalize unrelated user files.
 - Keep the repository buildable after every task.
 - Do not combine a plugin lock update with unrelated behavior work.
@@ -34,14 +37,15 @@ not a revised self-scoring formula.
 
 ## Current Reality
 
-- Local branch is `main`, one commit ahead of `origin/main` at planning time.
-- `lazy-lock.json` is modified and root `lazyvim.json` is untracked; both predate
-  this plan and belong to the user.
-- The documented root lockfile is not explicitly wired into lazy.nvim; tracked
-  `nvim/lazyvim.json` is not the active root-install file.
-- Public CI history has no successful completed run; Windows binary resolution
-  fails and Ubuntu used an unsupported Neovim version and hung.
-- The audit headline can display `100/100` while integration readiness is lower.
+- Local branch is `codex/20260709-clarity-trust-foundation` at committed baseline
+  `6e6112a`, with the runtime-contract planning and line-number repair still
+  local/uncommitted.
+- Root lock/JSON authority, honest readiness signals, and the local CI toolchain
+  are implemented; remote Ubuntu/Windows/macOS evidence is still absent.
+- Real file startup exposed a false-green validation gap: Clarity options did not
+  load naturally, while validation replayed `VeryLazy` and later passed.
+- Audit/validation still replay lifecycle events and can alter the state they
+  inspect; the new runtime-contract plan owns the passive replacement foundation.
 - Neo-tree, Mason, Conform, Gitsigns, Tree-sitter, validation, and colorscheme
   ownership have validated defects or migration risks.
 - Core local headless startup is fast; optimization work must be driven by
@@ -87,13 +91,16 @@ backup-first and non-destructive.
 
 ## Migration Order
 
-1. Trust foundation: `NVIM-002`, `QA-001`, `VALIDATE-002`, `CI-002`.
-2. First ownership slice: `NVIM-003`.
-3. Runtime correctness: `NVIM-004`, `NVIM-005`, `NVIM-006`, `VALIDATE-003`,
+1. Trust foundation: `NVIM-002`, `QA-001`, `VALIDATE-002`.
+2. Runtime-contract hardening: `RUNTIME-001` through `RUNTIME-008`, with
+   `VALIDATE-003` integrated after the passive runner exists.
+3. Close the trust gate: `CI-002` remote Ubuntu/Windows/macOS evidence.
+4. First ownership slice: `NVIM-003`.
+5. Runtime correctness: `NVIM-004`, `NVIM-005`, `NVIM-006`,
    `THEME-001`.
-4. Compatibility: `NVIM-007`.
-5. Experience: `UX-001`, `UX-002`, `I18N-002`, `UX-003`.
-6. Release and truth closeout: `RELEASE-001`, `QA-002`, `DOCS-002`.
+6. Compatibility: `NVIM-007`.
+7. Experience: `UX-001`, `UX-002`, `I18N-002`, `UX-003`.
+8. Release and truth closeout: `RELEASE-001`, `QA-002`, `DOCS-002`.
 
 Tasks inside a phase may run in parallel only when their dependencies say so.
 The first approved execution batch stops after the trust-foundation gate for
@@ -219,7 +226,7 @@ review before the first plugin migration.
 ### CI-002: Make CI Hermetic, Supported, And Bounded
 
 - Status: in progress — local workflow/action/toolchain checks pass 2026-07-09; remote Ubuntu/Windows/macOS run required
-- Depends on: NVIM-002, QA-001, VALIDATE-002
+- Depends on: NVIM-002, QA-001, VALIDATE-002, RUNTIME-008
 - Files: `.github/workflows/clarity-validate.yml`, CI helper scripts,
   version/checksum manifests, test fixtures
 - Change: use an explicit supported Neovim version on Ubuntu, Windows, and macOS;
@@ -227,7 +234,8 @@ review before the first plugin migration.
   platform-native roots; add job/subprocess timeouts, concurrency cancellation,
   least-privilege permissions, static gates, lock/config drift checks, and upload
   JSON/JUnit/log/environment manifests on failure and success.
-- Acceptance: all required matrix jobs reach runtime validation; Windows does not
+- Acceptance: all required matrix jobs reach runtime validation and upload the
+  runtime-contract coverage/scenario artifacts; Windows does not
   depend on one hard-coded install directory; no job uses unsupported Neovim;
   hangs terminate within budget; checked-out config/lock hashes remain unchanged.
 - Validation: `actionlint`; local workflow/helper tests; successful manually
@@ -303,7 +311,7 @@ review before the first plugin migration.
 ### VALIDATE-003: Make Diagnostics Passive And Session-Safe
 
 - Status: pending
-- Depends on: QA-001, VALIDATE-002
+- Depends on: QA-001, VALIDATE-002, RUNTIME-003, RUNTIME-006
 - Files: `nvim/lua/config/audit.lua`, `nvim/lua/config/validation.lua`, CLI
   adapters, session-state tests
 - Change: stop re-firing global `VeryLazy`; separate pure collection from UI;
@@ -438,7 +446,8 @@ review before the first plugin migration.
   from the previous release and rollback to the previous tag/data snapshot.
 - Acceptance: protected `main` cannot merge without required checks; a candidate
   tag has complete evidence; failed release gates prevent the 95+ claim; rollback
-  completes in the isolated rehearsal and is understandable without chat history.
+  completes in the isolated rehearsal and is understandable without chat history;
+  runtime-contract coverage has zero unclassified and zero planned core entries.
 - Validation: GitHub API/settings inspection; release-candidate workflow;
   manifest schema/hash verification; upgrade and rollback rehearsal with logs.
 
@@ -506,17 +515,22 @@ review before the first plugin migration.
   is done.
 - Remote matrix is not run because the branch has not been pushed; `CI-002`
   remains in progress.
+- Local review exposed a natural-startup false green: `config.options` was absent
+  during file startup even though later validation passed after lifecycle replay.
+  The approved verification architecture and decision-complete `RUNTIME-001`
+  through `RUNTIME-008` plan reopen the trust gate before remote certification.
 
-### First Execution Batch
+### Next Execution Batch
 
-After plan approval, execute only:
+After runtime-contract plan approval, execute only:
 
-1. `NVIM-002`
-2. `QA-001`
-3. `VALIDATE-002`
-4. `CI-002`
+1. `RUNTIME-001`
+2. `RUNTIME-002`
+3. `RUNTIME-003`
+4. `RUNTIME-004`
 
-Stop at the trust-foundation gate and present evidence before `NVIM-003`.
+Stop after the line-number lifecycle positive/negative proof and present evidence
+before expanding to `RUNTIME-005`.
 
 ### Assumptions And Defaults
 
@@ -551,5 +565,6 @@ PM document written to `docs/product/clarity-95-experience-pm.md`; approved
 architecture written to
 `docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md`; this decision-
 complete PLAN+TASK is written to
-`progress/2026-07-09-clarity-95-refactor-plan.md`. The first local execution batch
-is complete except for remote `CI-002` evidence; later tasks remain gated.
+`progress/2026-07-09-clarity-95-refactor-plan.md`. The runtime-contract PM/TASK is
+written to `progress/2026-07-09-runtime-contract-verification-plan.md` and awaits
+approval. `CI-002` and later tasks remain gated.
