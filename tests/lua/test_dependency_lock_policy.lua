@@ -11,6 +11,7 @@ local expected = {
     ["lazygit.nvim"] = true,
     ["mini.ai"] = true,
     ["nvim-lint"] = true,
+    ["nvim-ts-autotag"] = true,
     ["persistence.nvim"] = true,
     ["todo-comments.nvim"] = true,
     ["tokyonight.nvim"] = true,
@@ -32,7 +33,8 @@ for _, spec in ipairs(specs) do
 end
 
 assert(vim.deep_equal(actual, expected), "product-policy exclusion set drifted")
-assert(lock["copilot.lua"] ~= nil, "supported optional Copilot profile must remain reproducibly locked")
-assert(vim.tbl_count(lock) == 26, "lock must contain only active dependencies and supported optional profiles")
+assert(lock["copilot.lua"] == nil, "embedded AI must not remain in the product lock")
+assert(lock["toggleterm.nvim"] == nil, "dedicated terminal dependency must not remain locked")
+assert(vim.tbl_count(lock) == 23, "lock must contain active dependencies only")
 
 print("dependency lock policy tests: OK")

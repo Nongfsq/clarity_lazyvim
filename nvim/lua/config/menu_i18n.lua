@@ -7,6 +7,10 @@ local function zh(text)
 end
 
 local desc_translations = {
+    ["Noice All"] = zh("Noice 全部消息"),
+    ["Noice History"] = zh("Noice 历史消息"),
+    ["Noice Last Message"] = zh("Noice 最后一条消息"),
+    ["Noice Picker (Telescope/FzfLua)"] = zh("Noice 选择器（Telescope/FzfLua）"),
     ["Buffers"] = zh("缓冲区"),
     ["Buffers (all)"] = zh("缓冲区（全部）"),
     ["Buffer Keymaps (which-key)"] = zh("当前缓冲区键位"),
@@ -43,11 +47,7 @@ local desc_translations = {
     ["Search for Plugin Spec"] = zh("搜索插件定义"),
     ["Notification History"] = zh("通知历史"),
     ["Dismiss All Notifications"] = zh("清空全部通知"),
-    ["Noice All"] = zh("Noice 全部消息"),
     ["Dismiss All"] = zh("清空全部消息"),
-    ["Noice History"] = zh("Noice 历史消息"),
-    ["Noice Last Message"] = zh("Noice 最后一条消息"),
-    ["Noice Picker (Telescope/FzfLua)"] = zh("Noice 选择器（Telescope/FzfLua）"),
     ["Toggle Scratch Buffer"] = zh("切换临时缓冲区"),
     ["Select Scratch Buffer"] = zh("选择临时缓冲区"),
     ["Switch to Other Buffer"] = zh("切换到另一个缓冲区"),

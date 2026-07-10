@@ -30,6 +30,7 @@ local strings = {
             command_desc = "Show or set the Clarity UI language",
         },
         commands = {
+            health = "Open the unified Clarity help and health entry",
             audit = "Audit layout and external dependency readiness for clarity_lazyvim",
             validate = "Validate critical Clarity commands, keymaps, and UI behavior",
             start = "Open the Clarity in-editor onboarding panel",
@@ -191,6 +192,7 @@ local strings = {
             command_desc = "查看或设置 Clarity 界面语言",
         },
         commands = {
+            health = "打开统一的 Clarity 帮助与健康入口",
             audit = "检查 clarity_lazyvim 的布局与外部依赖就绪度",
             validate = "验证 Clarity 关键命令、键位和界面行为",
             start = "打开 Clarity 编辑器内引导面板",

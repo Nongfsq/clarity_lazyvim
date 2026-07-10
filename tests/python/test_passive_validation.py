@@ -42,7 +42,6 @@ class PassiveValidationTests(unittest.TestCase):
     def test_public_helpers_remain_stable(self) -> None:
         check = run_clarity_validate.CheckResult("Headless startup", True, "ok")
         self.assertEqual(check.id, "CLARITY_VALIDATE_HEADLESS_STARTUP")
-        self.assertEqual(run_clarity_validate.parse_node_major("node v26.5.0"), 26)
 
 
 if __name__ == "__main__":

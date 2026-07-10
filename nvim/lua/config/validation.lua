@@ -45,16 +45,6 @@ function M.get_report()
         picker_ready,
         "search backend should resolve to Snacks"
     )
-    if integrations.copilot and integrations.copilot.enabled then
-        add_result(
-            results,
-            "integrations",
-            "copilot_node_ready",
-            integrations.copilot.satisfied,
-            "Enabled Copilot profile requires Node >=22"
-        )
-    end
-
     local i18n_report = i18n.get_validation_report()
     add_result(
         results,
@@ -96,7 +86,7 @@ function M.get_report()
             leader_ghs = "CLARITY_RUNTIME_GITSIGNS_CONTRACT",
             dashboard_numbers_hidden = "CLARITY_RUNTIME_UI_CONTRACT",
             neo_tree_numbers_hidden = "CLARITY_RUNTIME_EXPLORER_CONTRACT",
-            toggleterm_defaults = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
+            snacks_terminal = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
         },
         audit = {
             core_status = audit_report.summary and audit_report.summary.core and audit_report.summary.core.status

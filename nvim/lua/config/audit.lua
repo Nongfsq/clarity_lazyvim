@@ -106,26 +106,6 @@ local function find_python_module(module_name)
     return false, nil
 end
 
-local function find_global_npm_package(package_name)
-    if vim.fn.executable("npm") ~= 1 then
-        return false, nil
-    end
-
-    local output = vim.fn.system({ "npm", "list", "-g", package_name, "--depth=0", "--json" })
-    local ok, data = pcall(vim.json.decode, output)
-
-    if not ok or type(data) ~= "table" then
-        return false, nil
-    end
-
-    local dependency = data.dependencies and data.dependencies[package_name]
-    if dependency and dependency.version then
-        return true, dependency.version
-    end
-
-    return false, nil
-end
-
 function M.classify_clipboard(input)
     input = input or {}
     local provider = input.provider
@@ -451,13 +431,7 @@ function M.get_report()
         repair = "Set vim.g.lazyvim_json to the repository root file before importing LazyVim.",
     })
 
-    local node_entry
-    local copilot_enabled = vim.env.CLARITY_COPILOT == "1"
-
     for _, spec in ipairs(tool_specs) do
-        if spec.profile == "copilot" and not copilot_enabled then
-            goto continue
-        end
         local present, detected = M.has(spec.commands)
         local version = present and M.get_command_version(detected) or nil
         local version_major = parse_major(version)
@@ -480,10 +454,6 @@ function M.get_report()
 
         table.insert(report.tools, entry)
 
-        if spec.id == "node" then
-            node_entry = entry
-        end
-
         add_check({
             id = "tool_" .. spec.id,
             profile = spec.profile,
@@ -493,12 +463,10 @@ function M.get_report()
             impact = spec.impact,
             repair = spec.repair,
         })
-        ::continue::
     end
 
     local clipboard = M.get_clipboard_status()
     local python_provider_present, python_interpreter = find_python_module("pynvim")
-    local node_provider_present, node_provider_version = find_global_npm_package("neovim")
     local picker = get_picker_status(report.plugins)
     local treesitter = get_treesitter_status()
 
@@ -509,21 +477,7 @@ function M.get_report()
             interpreter = python_interpreter,
             module = "pynvim",
         },
-        node_provider = {
-            present = node_provider_present,
-            manager = "npm",
-            package = "neovim",
-            version = node_provider_version,
-        },
         picker = picker,
-        copilot = {
-            enabled = copilot_enabled,
-            present = node_entry and node_entry.present or false,
-            satisfied = node_entry and node_entry.present or false,
-            detected = node_entry and node_entry.detected or nil,
-            version = node_entry and node_entry.version or nil,
-            minimum_major = 22,
-        },
         treesitter = treesitter,
     }
 
@@ -573,16 +527,6 @@ function M.get_report()
         impact = "Optional Python-backed integrations are unavailable.",
         repair = "Install pynvim for the active Python interpreter when needed.",
     })
-    add_check({
-        id = "provider_node",
-        profile = "providers",
-        required = false,
-        status = node_provider_present and "pass" or "warn",
-        detail = node_provider_present and (node_provider_version or "installed") or "npm neovim package missing",
-        impact = "Optional Node provider integrations are unavailable.",
-        repair = "Run `npm install -g neovim` when the Node provider is needed.",
-    })
-
     report.summary = capabilities.summarize(checks)
     report.summary.required = {
         ok = report.summary.core.passed,
@@ -612,7 +556,7 @@ function M.render_report(report)
         string.format("LazyVim state: %s", report.paths.lazyvim_json or "missing"),
     }
 
-    for _, profile in ipairs({ "development", "copilot", "providers", "clipboard", "utilities" }) do
+    for _, profile in ipairs({ "providers", "clipboard", "utilities" }) do
         local item = report.summary.profiles[profile]
         table.insert(
             lines,
@@ -655,33 +599,9 @@ function M.render_report(report)
         or "MISSING"
     table.insert(lines, string.format("Python provider package (pynvim): %s", python_status))
 
-    local node_provider_status = report.integrations.node_provider.present
-            and string.format(
-                "OK -> npm %s (%s)",
-                report.integrations.node_provider.package,
-                report.integrations.node_provider.version
-            )
-        or "MISSING"
-    table.insert(lines, string.format("Node provider package (neovim): %s", node_provider_status))
-
     table.insert(
         lines,
         string.format("Search backend: %s (%s)", report.integrations.picker.backend, report.integrations.picker.reason)
-    )
-
-    local copilot_status = not report.integrations.copilot.enabled and "DISABLED"
-        or (report.integrations.copilot.satisfied and "OK" or "MISSING")
-    local copilot_version = report.integrations.copilot.version and (" (" .. report.integrations.copilot.version .. ")")
-        or ""
-    table.insert(
-        lines,
-        string.format(
-            "Copilot node runtime: %s -> %s%s; requires >=%d",
-            copilot_status,
-            report.integrations.copilot.detected or "node",
-            copilot_version,
-            report.integrations.copilot.minimum_major
-        )
     )
 
     local ts_status = report.integrations.treesitter.health_ok and "OK" or "CHECK"

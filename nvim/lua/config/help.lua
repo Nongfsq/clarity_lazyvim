@@ -472,7 +472,7 @@ function M.setup()
     end
 
     vim.keymap.set("n", "<leader>hh", function()
-        vim.cmd("ClarityStart")
+        vim.cmd("ClarityHealth")
     end, { desc = i18n.t("keymaps.help_start_hub") })
 
     local group = vim.api.nvim_create_augroup("clarity_startup_guide", { clear = true })

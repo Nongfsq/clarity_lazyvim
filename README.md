@@ -49,7 +49,7 @@ It is a focused editor product for daily work.
 | Line wrapping | `<leader>uw` | Long lines wrap visually by default; toggle per editing window |
 | Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
 | Git hunks | `<leader>ghs`, `<leader>ghr`, `<leader>ghp` | Git hunk actions live under the truthful `<leader>gh` group |
-| Recovery | `:ClarityStart`, `<leader>hh` | A product-level "I forgot" path inside Neovim |
+| Recovery | `:ClarityHealth`, `<leader>hh` | One product-level help, health, and recovery entry |
 | Language | `:ClarityLanguage` | Switch Clarity-owned UI between `auto`, `en`, and `zh` |
 | Audit | `:ClarityAudit` | Environment and dependency readiness in one command |
 | Validation | `:ClarityValidate` | Behavior checks, not just "is the binary installed?" |
@@ -66,13 +66,11 @@ The custom theme is built around strong contrast, clearer syntax separation, and
 The active stack stays intentionally small:
 
 - LazyVim core
-- Snacks picker
+- Snacks picker and floating terminal
 - `neo-tree.nvim`
-- `toggleterm.nvim`
 - `gitsigns.nvim`
 - `conform.nvim`
 - `nvim-treesitter`
-- optional `copilot.lua` when `CLARITY_COPILOT=1`
 
 Several inherited or optional power-user plugins are deliberately disabled to keep the public product easier to audit and maintain.
 
@@ -150,13 +148,11 @@ nvim
 On first launch:
 
 1. `lazy.nvim` bootstraps plugins.
-2. The core profile starts without background language-tool installation.
-3. Set `CLARITY_PROFILE=development` before starting Neovim when you want the
-   curated Mason servers, formatters, and Tree-sitter parsers installed.
-4. Set `CLARITY_COPILOT=1` to opt into Copilot; it uses the active `node` from
-   `PATH` and requires Node.js `22+`.
-5. The Clarity welcome panel appears automatically on the first empty interactive startup.
-6. Use `:ClarityLanguage auto|en|zh` any time to inspect or change the Clarity UI language.
+2. Clarity starts without background language-tool or parser installation;
+   project environments and agents own their toolchains.
+3. The Clarity welcome panel appears automatically on the first empty interactive startup.
+4. Use `:ClarityHealth` or `<leader>hh` for help, health, and recovery.
+5. Use `:ClarityLanguage auto|en|zh` to inspect or change the Clarity UI language.
 
 ## First 5 Minutes
 
@@ -194,11 +190,10 @@ flowchart TB
     subgraph Plugins["Focused Runtime Surface"]
         Picker["Snacks picker"]
         Tree["neo-tree.nvim"]
-        Terminal["toggleterm.nvim"]
+        Terminal["Snacks terminal"]
         Git["gitsigns.nvim"]
         Format["conform.nvim"]
         Syntax["nvim-treesitter"]
-        AI["copilot.lua"]
     end
 
     Product --> Plugins
@@ -220,8 +215,8 @@ sequenceDiagram
     User->>NVIM: nvim
     NVIM->>Lazy: bootstrap plugins from lazy-lock.json
     Lazy->>Clarity: load options, keymaps, theme, commands
-    Clarity->>Tools: detect git, compiler, Node, Python, providers
-    Clarity->>NVIM: register :ClarityStart, :ClarityAudit, :ClarityValidate
+    Clarity->>Tools: detect Git, ripgrep, Python, clipboard, and project tools
+    Clarity->>NVIM: register :ClarityHealth and compatibility commands
     alt first empty interactive startup
         Clarity->>User: show welcome and recovery guide
     else normal startup
@@ -288,10 +283,9 @@ The project follows seven hard rules:
   <img src="https://img.shields.io/badge/Snacks_Picker-0EA5E9?style=flat-square" alt="Snacks picker" />
   <img src="https://img.shields.io/badge/Treesitter-2563EB?style=flat-square" alt="Treesitter" />
   <img src="https://img.shields.io/badge/Neo--tree-10B981?style=flat-square" alt="Neo-tree" />
-  <img src="https://img.shields.io/badge/ToggleTerm-F59E0B?style=flat-square" alt="Toggleterm" />
+  <img src="https://img.shields.io/badge/Snacks_Terminal-F59E0B?style=flat-square" alt="Snacks terminal" />
   <img src="https://img.shields.io/badge/Gitsigns-E11D48?style=flat-square" alt="Gitsigns" />
   <img src="https://img.shields.io/badge/Conform-7C3AED?style=flat-square" alt="Conform" />
-  <img src="https://img.shields.io/badge/Copilot-171717?style=flat-square&logo=githubcopilot&logoColor=white" alt="Copilot" />
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" />
 </p>
 
@@ -377,7 +371,7 @@ Validation currently covers:
 - keymap assertions for high-frequency paths
 - single-explorer directory startup and code fold/line-wrap behavior
 - dashboard, `neo-tree`, and terminal UI behavior
-- clipboard, Python, Node, and Copilot provider readiness
+- clipboard and optional Python-provider readiness
 - Tree-sitter `vim` parser/query/highlighter health
 - local user-level parser override detection
 
@@ -389,18 +383,11 @@ Validation currently covers:
 2. Git
 3. `ripgrep` for the promoted project text-search workflow
 
-### Development profile
-
-1. A C compiler for Tree-sitter parsers and native extensions
-2. `tree-sitter` CLI for parser installation and diagnostics:
-   `npm install -g tree-sitter-cli`
-
-### Recommended / optional profiles
+### Recommended / optional tools
 
 1. A Nerd Font
 2. `fd`
-3. Node.js `22+` and npm for Copilot/Node-provider features
-4. Python, pip, and `pynvim` for Python-provider features
+3. Python, pip, and `pynvim` for Python-provider features
 
 ## Troubleshooting
 
@@ -492,13 +479,6 @@ If you previously saw a stray `|` while moving or in blank indented lines, that 
 
 That is expected when optional extras are not installed.
 The related features warn and degrade gracefully instead of crashing the editor.
-
-### Copilot says Node.js `22+` is required
-
-Copilot is disabled in the core profile. Install a modern Node runtime, then
-start Neovim with `CLARITY_COPILOT=1`. Clarity uses the `node` executable from
-the active `PATH`; it does not scan version-manager directories or claim core
-completion keys.
 
 ## Documentation
 

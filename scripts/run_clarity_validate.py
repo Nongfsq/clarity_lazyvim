@@ -61,11 +61,6 @@ def run_doctor_json(repo_root: Path, env: dict[str, str]) -> dict:
     return json.loads(result.stdout)
 
 
-def parse_node_major(version_text: str) -> int | None:
-    match = re.search(r"v(\d+)\.", version_text)
-    return int(match.group(1)) if match else None
-
-
 def resolve_executable(name: str) -> str | None:
     return shutil.which(name)
 

@@ -30,6 +30,12 @@ LazyVim/upstream retains core plugin lifecycle ownership. Clarity extends merged
 opts and handlers. Follow the active 95+ blueprint and do not silently resolve
 the current lock/lazyvim.json split outside its planned migration task.
 
+Agent-era product rule:
+External agents own broad code generation. Clarity is a review and precision-edit
+console with no embedded Copilot, no Node product profile, and no background
+language-tool/parser installation. `:ClarityHealth` is the primary human recovery
+entry; stable CLI JSON and finding IDs are the provider-neutral agent contract.
+
 Validation:
 - python3 scripts/clarity_doctor.py
 - python3 scripts/run_clarity_audit.py

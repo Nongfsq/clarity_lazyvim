@@ -19,6 +19,9 @@
 | Interaction/dependency review | [`reviews/2026-07-10-interaction-dependency-modernization-review.md`](reviews/2026-07-10-interaction-dependency-modernization-review.md) | Keymap, feature, dependency, and current-workflow evidence |
 | Resolved dependency manifest | [`reviews/2026-07-10-resolved-dependency-manifest.md`](reviews/2026-07-10-resolved-dependency-manifest.md) | Active/locked set, retention rationale, lock rollback evidence |
 | Simplification PLAN+TASK | [`../progress/2026-07-10-interaction-dependency-simplification-plan.md`](../progress/2026-07-10-interaction-dependency-simplification-plan.md) | Completed local/manual-Ubuntu execution ledger; Windows/release evidence pending |
+| Agent-era product intent | [`product/clarity-agent-era-review-console-pm.md`](product/clarity-agent-era-review-console-pm.md) | Review-first product boundary and success criteria |
+| Agent-era architecture | [`architecture/2026-07-10-agent-era-editor-surface-blueprint.md`](architecture/2026-07-10-agent-era-editor-surface-blueprint.md) | Approved dependency, ownership, migration, and verification decisions |
+| Agent-era PLAN+TASK | [`../progress/2026-07-10-agent-era-review-console-plan.md`](../progress/2026-07-10-agent-era-review-console-plan.md) | Active execution status and evidence ledger |
 | Local agent contract | `AGENTS.md` at repository root | Durable local implementation rules; intentionally ignored by Git and therefore not a public repository link |
 
 ## Accepted Decisions
@@ -28,6 +31,7 @@
 - [`decisions/0003-ci-evidence-boundary.md`](decisions/0003-ci-evidence-boundary.md)
 - [`decisions/0004-natural-lifecycle-runtime-contracts.md`](decisions/0004-natural-lifecycle-runtime-contracts.md)
 - [`decisions/0005-thin-upstream-ownership-and-explicit-profiles.md`](decisions/0005-thin-upstream-ownership-and-explicit-profiles.md)
+- [`decisions/0006-agent-era-review-console.md`](decisions/0006-agent-era-review-console.md)
 
 ## Public Product Documentation
 

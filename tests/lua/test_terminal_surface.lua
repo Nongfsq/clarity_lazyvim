@@ -1,5 +1,5 @@
-local repo_root = vim.env.CLARITY_REPO_ROOT or vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h")
-package.path = repo_root .. "/nvim/lua/?.lua;" .. repo_root .. "/nvim/lua/?/init.lua;" .. package.path
+local repo_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h")
+local plugin_path = repo_root .. "/nvim/lua/plugins/terminal.lua"
 
 package.loaded["config.i18n"] = {
     t = function(key)
@@ -7,77 +7,39 @@ package.loaded["config.i18n"] = {
     end,
 }
 
-local created = 0
-local toggled = 0
-package.loaded["toggleterm.terminal"] = {
-    Terminal = {
-        new = function(_, opts)
-            created = created + 1
-            assert(opts.direction == "float", "the sole terminal instance must be floating")
-            return {
-                toggle = function()
-                    toggled = toggled + 1
-                end,
-            }
+local calls = {}
+_G.Snacks = {
+    terminal = {
+        toggle = function(cmd, opts)
+            table.insert(calls, { cmd = cmd, opts = opts })
         end,
     },
 }
 
-local spec = dofile(repo_root .. "/nvim/lua/plugins/toggleterm.lua")[1]
-assert(#spec.keys == 1, "ToggleTerm must expose exactly one product key")
-assert(spec.keys[1][1] == "<leader>tf", "the sole terminal entry must be <leader>tf")
-assert(spec.opts.open_mapping == nil, "raw <C-\\> product toggle must be removed")
+local original_getcwd = vim.fn.getcwd
+vim.fn.getcwd = function()
+    return "/review/project"
+end
 
+local spec = assert(loadfile(plugin_path))()[1]
+assert(spec[1] == "folke/snacks.nvim", "the required Snacks stack must own the terminal")
+assert(#spec.keys == 1 and spec.keys[1][1] == "<leader>tf", "one promoted terminal key is required")
 spec.keys[1][2]()
-spec.keys[1][2]()
-assert(created == 1, "the floating terminal instance must be reused")
-assert(toggled == 2, "the reused terminal must toggle on each invocation")
 
-local setup_opts
-package.loaded.toggleterm = {
-    setup = function(opts)
-        setup_opts = opts
-    end,
-}
-local autocmd_event
-local autocmd_opts
-local original_create_autocmd = vim.api.nvim_create_autocmd
-vim.api.nvim_create_autocmd = function(event, opts)
-    autocmd_event = event
-    autocmd_opts = opts
-end
-spec.config(nil, spec.opts)
-vim.api.nvim_create_autocmd = original_create_autocmd
-assert(setup_opts == spec.opts, "ToggleTerm setup must receive the declared opts")
-assert(autocmd_event == "FileType", "terminal mappings must not use a generic TermOpen autocmd")
-assert(autocmd_opts.pattern == "toggleterm", "terminal mappings must be scoped to ToggleTerm buffers")
-
-local mapped = {}
-local original_keymap_set = vim.keymap.set
-vim.keymap.set = function(mode, lhs, _, opts)
-    table.insert(mapped, { mode = mode, lhs = lhs, buffer = opts.buffer })
-end
-autocmd_opts.callback({ buf = 42 })
-vim.keymap.set = original_keymap_set
-assert(#mapped == 6, "only required terminal exit/window mappings should remain")
-for _, mapping in ipairs(mapped) do
-    assert(mapping.mode == "t" and mapping.buffer == 42, "terminal mappings must be buffer-local")
-    assert(mapping.lhs ~= "jk", "the undocumented jk terminal escape must be removed")
+assert(#calls == 1, "terminal action must issue one toggle")
+local opts = calls[1].opts
+assert(calls[1].cmd == nil, "terminal must use the configured shell")
+assert(opts.cwd == "/review/project", "terminal must inherit the current project cwd")
+assert(opts.win.position == "float", "terminal must remain a float")
+assert(opts.win.width == 0.8 and opts.win.height == 0.8, "terminal must fit small and large UIs proportionally")
+for _, key in ipairs({ "term_normal", "nav_left", "nav_down", "nav_up", "nav_right", "nav_prefix" }) do
+    assert(opts.win.keys[key] and opts.win.keys[key].mode == "t", "terminal-local navigation missing: " .. key)
 end
 
-local source = table.concat(vim.fn.readfile(repo_root .. "/nvim/lua/plugins/toggleterm.lua"), "\n")
-for _, forbidden in ipairs({
-    "<leader>tr",
-    "<leader>tv",
-    "<leader>th",
-    "<leader>ht",
-    "system_monitor",
-    "nvim-web-devicons",
-    '"TermOpen"',
-}) do
-    assert(not source:find(forbidden, 1, true), "removed terminal surface remains: " .. forbidden)
-end
+local source = table.concat(vim.fn.readfile(plugin_path), "\n")
+assert(not source:find("toggleterm", 1, true), "ToggleTerm ownership must be removed")
 
-package.loaded.toggleterm = nil
-package.loaded["toggleterm.terminal"] = nil
+vim.fn.getcwd = original_getcwd
 package.loaded["config.i18n"] = nil
+_G.Snacks = nil
+print("terminal surface tests: OK")

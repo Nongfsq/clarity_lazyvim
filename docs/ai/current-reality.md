@@ -9,6 +9,7 @@ Last updated: 2026-07-10
 The product direction is:
 
 - readable daily editor experience
+- agent-output review and precision editing rather than embedded code generation
 - minimal public plugin surface
 - explicit Windows / WSL / Linux workflow discipline
 - Clarity-owned help, audit, validation, and recovery paths
@@ -40,13 +41,11 @@ Primary runtime:
 - Lua
 - LazyVim
 - lazy.nvim
-- Snacks picker (search/picker only)
+- Snacks picker and floating terminal
 - nvim-treesitter
 - neo-tree.nvim (the sole file explorer, selected explicitly before LazyVim startup)
-- toggleterm.nvim
 - gitsigns.nvim
 - conform.nvim
-- copilot.lua
 
 Support scripts:
 
@@ -58,7 +57,7 @@ Clarity runtime diagnostics now has a dependency-free first slice:
 - `config.diagnostics`: schema-versioned bounded in-memory and JSONL events
 - `config.actions.fold`: typed fold outcomes instead of raw `normal! za`
 - persistence defaults to WARN/ERROR under isolated/user state roots
-- Noice and `vim.notify` remain presentation layers, not diagnostic authority
+- native messages and `vim.notify` present outcomes; diagnostics own truth
 - `:ClarityLog` exposes recent events, tail, path, and sanitized export
 - `scripts/run_clarity_tests.py` routes fast/contracts/behavior/faults/release
 
@@ -143,6 +142,7 @@ The doctor is cross-platform for macOS, Linux, WSL, and Windows. It dry-runs by 
 Inside Neovim:
 
 ```vim
+:ClarityHealth
 :ClarityAudit
 :ClarityValidate
 :ClarityStart
@@ -156,8 +156,8 @@ CI:
 
 - `.github/workflows/clarity-validate.yml`
 - defines Ubuntu 24.04, Windows 2022, and macOS 14 jobs
-- installs checksummed official Neovim 0.12.4, Python 3.12, Node 22, pinned
-  provider packages, and `tree-sitter-cli`
+- installs checksummed official Neovim 0.12.4, Python 3.12, and the pinned Python
+  provider package
 - uses isolated config/data/state/cache paths and a copied candidate repository
 - has bounded jobs/processes, static checks, immutable action SHAs, and artifacts
 - runs audit and runtime validation
@@ -183,7 +183,7 @@ As of 2026-07-10 on the simplification candidate:
 - `python3 scripts/clarity_doctor.py`: all locally configured requirements pass;
   removed system-monitor checks no longer advertise a removed product feature
 - `python3 scripts/run_clarity_audit.py`: core readiness is independent of
-  clipboard/Copilot/provider profiles; release quality remains `unverified`
+  clipboard/provider profiles; release quality remains `unverified`
 - `python3 scripts/run_clarity_validate.py`: required failures `0`
 - directory startup: one Neo-tree window and zero Snacks Explorer windows
 - natural runtime contracts: empty headless, file headless, and attached-UI file
@@ -192,12 +192,13 @@ As of 2026-07-10 on the simplification candidate:
   autocmds, editing defaults, and keymap ownership/behavior
 - raw-fold fixture: exactly `CLARITY_RUNTIME_KEYMAP_CONTRACT`; the repaired
   action returns `no_fold` without `E490/E5108` on a plain line
-- simplification candidate: 37 Python tests and 21 Lua policy files pass; the
+- agent-era candidate: 36 Python tests and 20 Lua policy files pass; the
   full release router passes on macOS and manual Ubuntu 24.04; fold is covered by
   success, expected-edge, fault, restoration, and real-input evidence
 - empty headless startup loads 4 plugins instead of the reviewed baseline of 10
-- the resolved core set is 25 plugins; the lock has 26 entries: active/transitive
-  dependencies plus optional Copilot, while 12 product exclusions live only in
+- the resolved core set and lock each contain 23 plugins; Copilot, ToggleTerm,
+  and autotag are absent; Noice remains as a presentation adapter after native
+  messages failed the attached fault contract; 13 product exclusions live in
   `nvim/lua/plugins/minimal.lua`
 
 This snapshot is intentionally local-only. It must not be copied into a public
@@ -208,8 +209,8 @@ Current runtime details:
 
 - Neovim `0.12.4`
 - Python `3.14.6`; `pynvim` is not installed for this interpreter
-- Node.js `26.5.0` with global `neovim@5.4.0`
-- `tree-sitter-cli 0.26.9`
+- local Node/tree-sitter installations are user-owned and outside Clarity
+  readiness
 
 ## Local Issue Resolved On 2026-05-05
 
@@ -236,7 +237,8 @@ This was a local machine state issue, not a GitHub repository code issue.
 Repository-level prevention added after this incident:
 
 - `scripts/clarity_doctor.py` detects stale user-level `vim` parser overrides and supports safe `--apply` backup moves.
-- `:ClarityAudit` reports Tree-sitter CLI availability and `vim` parser/query/highlighter health.
+- `:ClarityAudit` reports `vim` parser/query/highlighter health without requiring
+  Clarity-managed parser installation.
 - `scripts/run_clarity_validate.py` treats `vim` parser health and stale user-level parser overrides as required validation checks.
 - README troubleshooting now starts with the doctor path and documents the `Invalid node type "tab"` recovery flow.
 
@@ -336,9 +338,9 @@ Actions must not be triggered without a separate explicit request. Do not close
 Active execution plan:
 
 ```text
-progress/2026-07-10-interaction-dependency-simplification-plan.md
+progress/2026-07-10-agent-era-review-console-plan.md
 ```
 
 The `nvim-lspconfig` drift was accepted through the backup-first atomic
 transaction; the current lock hash is
-`33ec35118884af5ebdada829196672d4d7e25c2a0d4084418a3505b2c3bafcdc`.
+`df9dfba9cabe6fef10ec93737c9de125621de01bc1d41f1c6491787f26f3e20b`.
