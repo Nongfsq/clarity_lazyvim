@@ -132,6 +132,8 @@ function M.get_report()
     add_result(results, "keymaps", "leader_ff", has_map("<leader>ff", "n"), "<leader>ff")
     add_result(results, "keymaps", "leader_fw", has_map("<leader>fw", "n"), "<leader>fw")
     add_result(results, "keymaps", "leader_gd", has_map("<leader>gd", "n"), "<leader>gd")
+    add_result(results, "keymaps", "leader_cz", has_map("<leader>cz", "n"), "<leader>cz")
+    add_result(results, "keymaps", "leader_uw", has_map("<leader>uw", "n"), "<leader>uw")
     add_result(results, "keymaps", "leader_tf", has_map("<leader>tf", "n"), "<leader>tf")
     add_result(results, "keymaps", "leader_hh", has_map("<leader>hh", "n"), "<leader>hh")
 

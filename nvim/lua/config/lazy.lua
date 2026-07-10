@@ -1,5 +1,9 @@
 -- Final integrated lazy.nvim bootstrap for the Clarity runtime.
 
+-- Clarity owns Neo-tree as its only file explorer. LazyVim 8 otherwise selects
+-- Snacks Explorer by default, which makes both explorers handle directory startup.
+vim.g.lazyvim_explorer = "neo-tree"
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 local noninteractive = vim.env.CLARITY_NONINTERACTIVE == "1" or #vim.api.nvim_list_uis() == 0
 local function bundled_runtime_paths()

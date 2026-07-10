@@ -164,6 +164,8 @@ def run() -> int:
         "results.keymap_ff = has_map('<leader>ff', 'n'); "
         "results.keymap_fw = has_map('<leader>fw', 'n'); "
         "results.keymap_gd = has_map('<leader>gd', 'n'); "
+        "results.keymap_cz = has_map('<leader>cz', 'n'); "
+        "results.keymap_uw = has_map('<leader>uw', 'n'); "
         "results.keymap_tf = has_map('<leader>tf', 'n'); "
         "results.keymap_hh = has_map('<leader>hh', 'n'); "
         "vim.wait(1200, function() return vim.b.gitsigns_head ~= nil and vim.b.clarity_gitsigns_keymaps == true end); "
@@ -204,6 +206,8 @@ def run() -> int:
                 CheckResult("Keymap <leader>ff exists", bool(runtime_report.get("keymap_ff")), "expected true"),
                 CheckResult("Keymap <leader>fw exists", bool(runtime_report.get("keymap_fw")), "expected true"),
                 CheckResult("Keymap <leader>gd exists", bool(runtime_report.get("keymap_gd")), "expected true"),
+                CheckResult("Keymap <leader>cz exists", bool(runtime_report.get("keymap_cz")), "expected true"),
+                CheckResult("Keymap <leader>uw exists", bool(runtime_report.get("keymap_uw")), "expected true"),
                 CheckResult("Keymap <leader>hs exists", bool(runtime_report.get("keymap_hs")), "expected true"),
                 CheckResult("Keymap <leader>tf exists", bool(runtime_report.get("keymap_tf")), "expected true"),
                 CheckResult(
@@ -242,6 +246,129 @@ def run() -> int:
                     required=False,
                 ),
             ]
+        )
+
+    editing_controls_lua = (
+        "local results = {}; "
+        "local wrap_map = vim.fn.maparg('<leader>uw', 'n', false, true); "
+        "results.wrap_callback = type(wrap_map.callback) == 'function'; "
+        "local wrap_before = vim.wo.wrap; "
+        "if results.wrap_callback then "
+        "wrap_map.callback(); "
+        "results.wrap_changed = vim.wo.wrap ~= wrap_before; "
+        "wrap_map.callback(); "
+        "results.wrap_restored = vim.wo.wrap == wrap_before; "
+        "end; "
+        "local fold_map = vim.fn.maparg('<leader>cz', 'n', false, true); "
+        "results.fold_callback = type(fold_map.callback) == 'function'; "
+        "local original_buf = vim.api.nvim_get_current_buf(); "
+        "local original_foldmethod = vim.wo.foldmethod; "
+        "local original_foldenable = vim.wo.foldenable; "
+        "local original_foldlevel = vim.wo.foldlevel; "
+        "local scratch = vim.api.nvim_create_buf(false, true); "
+        "vim.api.nvim_win_set_buf(0, scratch); "
+        "vim.api.nvim_buf_set_lines(scratch, 0, -1, false, { 'if true then', '    print(1)', 'end', 'print(2)' }); "
+        "vim.wo.foldmethod = 'manual'; "
+        "vim.wo.foldenable = true; "
+        "vim.wo.foldlevel = 0; "
+        "vim.cmd('1,3fold'); "
+        "vim.api.nvim_win_set_cursor(0, { 1, 0 }); "
+        "results.fold_initially_closed = vim.fn.foldclosed(1) == 1; "
+        "if results.fold_callback then "
+        "fold_map.callback(); "
+        "results.fold_opened = vim.fn.foldclosed(1) == -1; "
+        "fold_map.callback(); "
+        "results.fold_reclosed = vim.fn.foldclosed(1) == 1; "
+        "end; "
+        "vim.api.nvim_win_set_buf(0, original_buf); "
+        "vim.wo.foldmethod = original_foldmethod; "
+        "vim.wo.foldenable = original_foldenable; "
+        "vim.wo.foldlevel = original_foldlevel; "
+        "vim.api.nvim_buf_delete(scratch, { force = true }); "
+        "print(vim.json.encode(results));"
+    )
+    editing_controls = run_nvim(
+        repo_root,
+        nvim_bin,
+        ["+doautocmd User VeryLazy", "+lua vim.wait(150)", f"+lua {editing_controls_lua}"],
+        env,
+    )
+    editing_controls_output = "\n".join(
+        part for part in (editing_controls.stdout, editing_controls.stderr) if part
+    )
+    if editing_controls.returncode != 0:
+        checks.append(CheckResult("Editing control behavior", False, editing_controls_output or "command failed"))
+    else:
+        editing_controls_report = extract_last_json_object(editing_controls_output)
+        checks.extend(
+            [
+                CheckResult(
+                    "Line wrap mapping changes and restores the window option",
+                    bool(editing_controls_report.get("wrap_callback"))
+                    and bool(editing_controls_report.get("wrap_changed"))
+                    and bool(editing_controls_report.get("wrap_restored")),
+                    (
+                        f"callback={editing_controls_report.get('wrap_callback')} "
+                        f"changed={editing_controls_report.get('wrap_changed')} "
+                        f"restored={editing_controls_report.get('wrap_restored')}"
+                    ),
+                ),
+                CheckResult(
+                    "Code fold mapping opens and recloses the current fold",
+                    bool(editing_controls_report.get("fold_callback"))
+                    and bool(editing_controls_report.get("fold_initially_closed"))
+                    and bool(editing_controls_report.get("fold_opened"))
+                    and bool(editing_controls_report.get("fold_reclosed")),
+                    (
+                        f"callback={editing_controls_report.get('fold_callback')} "
+                        f"initially_closed={editing_controls_report.get('fold_initially_closed')} "
+                        f"opened={editing_controls_report.get('fold_opened')} "
+                        f"reclosed={editing_controls_report.get('fold_reclosed')}"
+                    ),
+                ),
+            ]
+        )
+
+    directory_start_lua = (
+        "vim.wait(600); "
+        "local results = { neo_tree_windows = 0, snacks_explorer_windows = 0 }; "
+        "for _, win in ipairs(vim.api.nvim_list_wins()) do "
+        "local buf = vim.api.nvim_win_get_buf(win); "
+        "local ft = vim.bo[buf].filetype; "
+        "if ft == 'neo-tree' then results.neo_tree_windows = results.neo_tree_windows + 1; end; "
+        "if ft == 'snacks_layout_box' or ft == 'snacks_picker_input' or ft == 'snacks_picker_list' then "
+        "results.snacks_explorer_windows = results.snacks_explorer_windows + 1; "
+        "end; "
+        "end; "
+        "results.explorer = vim.g.lazyvim_explorer; "
+        "print(vim.json.encode(results));"
+    )
+    directory_start = run_nvim(
+        repo_root,
+        nvim_bin,
+        [f"+lua {directory_start_lua}"],
+        env,
+        str(repo_root),
+    )
+    directory_start_output = "\n".join(
+        part for part in (directory_start.stdout, directory_start.stderr) if part
+    )
+    if directory_start.returncode != 0:
+        checks.append(CheckResult("Directory startup explorer behavior", False, directory_start_output or "command failed"))
+    else:
+        directory_start_report = extract_last_json_object(directory_start_output)
+        checks.append(
+            CheckResult(
+                "Directory startup opens exactly one Neo-tree explorer",
+                directory_start_report.get("explorer") == "neo-tree"
+                and directory_start_report.get("neo_tree_windows") == 1
+                and directory_start_report.get("snacks_explorer_windows") == 0,
+                (
+                    f"explorer={directory_start_report.get('explorer')} "
+                    f"neo_tree_windows={directory_start_report.get('neo_tree_windows')} "
+                    f"snacks_explorer_windows={directory_start_report.get('snacks_explorer_windows')}"
+                ),
+            )
         )
 
     dashboard = run_nvim(
@@ -389,10 +516,34 @@ def run() -> int:
         )
 
     locale_specs = [
-        ("en", "Go to definition", "Search text", "Find Files (Root Dir)", "Delete Buffer", "Toggle Wrap"),
-        ("zh", "跳转到定义", "搜索文本", "查找文件（项目根目录）", "删除缓冲区", "切换自动换行"),
+        (
+            "en",
+            "Go to definition",
+            "Search text",
+            "Find Files (Root Dir)",
+            "Delete Buffer",
+            "Toggle current code fold",
+            "Toggle Wrap",
+        ),
+        (
+            "zh",
+            "跳转到定义",
+            "搜索文本",
+            "查找文件（项目根目录）",
+            "删除缓冲区",
+            "切换当前代码折叠",
+            "切换自动换行",
+        ),
     ]
-    for locale_code, expected_gd, expected_fw, expected_ff, expected_bd, expected_uw in locale_specs:
+    for (
+        locale_code,
+        expected_gd,
+        expected_fw,
+        expected_ff,
+        expected_bd,
+        expected_cz,
+        expected_uw,
+    ) in locale_specs:
         locale_env = build_env(locale_code)
         locale_runtime_lua = (
             "local i18n = require('config.i18n'); "
@@ -400,6 +551,7 @@ def run() -> int:
             "local fw = vim.fn.maparg('<leader>fw', 'n', false, true); "
             "local ff = vim.fn.maparg('<leader>ff', 'n', false, true); "
             "local bd = vim.fn.maparg('<leader>bd', 'n', false, true); "
+            "local cz = vim.fn.maparg('<leader>cz', 'n', false, true); "
             "local uw = vim.fn.maparg('<leader>uw', 'n', false, true); "
             "local hh = vim.fn.maparg('<leader>hh', 'n', false, true); "
             "local report = i18n.get_validation_report(); "
@@ -410,6 +562,7 @@ def run() -> int:
             "fw = fw.desc, "
             "ff = ff.desc, "
             "bd = bd.desc, "
+            "cz = cz.desc, "
             "uw = uw.desc, "
             "hh = hh.desc, "
             "language_cmd = (vim.fn.exists(':ClarityLanguage') == 2), "
@@ -473,6 +626,14 @@ def run() -> int:
                 f"Locale {locale_code} keymap <leader>bd description",
                 locale_report.get("bd") == expected_bd,
                 f"desc={locale_report.get('bd')}",
+                required=False,
+            )
+        )
+        checks.append(
+            CheckResult(
+                f"Locale {locale_code} keymap <leader>cz description",
+                locale_report.get("cz") == expected_cz,
+                f"desc={locale_report.get('cz')}",
                 required=False,
             )
         )

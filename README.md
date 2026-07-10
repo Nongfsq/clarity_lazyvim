@@ -45,6 +45,8 @@ It is a focused editor product for daily work.
 | --- | --- | --- |
 | File search | `<leader>ff` | Fast project entry without depending on file trees for everything |
 | Text search | `<leader>fw` | One obvious search path backed by Snacks picker |
+| Code folding | `<leader>cz` | Toggle the fold containing the cursor without memorizing Vim's `z` commands |
+| Line wrapping | `<leader>uw` | Toggle visual wrapping in the current editing window |
 | Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
 | Git hunks | `<leader>hs`, `<leader>hr`, `<leader>hp` | Clear hunk ownership without overloading the global Git namespace |
 | Recovery | `:ClarityStart`, `<leader>hh` | A product-level "I forgot" path inside Neovim |
@@ -164,6 +166,8 @@ If you only remember one workflow, remember this:
 5. Use `<leader>tf` for the floating terminal.
 6. Use `gd`, `gr`, and `gl` to navigate code and diagnostics.
 7. Reopen help any time with `:ClarityStart` or `<leader>hh`.
+
+While editing, use `<leader>cz` to toggle the current code fold and `<leader>uw` to toggle visual line wrapping.
 
 ## Architecture
 
@@ -327,6 +331,7 @@ Validation currently covers:
 
 - startup smoke checks on Windows and WSL
 - keymap assertions for high-frequency paths
+- single-explorer directory startup and code fold/line-wrap behavior
 - dashboard, `neo-tree`, and terminal UI behavior
 - clipboard, Python, Node, and Copilot provider readiness
 - Tree-sitter `vim` parser/query/highlighter health

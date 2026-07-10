@@ -1,6 +1,6 @@
 # Current Reality
 
-Last updated: 2026-05-05
+Last updated: 2026-07-09
 
 ## Product
 
@@ -21,13 +21,13 @@ This is not a shell framework, maximal plugin showcase, or generic starter templ
 Current local repository:
 
 ```text
-/Users/meng/Github/clarity_lazyvim
+/Users/frank/Github/clarity_lazyvim
 ```
 
 Local Neovim config symlink observed during this session:
 
 ```text
-/Users/meng/.config/nvim -> /Users/meng/Github/clarity_lazyvim/nvim
+/Users/frank/.config/nvim -> /Users/frank/Github/clarity_lazyvim
 ```
 
 The repository root has `init.lua`, and the nested Neovim runtime lives under `nvim/`.
@@ -40,9 +40,9 @@ Primary runtime:
 - Lua
 - LazyVim
 - lazy.nvim
-- Snacks picker
+- Snacks picker (search/picker only)
 - nvim-treesitter
-- neo-tree.nvim
+- neo-tree.nvim (the sole file explorer, selected explicitly before LazyVim startup)
 - toggleterm.nvim
 - gitsigns.nvim
 - conform.nvim
@@ -133,20 +133,25 @@ CI:
 - runs on Ubuntu and Windows
 - installs Neovim, Python, Node 22, provider packages, and `tree-sitter-cli`
 - runs audit and runtime validation
+- asserts that directory startup opens one Neo-tree and no Snacks Explorer
+- executes the code-fold and line-wrap mappings, including state restoration
 
 ## Current Local Validation Snapshot
 
-As of 2026-05-05 after local dependency remediation:
+As of 2026-07-09 on the current macOS runtime:
 
-- `python3 scripts/clarity_doctor.py`: all checks passing
+- `python3 scripts/clarity_doctor.py`: required checks passing; optional warning for `pynvim`
 - `python3 scripts/run_clarity_audit.py`: `Overall readiness: 100/100`
 - `python3 scripts/run_clarity_validate.py`: required failures `0`
-- optional warnings: `0`
+- optional warnings: `1` (`pynvim` is missing for the active Python runtime)
+- directory startup: one Neo-tree window and zero Snacks Explorer windows
 
-Local dependencies installed after the doctor work:
+Current runtime details:
 
-- `pynvim 0.6.0` for the current Homebrew Python 3.14 runtime
-- `tree-sitter-cli 0.26.8` through global npm under `/opt/homebrew`
+- Neovim `0.12.4`
+- Python `3.14.6`; `pynvim` is not installed for this interpreter
+- Node.js `26.5.0` with global `neovim@5.4.0`
+- `tree-sitter-cli 0.26.9`
 
 ## Local Issue Resolved On 2026-05-05
 
