@@ -102,7 +102,9 @@ lazy.setup({
     lockfile = vim.g.clarity_repo_root .. "/lazy-lock.json",
     defaults = { lazy = true, version = false },
     install = { colorscheme = { "habamax" } },
-    checker = { enabled = not noninteractive },
+    -- Dependency updates are explicit maintainer/agent transactions. A normal
+    -- review session must not perform background update checks.
+    checker = { enabled = false },
     performance = {
         rtp = {
             -- Keep the nested Clarity runtime discoverable while lazy.nvim

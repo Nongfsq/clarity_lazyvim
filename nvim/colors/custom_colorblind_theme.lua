@@ -6,79 +6,44 @@ end
 
 vim.o.background = "dark"
 
-local ok, lush = pcall(require, "lush")
-if not ok then
-    vim.schedule(function()
-        vim.notify(
-            "custom_colorblind_theme requires lush.nvim; using habamax instead.",
-            vim.log.levels.WARN,
-            { title = "Clarity" }
-        )
-    end)
-    local fallback_loaded = pcall(vim.cmd.colorscheme, "habamax")
-    if fallback_loaded then
-        -- A nested :colorscheme can leave the name unset while the fallback
-        -- highlights are active. Keep health/reporting explicit in that case.
-        vim.g.colors_name = "habamax"
-    end
-    return
-end
-
 vim.g.colors_name = "custom_colorblind_theme"
-local hsl = lush.hsl
 
-local theme = lush(function(injected_functions)
-    local sym = injected_functions.sym
-    local bg = hsl(220, 15, 18)
-    local fg = hsl(220, 15, 80)
+-- Static values generated from the accepted Lush theme. Keeping the concrete
+-- palette removes an eager runtime dependency while preserving exact colors.
+local highlights = {
+    Normal = { bg = "#272c35", fg = "#c4c9d4" },
+    NormalFloat = { bg = "#303541", fg = "#c4c9d4" },
+    CursorWord = { bg = "#365463", fg = "#cacfd8" },
+    Visual = { bg = "#6b6b47", fg = "#eeeeea" },
+    Cursor = { bg = "#ffd500", fg = "#272c35" },
+    CursorLine = { bg = "#303541" },
+    CursorColumn = { bg = "#303541" },
+    LineNr = { fg = "#919bad" },
+    CursorLineNr = { fg = "#ffd500", bold = true },
+    ["@keyword"] = { fg = "#bf8cd9", bold = true },
+    ["@function"] = { fg = "#7db2e8", bold = true },
+    ["@string"] = { fg = "#e8c47d" },
+    ["@number"] = { fg = "#e085a3" },
+    ["@boolean"] = { fg = "#85e0e0" },
+    ["@comment"] = { fg = "#85ad85", italic = true },
+    ["@type"] = { fg = "#66cc99", bold = true },
+    ["@constant"] = { fg = "#e8b37d" },
+    ["@special"] = { fg = "#e085e0" },
+    StatusLine = { bg = "#383f4c", fg = "#c4c9d4" },
+    WinSeparator = { fg = "#4a5264" },
+    TabLine = { bg = "#303541", fg = "#adb4c2" },
+    TabLineSel = { bg = "#414958", fg = "#c4c9d4", bold = true },
+    Pmenu = { bg = "#383f4c", fg = "#c4c9d4" },
+    PmenuSel = { bg = "#6b6b47", fg = "#eeeeea" },
+    DiagnosticError = { fg = "#ff6b6b" },
+    DiagnosticWarn = { fg = "#e0e052" },
+    DiagnosticInfo = { fg = "#52b1e0" },
+    DiagnosticHint = { fg = "#52e052" },
+    Search = { bg = "#d9d926", fg = "#272c35" },
+    IncSearch = { bg = "#d97f26", fg = "#272c35" },
+    MatchParen = { bg = "#40bfbf", fg = "#272c35", bold = true },
+}
 
-    return {
-        -- Base colors.
-        Normal({ bg = bg, fg = fg }), -- Deep blue-gray background with a light foreground.
-        NormalFloat({ bg = bg.lighten(5), fg = fg }),
-
-        -- Highlight the word under the cursor.
-        CursorWord({ bg = hsl(200, 30, 30), fg = fg.lighten(10) }), -- Soft blue background.
-
-        -- Visual-mode selection.
-        Visual({ bg = hsl(60, 20, 35), fg = hsl(60, 10, 90) }), -- Soft amber background with near-white text.
-        Cursor({ bg = hsl(50, 100, 50), fg = bg }), -- Cursor.
-        CursorLine({ bg = bg.lighten(5) }), -- Current line.
-        CursorColumn({ bg = bg.lighten(5) }), -- Current column.
-        LineNr({ fg = fg.darken(30) }), -- Line numbers.
-        CursorLineNr({ fg = hsl(50, 100, 50), bold = true }), -- Current line number.
-
-        -- Syntax highlighting.
-        sym("@keyword")({ fg = hsl(280, 50, 70), bold = true }), -- Keywords: purple.
-        sym("@function")({ fg = hsl(210, 70, 70), bold = true }), -- Functions: blue.
-        sym("@string")({ fg = hsl(40, 70, 70) }), -- Strings: yellow.
-        sym("@number")({ fg = hsl(340, 60, 70) }), -- Numbers: pink.
-        sym("@boolean")({ fg = hsl(180, 60, 70) }), -- Booleans: cyan.
-        sym("@comment")({ fg = hsl(120, 20, 60), italic = true }), -- Comments: muted green.
-        sym("@type")({ fg = hsl(150, 50, 60), bold = true }), -- Types: green.
-        sym("@constant")({ fg = hsl(30, 70, 70) }), -- Constants: orange.
-        sym("@special")({ fg = hsl(300, 60, 70) }), -- Special characters: bright purple.
-
-        -- Editor UI.
-        StatusLine({ bg = bg.lighten(10), fg = fg }),
-        WinSeparator({ fg = bg.lighten(20) }),
-        TabLine({ bg = bg.lighten(5), fg = fg.darken(10) }),
-        TabLineSel({ bg = bg.lighten(15), fg = fg, bold = true }),
-        Pmenu({ bg = bg.lighten(10), fg = fg }),
-        PmenuSel({ bg = Visual.bg, fg = Visual.fg }),
-
-        -- Diagnostics.
-        DiagnosticError({ fg = hsl(0, 70, 60) }),
-        DiagnosticWarn({ fg = hsl(60, 70, 60) }),
-        DiagnosticInfo({ fg = hsl(200, 70, 60) }),
-        DiagnosticHint({ fg = hsl(120, 70, 60) }),
-
-        -- Search and matches.
-        Search({ bg = hsl(60, 70, 50), fg = bg }),
-        IncSearch({ bg = hsl(30, 70, 50), fg = bg }),
-        MatchParen({ bg = hsl(180, 50, 50), fg = bg, bold = true }),
-    }
-end)
-
--- Apply the theme.
-lush(theme)
+for name, value in pairs(highlights) do
+    vim.api.nvim_set_hl(0, name, value)
+end

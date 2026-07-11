@@ -19,9 +19,19 @@ assert(resolved.default_format_opts.timeout_ms == 321, "inherited format options
 assert(resolved.default_format_opts.lsp_format == "fallback", "LSP fallback must remain enabled")
 assert(vim.deep_equal(resolved.formatters_by_ft.python, { "isort", "black" }), "Python chain missing")
 assert(vim.deep_equal(resolved.formatters_by_ft.lua, { "stylua" }), "Lua formatter missing")
-assert(resolved.formatters.prettier.prepend_args, "Prettier must extend default args")
-assert(resolved.formatters.prettier.args == nil, "Prettier must not replace Conform's required args")
+for _, formatter in ipairs({ "clang-format", "stylua", "black", "isort", "prettier" }) do
+    assert(resolved.formatters[formatter] == nil, "Clarity must not own style arguments for " .. formatter)
+end
+assert(resolved.formatters.cmake_format.command == "cmake-format", "cmake-format executable route missing")
 
 local source = table.concat(vim.fn.readfile(repo_root .. "/nvim/lua/plugins/formatting.lua"), "\n")
 assert(not source:find("vim.fn.executable", 1, true), "formatter availability must not freeze at startup")
+for _, forbidden in ipairs({ "prepend_args", "--line-length", "--print-width", "--indent-width", "--style=file" }) do
+    assert(not source:find(forbidden, 1, true), "global formatter style remains: " .. forbidden)
+end
+
+local options_source = table.concat(vim.fn.readfile(repo_root .. "/nvim/lua/config/options.lua"), "\n")
+for _, forbidden in ipairs({ "opt.tabstop", "opt.softtabstop", "opt.shiftwidth", "opt.expandtab", "opt.smartindent" }) do
+    assert(not options_source:find(forbidden, 1, true), "global indentation style remains: " .. forbidden)
+end
 print("formatting ownership tests: OK")

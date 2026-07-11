@@ -34,7 +34,6 @@ vim.o.timeoutlen = 200
 -- Number of lines to scroll when cursor is off-screen
 -- vim.o.scrolljump = 5
 
--- --- Indentation Settings ---
 local opt = vim.opt
 
 -- Prefer a stable terminal experience over extra visual effects.
@@ -45,12 +44,9 @@ opt.statuscolumn = "" -- Use the default status column to avoid custom terminal 
 opt.wrap = true -- Visually wrap long lines without inserting newlines into the file.
 opt.linebreak = true -- Prefer wrapping at word boundaries when possible.
 opt.breakindent = true -- Preserve indentation on visually wrapped continuation lines.
+opt.conceallevel = 0 -- Never hide source characters in ordinary code buffers.
 
-opt.tabstop = 4 -- Number of spaces that a <Tab> in the file counts for.
-opt.softtabstop = 4 -- Number of spaces that a <Tab> counts for while performing editing operations.
-opt.shiftwidth = 4 -- Number of spaces to use for each step of (auto)indent.
-opt.expandtab = true -- Use spaces instead of tabs.
-opt.smartindent = true -- Makes indenting smart.
+-- Indentation widths and tab/space style belong to project and filetype policy.
 opt.autoindent = true -- Copy indent from current line when starting a new line.
 
 return M

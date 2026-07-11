@@ -31,33 +31,10 @@ return {
             -- configured external formatter is available.
             opts.default_format_opts.lsp_format = "fallback"
 
-            opts.formatters["clang-format"] = { prepend_args = { "--style=file" } }
-            opts.formatters.stylua = {
-                prepend_args = {
-                    "--indent-type",
-                    "Spaces",
-                    "--indent-width",
-                    "4",
-                    "--quote-style",
-                    "AutoPreferDouble",
-                    "--call-parentheses",
-                    "None",
-                },
-            }
-            opts.formatters.black = { prepend_args = { "--line-length", "120" } }
-            opts.formatters.isort = { prepend_args = { "--profile", "black" } }
-            opts.formatters.prettier = {
-                prepend_args = {
-                    "--print-width",
-                    "120",
-                    "--tab-width",
-                    "4",
-                    "--use-tabs",
-                    "false",
-                    "--end-of-line",
-                    "lf",
-                },
-            }
+            -- Clarity owns formatter routing, not repository style. Project
+            -- configuration and formatter defaults decide indentation, line
+            -- width, quotes, and line endings so a review session cannot create
+            -- unrelated formatting churn.
             opts.formatters.cmake_format = { command = "cmake-format" }
             return opts
         end,

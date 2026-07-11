@@ -1,14 +1,13 @@
 local repo_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h")
+vim.opt.runtimepath:append(repo_root .. "/nvim")
 
 local tooling = assert(loadfile(repo_root .. "/nvim/lua/plugins/tooling.lua"))()
 local treesitter = assert(loadfile(repo_root .. "/nvim/lua/plugins/treesitter.lua"))()
 
-assert(#tooling == 2, "LSP and Mason policy specs are required")
+assert(#tooling == 1, "only the direct LSP policy spec should remain")
 local lsp_opts = tooling[1].opts(nil, {})
-local mason_opts = tooling[2].opts(nil, { ensure_installed = { "upstream-default" } })
 local treesitter_opts = treesitter[1].opts(nil, { ensure_installed = { "upstream-default" } })
 assert(vim.tbl_isempty(lsp_opts.servers), "Clarity must not provision language servers")
-assert(vim.tbl_isempty(mason_opts.ensure_installed), "Clarity must not provision Mason tools")
 assert(vim.tbl_isempty(treesitter_opts.ensure_installed), "Clarity must not provision parsers")
 
 for _, path in ipairs({
@@ -21,5 +20,13 @@ for _, path in ipairs({
         assert(not source:find(forbidden, 1, true), "curated global tool remains: " .. forbidden)
     end
 end
+
+local minimal = assert(loadfile(repo_root .. "/nvim/lua/plugins/minimal.lua"))()
+local disabled = {}
+for _, spec in ipairs(minimal) do
+    disabled[spec[1]] = spec.enabled
+end
+assert(disabled["mason-org/mason.nvim"] == false, "Mason must be disabled")
+assert(disabled["mason-org/mason-lspconfig.nvim"] == false, "mason-lspconfig must be disabled")
 
 print("external toolchain policy tests: OK")

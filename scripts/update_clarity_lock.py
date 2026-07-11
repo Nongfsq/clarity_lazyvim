@@ -30,10 +30,12 @@ def default_backup_root(env: dict[str, str] | None = None) -> Path:
 
 
 def replace_with_backup(source: Path, proposed: Path, backup_root: Path) -> Path:
-    backup_root.mkdir(parents=True, exist_ok=True)
+    backup_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    backup_root.chmod(0o700)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     backup = backup_root / f"{timestamp}-{source.name}"
     shutil.copy2(source, backup)
+    backup.chmod(0o600)
 
     file_descriptor, temporary_name = tempfile.mkstemp(prefix=f".{source.name}.", dir=source.parent)
     temporary = Path(temporary_name)
@@ -47,6 +49,45 @@ def replace_with_backup(source: Path, proposed: Path, backup_root: Path) -> Path
     finally:
         temporary.unlink(missing_ok=True)
     return backup
+
+
+def write_lazy_lock(path: Path, lock: dict[str, dict[str, str]]) -> None:
+    """Write lazy.nvim's stable one-plugin-per-line lock format."""
+    lines = ["{"]
+    names = sorted(lock)
+    for index, name in enumerate(names):
+        info = lock[name]
+        suffix = "," if index + 1 < len(names) else ""
+        lines.append(
+            f"  {json.dumps(name, ensure_ascii=False)}: "
+            f'{{ "branch": {json.dumps(info["branch"])}, '
+            f'"commit": {json.dumps(info["commit"])} }}{suffix}'
+        )
+    lines.append("}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def prune_reviewed_exclusions(
+    path: Path,
+    registry_exclusions: list[str],
+    runtime_disabled: list[str],
+) -> list[str]:
+    """Remove only reviewed exclusions that are disabled in this runtime.
+
+    lazy.nvim keeps disabled plugin entries so a future re-enable can restore
+    the old revision. Clarity instead treats its tracked lock as an active-only
+    dependency manifest; the reviewed exclusion registry remains the durable
+    policy. Conditional runtime specs that are not in that registry must retain
+    their lock entries.
+    """
+    lock = json.loads(path.read_text(encoding="utf-8"))
+    confirmed = set(registry_exclusions).intersection(runtime_disabled)
+    removed = sorted(confirmed.intersection(lock))
+    if removed:
+        for name in removed:
+            del lock[name]
+        write_lazy_lock(path, lock)
+    return removed
 
 
 def main() -> int:
@@ -74,6 +115,34 @@ def main() -> int:
         first = run_nvim(candidate_root, nvim, [], env, timeout=args.timeout)
         if first.returncode != 0:
             raise RuntimeError(f"Candidate normalization boot failed:\n{combined_output(first)}")
+
+        policy = run_nvim(
+            candidate_root,
+            nvim,
+            [
+                "+lua local runtime=vim.tbl_keys(require('lazy.core.config').spec.disabled); "
+                "table.sort(runtime); local registry=require('config.product_policy').plugin_exclusion_names(); "
+                "print(vim.json.encode({registry_exclusions=registry,runtime_disabled=runtime}))"
+            ],
+            env,
+            timeout=args.timeout,
+        )
+        if policy.returncode != 0:
+            raise RuntimeError(f"Disabled-plugin policy query failed:\n{combined_output(policy)}")
+        policy_report = extract_last_json_object(combined_output(policy))
+        registry_exclusions = policy_report.get("registry_exclusions", [])
+        runtime_disabled = policy_report.get("runtime_disabled", [])
+        if not isinstance(registry_exclusions, list) or not all(
+            isinstance(name, str) for name in registry_exclusions
+        ):
+            raise RuntimeError("Product exclusion registry query returned an invalid manifest.")
+        if not isinstance(runtime_disabled, list) or not all(isinstance(name, str) for name in runtime_disabled):
+            raise RuntimeError("Disabled-plugin policy query returned an invalid manifest.")
+        removed_exclusions = prune_reviewed_exclusions(
+            candidate_lock,
+            registry_exclusions,
+            runtime_disabled,
+        )
         normalized_hash = sha256_file(candidate_lock)
 
         audit = run_nvim(candidate_root, nvim, ["+ClarityAudit!"], env, timeout=args.timeout)
@@ -99,6 +168,7 @@ def main() -> int:
             "source_hash": source_before,
             "candidate_hash": stable_hash,
             "candidate_core": report["summary"]["core"]["status"],
+            "pruned_exclusions": removed_exclusions,
         }
 
         if changed and args.apply:
