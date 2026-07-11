@@ -144,6 +144,7 @@ function M.snapshot(scenario)
             wrap = vim.wo.wrap,
             linebreak = vim.wo.linebreak,
             breakindent = vim.wo.breakindent,
+            conceallevel = vim.wo.conceallevel,
         },
         maps = {
             leader_uw = map_snapshot("<leader>uw"),

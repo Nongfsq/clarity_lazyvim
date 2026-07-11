@@ -20,6 +20,10 @@ class ClarityTestRouterTests(unittest.TestCase):
         self.assertLessEqual(len(value.encode()), 40)
         self.assertIn("truncated", value)
 
+    def test_child_json_tolerates_tooling_output_after_report(self) -> None:
+        report = runner.parse_child_json('notice\n{\n  "status": "pass"\n}\ninstalled package\n')
+        self.assertEqual(report, {"status": "pass"})
+
     def test_behavior_requires_the_fold_feature(self) -> None:
         with self.assertRaisesRegex(ValueError, "--feature fold"):
             runner.build_commands(REPO_ROOT, "behavior", "python", "nvim", None, [], None)

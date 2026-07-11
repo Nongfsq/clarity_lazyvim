@@ -92,6 +92,7 @@ class RuntimeContractTests(unittest.TestCase):
                 "wrap": True,
                 "linebreak": True,
                 "breakindent": True,
+                "conceallevel": 0,
             },
             "autocmds": {"absolute_line_numbers": 5},
             "maps": {
@@ -100,28 +101,15 @@ class RuntimeContractTests(unittest.TestCase):
             },
         }
         behavior = {
-            "wrap_callback": True,
-            "fold_callback": True,
-            "fold_input": True,
-            "fold_open_input_ok": True,
-            "wrap_changed": True,
-            "wrap_restored": True,
-            "fold_initially_closed": True,
-            "fold_opened": True,
-            "fold_reclosed": True,
-            "fold_open_outcome": "toggled",
-            "fold_close_outcome": "toggled",
-            "fold_close_input_ok": True,
-            "fold_no_fold_ok": True,
-            "fold_no_fold_outcome": "no_fold",
-            "fold_no_fold_event_id": "CLARITY_FOLD_NO_FOLD",
-            "fold_no_fold_error": "",
-            "fold_cleanup": True,
-            "log_small_ui": True,
-            "log_readonly": True,
-            "log_tail": True,
-            "log_cleanup": True,
+            "global_leader_exact": True,
+            "dynamic_leader_exact": True,
+            "full_context_within_budget": True,
         }
+        for check in self.catalog["checks"]:
+            if check["kind"] != "behavior_contract":
+                continue
+            behavior.update({name: True for name in check.get("flags", [])})
+            behavior.update(check.get("equals", {}))
         self.assertFalse([result for result in contracts.evaluate_snapshot(self.catalog, positive, behavior) if not result["ok"]])
 
         fault = {**positive, "modules": {name: dict(value) for name, value in modules.items()}}
@@ -133,12 +121,13 @@ class RuntimeContractTests(unittest.TestCase):
             "wrap": False,
             "linebreak": False,
             "breakindent": False,
+            "conceallevel": 2,
         }
         fault["autocmds"] = {"absolute_line_numbers": 0}
         fault["maps"] = {"leader_uw": {"source": None}, "leader_cz": {"source": None}}
         failure_ids = {
             result["id"]
-            for result in contracts.evaluate_snapshot(self.catalog, fault, {})
+            for result in contracts.evaluate_snapshot(self.catalog, fault, behavior)
             if not result["ok"]
         }
         self.assertEqual(

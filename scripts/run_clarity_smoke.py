@@ -43,13 +43,16 @@ def copy_candidate(source: Path, destination: Path) -> None:
 
 def probe_command() -> str:
     return (
-        "+lua local cfg=require('lazy.core.config'); "
+        "+lua local cfg=require('lazy.core.config'); local names={}; "
+        "for name,plugin in pairs(cfg.plugins or {}) do "
+        "if plugin.enabled ~= false then table.insert(names,name) end end; table.sort(names); "
         "print(vim.json.encode({"
         "repo=vim.g.clarity_repo_root,"
         "lock=cfg.options.lockfile,"
         "json=LazyVim.config.json.path,"
         "nvim=vim.version(),"
-        "plugins=vim.tbl_count(cfg.plugins or {})"
+        "plugin_count=#names,"
+        "plugin_names=names"
         "}))"
     )
 
@@ -90,8 +93,21 @@ def run() -> int:
             copy_plugin_cache(args.reuse_plugin_cache.resolve(), runtime_root)
 
         boots: list[dict] = []
-        for phase in ("first", "restart"):
-            result = run_nvim(repo_root, nvim, [probe_command()], env, timeout=args.timeout)
+        offline_bin = runtime_root / "offline-bin"
+        offline_bin.mkdir(parents=True, exist_ok=True)
+        offline_env = dict(env)
+        offline_env.update(
+            {
+                "PATH": str(offline_bin),
+                "GIT_TERMINAL_PROMPT": "0",
+                "HTTP_PROXY": "http://127.0.0.1:9",
+                "HTTPS_PROXY": "http://127.0.0.1:9",
+                "ALL_PROXY": "http://127.0.0.1:9",
+                "NO_PROXY": "",
+            }
+        )
+        for phase, phase_env in (("first", env), ("restart", env), ("offline_restart", offline_env)):
+            result = run_nvim(repo_root, nvim, [probe_command()], phase_env, timeout=args.timeout)
             output = combined_output(result)
             if result.returncode != 0:
                 raise RuntimeError(f"{phase} boot failed with exit {result.returncode}:\n{output}")
@@ -102,6 +118,7 @@ def run() -> int:
         expected_lock = str(lockfile.resolve()).replace("\\", "/")
         expected_json = str(lazyvim_json.resolve()).replace("\\", "/")
         expected_repo = str(repo_root.resolve()).replace("\\", "/")
+        expected_plugins = sorted(json.loads(lockfile.read_text(encoding="utf-8")))
         for report in boots:
             actual = {key: str(report[key]).replace("\\", "/") for key in ("repo", "lock", "json")}
             expected = {"repo": expected_repo, "lock": expected_lock, "json": expected_json}
@@ -110,6 +127,11 @@ def run() -> int:
             version = report.get("nvim", {})
             if (version.get("major", 0), version.get("minor", 0)) < (0, 12):
                 raise RuntimeError(f"Unsupported Neovim version: {version}")
+            if report.get("plugin_names") != expected_plugins:
+                raise RuntimeError(
+                    "Resolved active plugin set does not exactly match the lockfile: "
+                    f"expected={expected_plugins} actual={report.get('plugin_names')}"
+                )
 
         after = {"lock": sha256_file(lockfile), "json": sha256_file(lazyvim_json)}
         if before != after:
@@ -127,6 +149,7 @@ def run() -> int:
                     "runtime_root": str(runtime_root),
                     "candidate_root": str(repo_root),
                     "hashes": after,
+                    "lock_plugins": expected_plugins,
                     "boots": boots,
                 },
                 indent=2,

@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,7 +13,15 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
 
-from clarity_runtime import build_env, combined_output, resolve_nvim_binary, run_command, sha256_file
+from clarity_runtime import (
+    build_env,
+    combined_output,
+    configure_isolated_runtime,
+    resolve_nvim_binary,
+    run_command,
+    sha256_file,
+)
+from run_clarity_smoke import copy_plugin_cache
 
 
 SCHEMA_VERSION = 1
@@ -56,6 +65,19 @@ def nvim_version(nvim: str) -> str:
     return result.stdout.splitlines()[0]
 
 
+def contract_python_command(python: str) -> list[str]:
+    try:
+        probe = subprocess.run([python, "-c", "import pynvim"], capture_output=True, text=True)
+        if probe.returncode == 0:
+            return [python]
+    except OSError:
+        pass
+    uv = shutil.which("uv")
+    if uv:
+        return [uv, "run", "--with", "pynvim", "python"]
+    return [python]
+
+
 def build_commands(
     repo_root: Path,
     suite: str,
@@ -68,7 +90,14 @@ def build_commands(
     lua_tests = [python, "scripts/run_clarity_lua_tests.py", "--nvim-bin", nvim]
     python_tests = [python, "-m", "unittest", "discover", "-s", "tests/python", "-v"]
     cache_args = ["--reuse-plugin-cache", str(plugin_cache)] if plugin_cache else []
-    contracts = [python, "scripts/run_clarity_contracts.py", "--nvim-bin", nvim, "--json", *cache_args]
+    contracts = [
+        *contract_python_command(python),
+        "scripts/run_clarity_contracts.py",
+        "--nvim-bin",
+        nvim,
+        "--json",
+        *cache_args,
+    ]
 
     if suite == "fast":
         return [
@@ -105,7 +134,7 @@ def build_commands(
                     "--fault",
                     "raw_fold_action",
                     "--expect-failure-id",
-                    "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+                    "CLARITY_RUNTIME_FOLD_CONTRACT",
                 ],
             }
         ]
@@ -134,7 +163,7 @@ def build_commands(
                     "--fault",
                     "raw_fold_action",
                     "--expect-failure-id",
-                    "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+                    "CLARITY_RUNTIME_FOLD_CONTRACT",
                 ],
             },
             {"id": "CLARITY_TESTS_VALIDATE", "command": [python, "scripts/run_clarity_validate.py", "--json"]},
@@ -148,20 +177,37 @@ def build_commands(
 
 
 def parse_child_json(output: str) -> dict[str, Any] | None:
-    try:
-        lines = output.splitlines()
-        for index, line in enumerate(lines):
-            if line.lstrip().startswith("{"):
-                return json.loads("\n".join(lines[index:]))
-    except json.JSONDecodeError:
-        return None
-    return None
+    decoder = json.JSONDecoder()
+    parsed: dict[str, Any] | None = None
+    parsed_size = -1
+    offset = 0
+    for line in output.splitlines(keepends=True):
+        stripped = line.lstrip()
+        if not stripped.startswith("{"):
+            offset += len(line)
+            continue
+        index = offset + len(line) - len(stripped)
+        try:
+            value, consumed = decoder.raw_decode(output[index:])
+        except json.JSONDecodeError:
+            offset += len(line)
+            continue
+        if isinstance(value, dict) and consumed > parsed_size:
+            parsed = value
+            parsed_size = consumed
+        offset += len(line)
+    return parsed
 
 
-def run_suite(repo_root: Path, commands: list[dict[str, Any]], timeout: float) -> list[dict[str, Any]]:
+def run_suite(
+    repo_root: Path,
+    commands: list[dict[str, Any]],
+    timeout: float,
+    env: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
     for spec in commands:
-        result = run_command(spec["command"], cwd=repo_root, env=build_env(), timeout=timeout)
+        result = run_command(spec["command"], cwd=repo_root, env=env or build_env(), timeout=timeout)
         output = combined_output(result)
         bounded, truncated = truncate_output(output)
         results.append(
@@ -193,6 +239,8 @@ def junit(results: list[dict[str, Any]]) -> str:
 
 def write_artifacts(artifact_dir: Path, report: dict[str, Any]) -> None:
     artifact_dir.mkdir(parents=True, exist_ok=True)
+    if os.name != "nt":
+        artifact_dir.chmod(0o700)
     checks = [
         {
             "schema_version": SCHEMA_VERSION,
@@ -240,7 +288,10 @@ def write_artifacts(artifact_dir: Path, report: dict[str, Any]) -> None:
     for name, content in files.items():
         if name.endswith((".json", ".jsonl")) and len(content.encode()) > STRUCTURED_LIMIT:
             raise RuntimeError(f"Structured artifact exceeds {STRUCTURED_LIMIT} bytes: {name}")
-        (artifact_dir / name).write_text(content, encoding="utf-8")
+        path = artifact_dir / name
+        path.write_text(content, encoding="utf-8")
+        if os.name != "nt":
+            path.chmod(0o600)
 
 
 def main() -> int:
@@ -277,7 +328,27 @@ def main() -> int:
         )
     except ValueError as exc:
         parser.error(str(exc))
-    checks = run_suite(repo_root, commands, args.timeout)
+    dirty_before = git_dirty(repo_root)
+    runtime_context = tempfile.TemporaryDirectory(prefix="clarity-release-runtime-")
+    runtime_root = Path(runtime_context.name)
+    runtime_env = configure_isolated_runtime(build_env(), runtime_root)
+    if plugin_cache:
+        copy_plugin_cache(plugin_cache.resolve(), runtime_root)
+    if args.suite == "release" and dirty_before:
+        checks = [
+            {
+                "check_id": "CLARITY_TESTS_CLEAN_WORKTREE",
+                "command": ["git", "status", "--porcelain"],
+                "returncode": 1,
+                "ok": False,
+                "output": "Release evidence requires a clean, commit-bound worktree.",
+                "output_truncated": False,
+                "report": None,
+            }
+        ]
+    else:
+        checks = run_suite(repo_root, commands, args.timeout, runtime_env)
+    runtime_context.cleanup()
     after = authority_hashes(repo_root)
     status = "pass" if checks and all(check["ok"] for check in checks) and before == after else "fail"
     generated_at = datetime.now(timezone.utc).isoformat()
@@ -286,7 +357,7 @@ def main() -> int:
         "suite": args.suite,
         "status": status,
         "commit": git_commit(repo_root),
-        "git_dirty": git_dirty(repo_root),
+        "git_dirty": dirty_before,
         "platform": platform.platform(),
         "python": platform.python_version(),
         "nvim": nvim,
@@ -305,10 +376,15 @@ def main() -> int:
     artifact_context = None
     artifact_dir = args.artifact_dir
     if artifact_dir is None:
-        artifact_context = tempfile.TemporaryDirectory(prefix="clarity-tests-")
-        artifact_dir = Path(artifact_context.name)
+        if args.suite == "release":
+            state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            artifact_dir = state_home / "clarity_lazyvim" / "release-evidence" / f"{stamp}-{manifest['commit'][:12]}"
+        else:
+            artifact_context = tempfile.TemporaryDirectory(prefix="clarity-tests-")
+            artifact_dir = Path(artifact_context.name)
     write_artifacts(artifact_dir.resolve(), report)
-    report["artifact_dir"] = str(artifact_dir.resolve()) if args.artifact_dir else None
+    report["artifact_dir"] = str(artifact_dir.resolve()) if artifact_context is None else None
     encoded = json.dumps(report, indent=2, ensure_ascii=False)
     if len(encoded.encode()) > STRUCTURED_LIMIT:
         report["checks"] = [
