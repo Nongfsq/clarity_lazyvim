@@ -309,7 +309,7 @@ As of 2026-07-11:
 
 See the [historical quality baseline](docs/reviews/2026-07-09-clarity-95-quality-review.md),
 [current implementation review](docs/reviews/2026-07-11-observation-surface-implementation-review.md),
-and [active delivery ledger](progress/2026-07-11-agent-era-observation-surface-plan.md).
+and [completed delivery ledger](progress/2026-07-11-agent-era-observation-surface-plan.md).
 Use `python3 scripts/clarity_doctor.py` for local environment diagnosis and
 `python3 scripts/run_clarity_smoke.py` for an isolated candidate boot; local
 success does not replace the required remote CI evidence.

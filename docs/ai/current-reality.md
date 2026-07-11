@@ -330,14 +330,14 @@ scripts/session-prompt.md
 
 `AGENTS.md` remains local-only unless the project owner explicitly changes the ignore policy.
 
-## Active Refactor
+## Completed Observation-Surface Delivery
 
 The owner approved full local execution of the observation-surface plan on
-2026-07-11. `LOCK-001` and `SURFACE-001` through `SURFACE-009` are complete for
-the authorized local boundary. Documentation reconciliation and branch push are
-tracked in `SURFACE-010`.
+2026-07-11. `LOCK-001` and `SURFACE-001` through `SURFACE-010` are complete for
+the authorized local boundary. The feature branch was pushed without a PR or
+GitHub Actions run; there is no active implementation task.
 
-Active execution plan:
+Completed delivery ledger:
 
 ```text
 progress/2026-07-11-agent-era-observation-surface-plan.md

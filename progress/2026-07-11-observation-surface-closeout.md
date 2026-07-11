@@ -2,7 +2,7 @@
 
 Date: 2026-07-11
 
-Status: local implementation and clean release complete; authorized branch push pending
+Status: complete for the authorized local boundary; branch pushed without CI
 
 Clarity now exposes a cataloged bilingual review surface, five read-only Git
 observations, curated components, one Health facade, and 18 gated dependencies.

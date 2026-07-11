@@ -2,8 +2,7 @@
 
 Date: 2026-07-11
 
-Status: local implementation and release gate complete; documentation closeout
-and authorized branch push in progress.
+Status: complete for the authorized local boundary; remote platform evidence pending.
 
 PM: `docs/product/clarity-observation-surface-pm.md`
 
@@ -348,9 +347,9 @@ migration is allowed.
 
 ### SURFACE-010: Reconcile Truth, Commit, And Push
 
-- Status: in progress — public/current docs, ADRs, implementation review,
-  dependency manifest, and closeout are reconciled; the final clean release
-  passed and only the authorized branch push/remote-ref verification remains
+- Status: done — 2026-07-11; public/current docs, ADRs, implementation review,
+  dependency manifest, and closeout are reconciled; clean release passed; the
+  feature branch was pushed at `57ff1be` without a PR or GitHub Actions run
 - Depends on: SURFACE-009
 - Files: `README.md`, `doc/clarity_lazyvim_complete_guide_zh.md`,
   `docs/ai/current-reality.md`, `docs/DOCUMENT_INDEX.md`, product/architecture/
@@ -395,6 +394,9 @@ migration is allowed.
   pin and all command timeouts terminate descendant process groups.
 - GitHub Actions was not run or inspected. The local score therefore remains
   below 95 until the separately authorized platform evidence gates are met.
+- `codex/20260711-observation-surface` was created on `origin`; the final
+  closeout-only ledger commit changes no runtime authority and remote-ref
+  equality is verified in the delivery handoff.
 
 ## Handoff
 
