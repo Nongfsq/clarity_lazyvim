@@ -1,6 +1,6 @@
 # ADR-0006: Agent-Era Review Console
 
-Status: accepted locally; available-host and release evidence pending
+Status: accepted; commit-bound macOS evidence complete, other platforms pending
 Date: 2026-07-10
 
 ## Context
@@ -38,11 +38,15 @@ support cost without strengthening review of agent-produced changes.
 
 ## Consequences
 
-- The active and locked set decreases from 25/26 to 23/23.
+- The active and locked set decreased from 25/26 to 23/23 in this decision's
+  initial slice, then to 18/18 through the later observation-surface parity gates
+  that removed Mason, mason-lspconfig, Lush, friendly-snippets, and lazydev.
 - CI no longer installs Node or npm provider packages.
 - Startup never schedules curated Mason or parser installation.
-- Product exclusions increase to 14 and are enforced separately from the lock.
-- Windows/WSL and commit-bound release evidence remain pending.
+- Product exclusions increase to 18 reviewed registry records and are enforced
+  separately from the lock.
+- Exact-commit Ubuntu, Windows, WSL, and hosted-CI evidence remains pending;
+  commit-bound macOS release evidence is complete.
 
 ## Revisit Trigger
 

@@ -2,6 +2,12 @@
 
 Date: 2026-07-09
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 - Branch: `codex/20260709-clarity-trust-foundation` from `9b030f6`.
 - Implemented explicit root lock/JSON authority and actionable bootstrap exits.
 - Added isolated candidate smoke, bounded shared Python runtime, Python/Lua tests,

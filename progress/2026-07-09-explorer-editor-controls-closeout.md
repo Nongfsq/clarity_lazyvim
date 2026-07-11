@@ -1,5 +1,11 @@
 # 2026-07-09 Explorer And Editor Controls Closeout
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 ## Summary
 
 - Selected Neo-tree as Clarity's sole LazyVim explorer and removed the redundant directory-start `VimEnter` opener.

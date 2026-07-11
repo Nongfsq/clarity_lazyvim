@@ -1,7 +1,8 @@
 # Clarity Diagnostics And Test Experience PM
 
 Date: 2026-07-10
-Status: proposed — implementation awaits PLAN+TASK approval
+Status: historical approved product baseline; local implementation followed;
+current truth is in `docs/ai/current-reality.md` and the active PLAN+TASK
 Architecture:
 [`../architecture/2026-07-10-observability-and-test-system-blueprint.md`](../architecture/2026-07-10-observability-and-test-system-blueprint.md)
 

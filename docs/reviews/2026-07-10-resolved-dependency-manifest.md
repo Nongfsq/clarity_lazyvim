@@ -1,77 +1,79 @@
 # Resolved Dependency Manifest
 
-Date: 2026-07-10  
-Branch: `codex/20260710-clarity-simplification`  
-Base: `b072da5049092ab495cfa6f6c6a0152dfbdfba45`
+Last updated: 2026-07-11
+
+Branch: `codex/20260711-observation-surface`
+
+Reviewed base: `c7f80052362860c2500327cb00365754c5f7997e`
+
+Implementation evidence: `596cffac0e08b3e21012c908d929c55aff0a4fe4`
 
 ## Result
 
-- Resolved enabled plugins in the core noninteractive profile: 23.
-- Loaded at empty headless startup: 4 (`LazyVim`, `lazy.nvim`, `lush.nvim`,
-  `snacks.nvim`), down from the reviewed baseline of 10.
-- Lock entries after agent-era pruning: 23, down from 39.
-- Removed lock entry: `nvim-web-devicons`; LazyVim's `mini.icons` compatibility
-  satisfies Neo-tree without a second icon implementation.
-- Lock transaction backup:
-  `/Users/frank/.local/state/clarity_lazyvim/lock-backups/20260710T223518.375284Z-lazy-lock.json`.
+- Resolved enabled plugins: 18.
+- `lazy-lock.json` entries: 18.
+- Empty headless loaded plugins: three (`LazyVim`, `lazy.nvim`, and
+  `snacks.nvim`).
+- Lock SHA-256:
+  `e158ec437e8cdd2ada480aa6f01e11479db7d322e4f16ad21d1626f5340c57ca`.
+- The earlier 23-entry state in this document is historical and is superseded
+  by the parity-gated observation-surface migration.
 
-## Enabled Runtime Set
+## Enabled Runtime Set And Ownership
 
-`LazyVim`, `lazy.nvim`, `snacks.nvim`, `neo-tree.nvim`,
-`gitsigns.nvim`, `conform.nvim`, `nvim-treesitter`,
-`nvim-treesitter-textobjects`, `nvim-lspconfig`,
-`mason.nvim`, `mason-lspconfig.nvim`, `blink.cmp`, `friendly-snippets`,
-`lazydev.nvim`, `lualine.nvim`, `lush.nvim`, `mini.icons`, `mini.pairs`,
-`noice.nvim`, `nui.nvim`, `plenary.nvim`, `ts-comments.nvim`, and
-`which-key.nvim`.
+| Dependency | Retained product or transitive job |
+| --- | --- |
+| LazyVim, lazy.nvim | Runtime foundation, resolution, and locked lifecycle |
+| snacks.nvim | Picker, dashboard, terminal, and shared UI support |
+| neo-tree.nvim | Sole file explorer |
+| gitsigns.nvim | Read-only hunk navigation and preview |
+| conform.nvim | Project-owned formatter routing and LSP fallback |
+| nvim-lspconfig | Host/project language-server attachment |
+| blink.cmp | Completion UI using native/project snippets |
+| nvim-treesitter, nvim-treesitter-textobjects, ts-comments.nvim | Parsing, folds, syntax-aware review, text objects, and comments |
+| which-key.nvim | Small bilingual action discovery surface |
+| lualine.nvim | Stable status context |
+| mini.icons | Shared component icon adapter |
+| mini.pairs | Tested small-edit pairing behavior |
+| noice.nvim, nui.nvim | Accessible message presentation and required UI support |
+| plenary.nvim | Locked transitive utility used by retained integrations |
 
-## Product Exclusions And Optional Lock Entries
+## Removed After Independent Parity Gates
 
-The following plugins remain explicit `enabled = false` product exclusions in
-`nvim/lua/plugins/minimal.lua`, but are no longer lock entries:
+- `mason.nvim` and `mason-lspconfig.nvim`: system/project LSP attachment and the
+  missing-server no-install recovery path pass without editor provisioning.
+- `lush.nvim`: the checked-in static theme passes reload and contrast behavior.
+- `friendly-snippets`: native/project LSP snippet insertion and completion pass.
+- `lazydev.nvim`: Lua review, LSP attachment, completion, and diagnostics pass
+  without a separate maintainer-oriented development helper.
 
-- `bufferline.nvim`
-- `catppuccin`
-- `dashboard-nvim`
-- `flash.nvim`
-- `grug-far.nvim`
-- `lazygit.nvim`
-- `mini.ai`
-- `nvim-lint`
-- `nvim-ts-autotag`
-- `persistence.nvim`
-- `todo-comments.nvim`
-- `tokyonight.nvim`
-- `trouble.nvim`
+Noice and mini.pairs remain because their independent presentation and small-
+edit behavior gates still justify them. Removal is not scored by plugin count.
 
-Copilot is outside the product boundary and is neither specified nor locked.
+## Product Exclusions Are Not Lock Sentinels
 
-## Retention Decisions
+`config.product_policy` owns 18 reviewed exclusions. Every entry has a product
+rationale and revisit trigger. `nvim/lua/plugins/minimal.lua` is generated from
+that registry, and lock normalization prunes only names present in both the
+registry and the resolved runtime-disabled set. Conditional or unrelated lazy
+state therefore cannot become product policy accidentally.
 
-- Lush remains because `custom_colorblind_theme` directly uses its HSL and DSL.
-- Tree-sitter textobjects remains because LazyVim owns current class/function/
-  parameter motions, including the restored `[c`/`]c` class namespace.
-- `nvim-ts-autotag` is excluded because sustained manual markup authoring is not
-  a promoted job.
-- Noice remains because native messages blocked the attached `raw_fold_action`
-  fault contract; structured Clarity diagnostics remain the truth authority.
-- Mason remains inherited, but Clarity explicitly schedules no global installs.
-- Snacks owns the single reusable terminal, removing ToggleTerm.
+This replaces the old design in which disabled entries were kept in the lock as
+implicit LazyVim policy sentinels. The same experience is preserved with a
+smaller, explicit, testable authority.
 
-## Verification And Rollback
+## Transactions, Verification, And Rollback
 
-- `update_clarity_lock.py --apply` validated the copied candidate before replacing
-  the source lock.
-- Old hash: `af8ad1dff2b125573e19a37c3a30af25a152450d2b9b1d0320ee78fd35db04d7`.
-- Post-normalization hash:
-  `4f702e2bde3020465ffa2b28c3a681f4b56b415b6164171d73151c8aa717a6db`.
-- Policy-separated hash:
-  `33ec35118884af5ebdada829196672d4d7e25c2a0d4084418a3505b2c3bafcdc`.
-- Agent-era hash:
-  `df9dfba9cabe6fef10ec93737c9de125621de01bc1d41f1c6491787f26f3e20b`.
-- Pre-prune backup:
-  `/Users/frank/.local/state/clarity_lazyvim/lock-backups/20260710T224848Z-pre-policy-prune-lazy-lock.json`.
-- Both predecessor locks remain in the listed backups. Rollback is an atomic
-  replacement from the pre-prune backup followed by copied-candidate smoke and
-  release validation; the backup was hash-verified and was not applied during
-  this review.
+- Existing Gitsigns/Neo-tree drift was accepted separately in `1706819`.
+- Dependency removal and normalization landed in `57328ae`.
+- Pre-observation lock backup:
+  `~/.local/state/clarity_lazyvim/lock-backups/20260711T192244Z-pre-observation-surface-lazy-lock.json`.
+- Pre-dependency-normalization backup:
+  `~/.local/state/clarity_lazyvim/lock-backups/20260711T193717.081606Z-lazy-lock.json`.
+- Check-only normalization, exact active/lock parity, first boot, restart,
+  proxy/PATH-blocked offline restart, and clean commit-bound release pass.
+- Rollback restores an exact backup before rerunning copied-candidate smoke and
+  release validation; no user config/data/state/cache is deleted.
+
+Evidence is commit-bound on macOS only. Exact-commit Ubuntu, Windows, WSL, and
+hosted CI remain unverified and are not inferred from this manifest.

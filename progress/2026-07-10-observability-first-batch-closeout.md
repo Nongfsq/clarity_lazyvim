@@ -2,6 +2,12 @@
 
 Date: 2026-07-10
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 - Completed `OBS-001` through `OBS-003`; stopped before `OBS-004`.
 - Raw no-fold `za` deterministically reproduces `E490/E5108`.
 - Added diagnostic schema v1, bounded JSONL/ring, rotation, redaction, and guard.

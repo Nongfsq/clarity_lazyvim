@@ -2,6 +2,12 @@
 
 Date: 2026-07-10
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 - Removed Copilot, Node/npm product checks, development auto-install profiles,
   ToggleTerm, and autotag; Snacks now owns `<leader>tf`.
 - Added `:ClarityHealth` and kept old commands as compatibility routes.

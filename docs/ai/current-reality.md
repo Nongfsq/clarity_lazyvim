@@ -1,6 +1,6 @@
 # Current Reality
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Product
 
@@ -58,8 +58,15 @@ Clarity runtime diagnostics now has a dependency-free first slice:
 - `config.actions.fold`: typed fold outcomes instead of raw `normal! za`
 - persistence defaults to WARN/ERROR under isolated/user state roots
 - native messages and `vim.notify` present outcomes; diagnostics own truth
-- `:ClarityLog` exposes recent events, tail, path, and sanitized export
+- Health is the human renderer for overview, recovery, native/Noice messages,
+  structured events, clipboard, environment, and language
+- `:ClarityLog path` and `:ClarityLog export` retain stable machine/evidence routes
 - `scripts/run_clarity_tests.py` routes fast/contracts/behavior/faults/release
+
+The resolved active and locked set is exactly 18 plugins. Mason,
+`mason-lspconfig`, Lush, friendly-snippets, and lazydev are removed after
+system-LSP, static-theme, native-snippet, and completion parity gates. Noice and
+mini.pairs remain because they own tested presentation and small-edit behavior.
 
 ## Directory Map
 
@@ -69,6 +76,7 @@ Important paths:
 README.md
 init.lua
 lazy-lock.json
+lazyvim.json
 nvim/init.lua
 nvim/lua/config/
 nvim/lua/plugins/
@@ -78,6 +86,7 @@ doc/clarity_architecture_governance.md
 scripts/run_clarity_audit.py
 scripts/clarity_doctor.py
 scripts/run_clarity_validate.py
+scripts/run_clarity_action_matrix.py
 .github/workflows/clarity-validate.yml
 docs/ai/
 progress/
@@ -85,10 +94,12 @@ progress/
 
 ## Source Of Truth
 
-Merged runtime authority on `main` at `b072da5049092ab495cfa6f6c6a0152dfbdfba45`:
+Runtime authority remains the three-file root contract:
 
 ```text
+init.lua
 lazy-lock.json
+lazyvim.json
 ```
 
 Do not keep or commit:
@@ -97,18 +108,20 @@ Do not keep or commit:
 nvim/lazy-lock.json
 ```
 
-The merged runtime guarantees:
+The implemented root runtime guarantees:
 
 - lazy.nvim receives root `lazy-lock.json` explicitly;
 - `vim.g.lazyvim_json` points LazyVim at root `lazyvim.json` before import;
 - nested `nvim/lazyvim.json` is removed;
-- the copied-candidate smoke verifies both paths and source/candidate hashes.
+- the copied-candidate smoke verifies all three paths and source/candidate
+  hashes, and copies only Git-tracked or non-ignored development files.
 
-The normalized lock snapshot is accepted through the explicit lock transaction.
-The trust-foundation PR is merged. Manual Ubuntu 24.04 evidence exists for this
-commit with official Neovim 0.12.4, and local macOS evidence exists. Windows and
-the commit-bound GitHub-hosted matrix remain unverified. The accepted boundary is
-recorded in ADR-0001.
+The normalized 18-entry lock snapshot is accepted through explicit backup-first
+transactions. Commit-bound macOS evidence uses official Neovim 0.12.4, isolated
+roots, a copied candidate, and first/restart/offline-restart phases. Earlier
+manual Ubuntu evidence is for an older commit and does not certify this
+candidate. Exact-commit Ubuntu, Windows, WSL, and GitHub-hosted evidence remains
+unverified. The authority boundary is recorded in ADR-0001.
 
 Local AI implementation rules:
 
@@ -127,6 +140,7 @@ python3 scripts/clarity_doctor.py
 python3 scripts/run_clarity_audit.py
 python3 scripts/run_clarity_validate.py
 python3 scripts/run_clarity_contracts.py
+uv run --with pynvim==0.6.0 python scripts/run_clarity_action_matrix.py
 python3 scripts/run_clarity_tests.py fast
 nvim --headless -u ./init.lua "+qall"
 ```
@@ -137,20 +151,21 @@ Local safe repair command:
 python3 scripts/clarity_doctor.py --apply
 ```
 
-The doctor is cross-platform for macOS, Linux, WSL, and Windows. It dry-runs by default, reports exact dependency and parser health findings, and only performs conservative local backup moves with `--apply`.
+The doctor is designed and statically tested for macOS, Linux, WSL, and Windows.
+It dry-runs by default, reports exact dependency and parser health findings, and
+only performs conservative local backup moves with `--apply`; this does not
+substitute for exact-commit platform evidence.
 
 Inside Neovim:
 
 ```vim
 :ClarityHealth
-:ClarityAudit
-:ClarityValidate
-:ClarityStart
-:ClaritySync
-:ClarityClipboard
 :ClarityLanguage
-:ClarityLog
 ```
+
+Audit, validation, Start, Sync, Clipboard, and log-view commands are temporary,
+unpromoted one-release compatibility routes into Health. Bang JSON and
+log path/export contracts remain stable for agents and scripts.
 
 CI:
 
@@ -162,7 +177,9 @@ CI:
 - has bounded jobs/processes, static checks, immutable action SHAs, and artifacts
 - runs audit and runtime validation
 - asserts that directory startup opens one Neo-tree and no Snacks Explorer
-- executes the code-fold and line-wrap mappings, including state restoration
+- executes independent fold, wrap, keymap, LSP, Gitsigns, localization,
+  component, Health, Git-observation, formatting, dependency, theme, and
+  terminal behavior contracts
 
 Important evidence boundary:
 
@@ -171,47 +188,57 @@ Important evidence boundary:
 - the public GitHub Actions history inspected on 2026-07-09 has no successful
   completed `clarity-validate` run;
 - the historical Windows executable and Ubuntu version/timeout defects are fixed
-  in the merged workflow, but no authorized GitHub-hosted matrix has run for the
-  merged commit;
+  in the workflow source, but no authorized GitHub-hosted matrix has run for the
+  observation-surface candidate;
 - audit now separates core, optional profiles, and release quality. A local audit
   never certifies release quality.
 
 ## Current Local Validation Snapshot
 
-As of 2026-07-10 on the simplification candidate:
+The observation runtime is implemented through `596cffa`; trust-gap hardening,
+exact i18n pruning, and the real-input matrix are in `21f8d29`. The final clean,
+commit-bound release rerun follows the documentation reconciliation commit:
 
-- `python3 scripts/clarity_doctor.py`: all locally configured requirements pass;
-  removed system-monitor checks no longer advertise a removed product feature
-- `python3 scripts/run_clarity_audit.py`: core readiness is independent of
-  clipboard/provider profiles; release quality remains `unverified`
-- `python3 scripts/run_clarity_validate.py`: required failures `0`
-- directory startup: one Neo-tree window and zero Snacks Explorer windows
-- natural runtime contracts: empty headless, file headless, and attached-UI file
-  startup pass; all 13 config/action modules are classified
-- negative runtimepath fixture: exactly four expected failures for options,
-  autocmds, editing defaults, and keymap ownership/behavior
-- raw-fold fixture: exactly `CLARITY_RUNTIME_KEYMAP_CONTRACT`; the repaired
-  action returns `no_fold` without `E490/E5108` on a plain line
-- agent-era candidate: 36 Python tests and 20 Lua policy files pass; the full
-  release router passes on macOS and manual Ubuntu at
-  `85d217029722d31e3b441ce5e9aa9410ad1becf1`; fold is covered by
-  success, expected-edge, fault, restoration, and real-input evidence
-- empty headless startup loads 4 plugins instead of the reviewed baseline of 10
-- the resolved core set and lock each contain 23 plugins; Copilot, ToggleTerm,
-  and autotag are absent; Noice remains as a presentation adapter after native
-  messages failed the attached fault contract; 13 product exclusions live in
-  `nvim/lua/plugins/minimal.lua`
+- release manifest: clean worktree, Neovim 0.12.4, isolated config/data/state/
+  cache, owner-only persistent artifacts
+- 60 Python tests and 26 Lua policy/behavior files pass
+- empty headless, file headless, and attached-UI scenarios pass; all 17 config/
+  action modules are classified and all 14 cataloged capabilities are covered
+- exact normal leader surface: 28 global + seven context-scoped = 35; the latter
+  are five LSP, one Git hunk preview, and one editable-buffer format recovery
+- four retained native/diagnostic actions also pass through real input: `gd`,
+  `gr`, `K`, and `[d`/`]d`; code action and rename apply real WorkspaceEdits and
+  restore buffer/cursor/modified state
+- Neo-tree exposes exactly 20 local mappings; files Picker exposes input
+  19 normal/18 insert, list 20 normal, preview two normal; dashboard exposes six
+- five Git observation views, removed mutation keys, and full HEAD/refs/index/
+  worktree/lock snapshots prove repository immutability
+- system `lua-language-server` attaches naturally; missing server schedules no
+  Mason/install path; native snippets, blink.cmp, and mini.pairs behavior pass
+- project `nvim/stylua.toml` controls formatting; missing formatter is explicit and
+  leaves the buffer stable; Clarity supplies no global style arguments
+- static theme reload and 4.5:1 normal-text contrast checks pass without Lush
+- raw-fold injection fails only `CLARITY_RUNTIME_FOLD_CONTRACT`; positive and
+  no-fold paths remain typed, visible, and free of E490/E5108
+- both attached sessions start without captured errors; injected cleanup restores
+  diagnostics, quickfix, cursor, and UI callbacks; all three fake LSP processes
+  exit; serialized matrix evidence contains no fixture/home absolute paths
+- the active bilingual i18n catalog contains exactly 39 consumed keys per locale;
+  retired help panels and Git-mutation labels cannot return silently
+- first boot, restart, and proxy/PATH-blocked offline restart resolve exactly the
+  same 18 active and locked plugins without authority-file drift
 
 This snapshot is intentionally local-only. It must not be copied into a public
-cross-platform baseline until the clean-archive matrix in the active plan is
-green.
+cross-platform baseline until the separately authorized clean-archive remote
+matrix and real-WSL evidence are green.
 
 Current runtime details:
 
 - Neovim `0.12.4`
-- Python `3.14.6`; `pynvim` is not installed for this interpreter
-- local Node/tree-sitter installations are user-owned and outside Clarity
-  readiness
+- Python `3.14.6`; attached UI is pinned to ephemeral `pynvim==0.6.0` through
+  the test router
+- local formatter/LSP/parser installations remain user/project-owned and outside
+  automatic Clarity provisioning
 
 ## Local Issue Resolved On 2026-05-05
 
@@ -269,7 +296,8 @@ Repository-level prevention added after this incident:
 
 There is no hosted application deployment.
 
-Distribution path is GitHub clone plus Neovim bootstrap. Public validation is GitHub Actions.
+Distribution path is GitHub clone plus Neovim bootstrap. A GitHub Actions
+workflow is defined, but run evidence requires separate owner authorization.
 
 ## Documentation Notes
 
@@ -282,10 +310,10 @@ Public documentation currently includes:
 Canonical refactor documentation:
 
 - `docs/DOCUMENT_INDEX.md`
-- `docs/reviews/2026-07-09-clarity-95-quality-review.md`
-- `docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md`
-- `docs/product/clarity-95-experience-pm.md`
-- `progress/2026-07-09-clarity-95-refactor-plan.md`
+- `docs/reviews/2026-07-11-observation-surface-implementation-review.md`
+- `docs/architecture/2026-07-11-agent-era-observation-surface-blueprint.md`
+- `docs/product/clarity-observation-surface-pm.md`
+- `progress/2026-07-11-agent-era-observation-surface-plan.md`
 
 The older `doc/clarity_architecture_governance.md` is retained for historical
 traceability. Its score and platform snapshots are not current authority.
@@ -302,46 +330,26 @@ scripts/session-prompt.md
 
 ## Active Refactor
 
-The 95+ review and architecture direction were approved on 2026-07-09. The first
-trust-foundation batch is implemented locally on
-`codex/20260709-clarity-trust-foundation`.
-
-Trust foundation and runtime-contract status:
-
-1. `QA-001` — done locally
-2. `VALIDATE-002` — done locally
-3. `NVIM-002` — done; normalized lock accepted with an explicit validated,
-   backed-up, atomic update transaction
-4. `CI-002` — local workflow checks pass; remote three-platform run required
-5. `RUNTIME-001` through `RUNTIME-004` — done locally on 2026-07-10; natural
-   lifecycle catalog/probe/runner and line-number positive/negative proof pass
-6. `RUNTIME-005` — pending owner evidence review
-7. `OBS-001` through `OBS-007` — done locally on 2026-07-10; diagnostic commands,
-   real-input fold evidence, unified router/artifacts, privacy, and restoration
-   hardening pass
-8. `OBS-008` — local workflow integration passes; remote Ubuntu/Windows/macOS
-   evidence pending
-9. `OBS-009` — pending remote evidence and final legacy/ADR closeout
-
-Platform evidence boundary for the next gate:
-
-- Ubuntu GitHub Actions evidence can be evaluated immediately.
-- Windows GitHub-hosted runner evidence, if produced, is CI evidence only.
-- Real remote Windows/server validation remains pending until the owner provides
-  the announced root access; do not mark that environment verified beforehand.
-
-The owner approved and the implementation completed the interaction/dependency
-simplification plan on 2026-07-10. Local macOS and manual Ubuntu release gates
-pass. Windows and commit-bound release certification remain pending. GitHub
-Actions must not be triggered without a separate explicit request. Do not close
-`OBS-008` or claim cross-platform release readiness without its stated evidence.
+The owner approved full local execution of the observation-surface plan on
+2026-07-11. `LOCK-001` and `SURFACE-001` through `SURFACE-009` are complete for
+the authorized local boundary. Documentation reconciliation and branch push are
+tracked in `SURFACE-010`.
 
 Active execution plan:
 
 ```text
-progress/2026-07-10-agent-era-review-console-plan.md
+progress/2026-07-11-agent-era-observation-surface-plan.md
 ```
 
-The `nvim-lspconfig` drift was accepted through the backup-first atomic
-transaction; the current lock hash is
-`df9dfba9cabe6fef10ec93737c9de125621de01bc1d41f1c6491787f26f3e20b`.
+The accepted lock hash is
+`e158ec437e8cdd2ada480aa6f01e11479db7d322e4f16ad21d1626f5340c57ca`.
+The reviewed exclusion registry contains 18 product-policy records with a
+rationale and revisit trigger. `minimal.lua` is generated from that registry;
+lock normalization removes only registry entries confirmed runtime-disabled and
+does not prune unrelated conditional plugins.
+
+GitHub Actions must not be triggered without a separate explicit request. The
+current full-rubric assessment remains below a release-grade 95 because the
+required remote Ubuntu/Windows/macOS matrix, real WSL evidence, and branch
+protection are outside this authorized local execution. Do not convert the
+owner-provided macOS pass into a cross-platform claim.

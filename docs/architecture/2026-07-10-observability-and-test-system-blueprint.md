@@ -1,5 +1,10 @@
 # Architecture Blueprint: Clarity Observability And Command-Driven Testing
 
+Date: 2026-07-10
+
+Status: historical approved blueprint; local implementation followed; current
+truth is in `docs/ai/current-reality.md` and the active PLAN+TASK
+
 ## Summary
 
 - Product goal: make every promoted Clarity action calm in normal edge states,

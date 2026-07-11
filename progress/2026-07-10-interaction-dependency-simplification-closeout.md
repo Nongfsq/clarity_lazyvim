@@ -4,6 +4,14 @@ Date: 2026-07-10
 Branch: `codex/20260710-clarity-simplification`  
 Base commit: `b072da5049092ab495cfa6f6c6a0152dfbdfba45`
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK. Copilot and its Node/profile surface were later removed end to end;
+> see [ADR-0006](../docs/decisions/0006-agent-era-review-console.md). Do not
+> restore the optional profile from this historical closeout.
+
 ## Summary
 
 All five approved implementation batches are complete for local macOS and the

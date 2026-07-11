@@ -1,5 +1,10 @@
 # Architecture Blueprint: Agent-Era Clarity Editor Surface
 
+Date: 2026-07-10
+
+Status: historical approved blueprint; local implementation followed. Current
+truth is in `docs/ai/current-reality.md` and the active PLAN+TASK.
+
 ## Summary
 
 - Product goal: reshape Clarity for a workflow in which AI agents perform most

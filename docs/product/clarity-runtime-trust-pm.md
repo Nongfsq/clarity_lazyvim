@@ -1,7 +1,8 @@
 # Clarity Runtime Trust PM
 
 Date: 2026-07-09
-Status: proposed; implementation awaits PLAN+TASK approval
+Status: historical approved product baseline; local implementation followed;
+current truth is in `docs/ai/current-reality.md` and the active PLAN+TASK
 Architecture:
 [`../architecture/2026-07-09-runtime-contract-verification-blueprint.md`](../architecture/2026-07-09-runtime-contract-verification-blueprint.md)
 

@@ -27,14 +27,18 @@ Task status and execution evidence live in the active PLAN+TASK, not in chat.
 
 Approved architecture rule:
 LazyVim/upstream retains core plugin lifecycle ownership. Clarity extends merged
-opts and handlers. Follow the active 95+ blueprint and do not silently resolve
-the current lock/lazyvim.json split outside its planned migration task.
+opts and handlers. The root init.lua, lazy-lock.json, and lazyvim.json are the
+single runtime authority. Lock changes use the backup-first transaction and may
+prune only reviewed product exclusions confirmed disabled at runtime.
 
 Agent-era product rule:
 External agents own broad code generation. Clarity is a review and precision-edit
-console with no embedded Copilot, no Node product profile, and no background
-language-tool/parser installation. `:ClarityHealth` is the primary human recovery
-entry; stable CLI JSON and finding IDs are the provider-neutral agent contract.
+console with no embedded Copilot, no editor Git mutation, no Node product
+profile, and no background language-tool/parser installation. The catalog owns
+28 global plus seven contextual normal leader actions. `:ClarityHealth` is the
+primary human recovery entry; stable CLI JSON and finding IDs are the
+provider-neutral agent contract. Language changes refresh Clarity-owned surfaces
+live and must not change action identity.
 
 Validation:
 - python3 scripts/clarity_doctor.py
@@ -43,7 +47,13 @@ Validation:
 - python3 scripts/run_clarity_contracts.py
 - python3 scripts/run_clarity_tests.py fast
 - python3 scripts/run_clarity_tests.py contracts --json
+- python3 scripts/run_clarity_tests.py behavior --feature fold
+- python3 scripts/run_clarity_tests.py faults --feature fold
+- python3 scripts/run_clarity_tests.py release --reuse-plugin-cache <path>
 - nvim --headless -u ./init.lua "+qall"
+
+GitHub Actions are evidence only when the owner explicitly authorizes a run.
+Never infer cross-platform readiness from the local release router.
 
 If an issue is local cache/provider/parser state, fix it locally and do not commit repository changes.
 Use python3 scripts/clarity_doctor.py --apply only for safe local backup-based repairs.

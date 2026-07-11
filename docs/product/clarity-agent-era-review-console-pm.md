@@ -1,7 +1,10 @@
 # Clarity Agent-Era Review Console PM
 
 Date: 2026-07-10
-Status: implemented on local macOS and manual Ubuntu; Windows/WSL and release evidence pending
+
+Status: historical implemented phase; its manual Ubuntu evidence belongs to an
+older commit. Current truth is in `docs/ai/current-reality.md` and the active
+PLAN+TASK.
 
 ## Problem And Product Intent
 

@@ -2,7 +2,8 @@
 
 Date: 2026-07-11
 
-Status: approved by the owner on 2026-07-11; implementation is tracked in
+Status: approved and implemented locally on 2026-07-11; execution evidence and
+remaining platform gates are tracked in
 `progress/2026-07-11-agent-era-observation-surface-plan.md`.
 
 ## Summary
@@ -25,15 +26,20 @@ Status: approved by the owner on 2026-07-11; implementation is tracked in
   editor-owned global toolchain, background update checking, second explorer,
   second picker, or second diagnostics dashboard.
 
-The central conclusion is not that every inherited feature is bad. It is that
-the current runtime dependency set is already relatively small while the public
+The central approval-time conclusion was not that every inherited feature was
+bad. It was that the reviewed runtime dependency set was already relatively
+small while the public
 interaction surface still behaves like full LazyVim. Clarity cannot meet a 95+
 experience bar while an attached file can expose roughly 144 normal-mode leader
 actions before a fully capable LSP is added, live language switching leaves menu
 metadata stale, Git mutation remains one keystroke away, and project formatting
 policy can be overridden globally.
 
-### Evidence Boundary
+### Approval-Time Evidence Boundary
+
+All uses of “current” in the baseline and decision analysis below refer to the
+review commit, not the implemented runtime. Implementation truth lives in the
+active PLAN+TASK and dated implementation review.
 
 - Review commit: `c7f80052362860c2500327cb00365754c5f7997e` on `main`.
 - Review method: source inspection, locked-upstream inspection, headless runtime
@@ -53,9 +59,9 @@ policy can be overridden globally.
   correction; a view is not read-only merely because its opening key is named
   status, diff, log, blame, or branches.
 
-### Runtime Surface Evidence
+### Approval-Time Runtime Surface Evidence
 
-| Observation | Current result | Product implication |
+| Observation | Approval-time result | Product implication |
 | --- | ---: | --- |
 | Locked and resolved enabled plugins | 23 / 23 | Plugin count is not the main UX problem |
 | Plugins loaded during empty headless startup | 4 | Lazy loading is materially improved |
@@ -222,7 +228,7 @@ size would increase duplication elsewhere.
 - Human command surface: promote only `:ClarityHealth` and
   `:ClarityLanguage`; expose overview, recovery, clipboard, diagnostics, and log
   views inside Health. Preserve machine CLI/JSON contracts and keep old Ex
-  commands as thin, undocumented compatibility aliases for one release. Why:
+  commands as thin, unpromoted compatibility aliases for one release. Why:
   humans need one memorable recovery path while agents need stable IDs. Rejected:
   deleting evidence systems and continuing to advertise eight peer commands.
   Revisit when: measured navigation shows a separate command is faster and more
@@ -246,11 +252,11 @@ size would increase duplication elsewhere.
   inherited products) and carrying disabled lock pins (false runtime authority).
   Revisit when: upstream no longer imports a listed plugin.
 - Dashboard and maintenance: reduce empty-start actions to files, text search,
-  recent files, and Health; remove Config and Lazy Extras promotion. Disable the
-  lazy.nvim checker by default and remove maintenance shortcuts from the product
-  menu. Why: agents own configuration and dependency updates. Rejected: removing
-  Snacks solely to remove its dashboard. Revisit when: maintainers become a
-  first-class runtime audience.
+  recent files, new file, Health, and quit; remove Config and Lazy Extras
+  promotion. Disable the lazy.nvim checker by default and remove maintenance
+  shortcuts from the product menu. Why: agents own configuration and dependency
+  updates. Rejected: removing Snacks solely to remove its dashboard. Revisit
+  when: maintainers become a first-class runtime audience.
 - Dependency selection: remove a dependency only when its named job disappears
   or an existing/native implementation passes behavior and accessibility parity.
   Why: plugin-count theater can make a smaller but worse product. Rejected:
@@ -405,7 +411,7 @@ available without being duplicated into the leader menu.
 - Stage 5, truth and release: perform each accepted lock transaction separately,
   update public/AI docs and ADRs, run copied-candidate local evidence, deploy to
   available Ubuntu only when requested, and leave Windows/WSL explicit.
-- Compatibility window: old Clarity human commands remain undocumented aliases
+- Compatibility window: old Clarity human commands remain unpromoted aliases
   for one release; public Git mutation mappings have no compatibility window
   because the owner explicitly removed that job. Machine IDs and CLIs remain.
 - Data migration order and dry run: no repository or user-data migration.
@@ -490,28 +496,17 @@ available without being duplicated into the leader menu.
   typed failures have stable IDs and sanitized context; no source text, Git diff,
   credentials, clipboard contents, or arbitrary paths enter persistent logs.
 
-## ADRs to Write
+## Implemented ADR Consolidation
 
-- ADR: External agents own repository mutation. Context/decision: Clarity exposes
-  read-only Git observation while Codex/agents own stage/reset/commit/branch/
-  remote/forge changes. Rejected: advanced mutation submenu and complete Git
-  removal. Revisit when: measured workflow changes.
-- ADR: Declarative product action and exclusion policy. Context/decision: stable
-  IDs drive keys, labels, help, mutability, budgets, and LazyVim exclusions.
-  Rejected: inherited-description translation and scattered sentinels. Revisit
-  when: upstream exposes stable semantic contracts.
-- ADR: Immediate bilingual presentation. Context/decision: locale changes emit an
-  event and rerender global, buffer-local, command, and open-view presentation
-  without recreating behavior ownership. Rejected: restart-only UI. Revisit
-  when: native localization support supersedes it.
-- ADR: Project-owned toolchain and formatting style. Context/decision: Clarity
-  discovers servers/formatters/parsers and invokes project-configured formatters
-  without global style flags. Rejected: Mason/global editor policy. Revisit when:
-  Clarity owns a controlled development image.
-- ADR: Explicit maintenance only. Context/decision: no background lazy checker or
-  promoted dependency-management UI; updates are agent-owned, isolated lock
-  transactions. Rejected: ambient plugin maintenance. Revisit when: the product
-  gains a non-agent update channel.
+- [ADR-0005](../decisions/0005-thin-upstream-ownership-and-explicit-profiles.md)
+  records thin upstream lifecycle ownership and project/system-owned toolchains.
+- [ADR-0006](../decisions/0006-agent-era-review-console.md) records agent-owned
+  repository mutation and maintenance, removal of Copilot/Node provisioning, and
+  the review-console product boundary.
+- [ADR-0007](../decisions/0007-cataloged-observation-surface.md) records the
+  declarative action/exclusion authorities, read-only Git observation, live
+  bilingual mapping/component/open-view refresh, curated component profiles,
+  Health consolidation, and project-owned formatting style.
 
 ## Risks And Assumptions
 
@@ -541,20 +536,14 @@ available without being duplicated into the leader menu.
   message parity, changed target hosts, or measured behavior showing that a
   removed action is essential.
 
-## Handoff
+## Implementation Handoff
 
-- Assumptions with stated defaults: keep review/accessibility capabilities;
-  remove Git mutation and maintainer noise; use no new Git client; preserve
-  current lock drift untouched; keep Noice under its known blocker; require
-  parity before removing Mason, Lush, snippets, or edit helpers.
-- Open questions: zero blocking for architecture review. Non-blocking default:
-  use `<leader>gt` for the bounded branch graph if collision tests pass; otherwise
-  choose the nearest free Git-observation key without adding another alias.
-- Non-goals: no product code, tests, lockfile, Git history, user state, remote
-  host, CI, or deployment is changed at this Architecture Gate.
-- Status line: blueprint written to
-  `docs/architecture/2026-07-11-agent-era-observation-surface-blueprint.md`;
-  the Git observation boundary is owner-approved, while the complete action,
-  localization, dependency, migration, and verification design awaits blueprint
-  approval. After approval, use PM planning to update the product PM and create a
-  dependency-ordered PLAN+TASK before implementation.
+- The owner approved the blueprint and the local implementation completed on
+  2026-07-11. The bounded branch graph uses `<leader>gt`; collision, action,
+  localization, dependency, migration, and verification contracts pass locally.
+- Execution status, deviations, rollback, and evidence live in
+  `progress/2026-07-11-agent-era-observation-surface-plan.md`.
+- The dated implementation assessment is
+  `docs/reviews/2026-07-11-observation-surface-implementation-review.md`.
+- Exact-commit remote Ubuntu/Windows/macOS and real-WSL evidence remains a
+  separate authorization boundary. This blueprint does not claim those gates.

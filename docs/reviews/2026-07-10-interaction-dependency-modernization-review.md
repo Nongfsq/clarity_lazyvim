@@ -6,6 +6,14 @@ Scope: read-only review of keymaps, commands, user-facing behavior, plugin owner
 dependency weight, startup policy, host requirements, validation, and current Neovim
 0.12 / LazyVim workflow fit.
 
+> **Historical / superseded:** this review records the state and recommendations
+> at the stated commit. It is not current runtime, dependency, release, CI, or
+> task-status authority. Use
+> [`../ai/current-reality.md`](../ai/current-reality.md) and the active PLAN+TASK
+> linked there. Copilot and its Node/profile surface were later removed end to
+> end; see [ADR-0006](../decisions/0006-agent-era-review-console.md). Do not
+> restore the optional profile from this historical review.
+
 ## Executive Judgment
 
 Clarity does not need more features. Its best path to a 95+ experience is to become
@@ -204,4 +212,3 @@ This review proves source and locked-upstream conflicts. It does not certify
 Windows behavior, GitHub Actions, terminal-rendering quality, or dependency
 removal. Those require the acceptance matrix in the execution plan. No runtime,
 Git, cache, lock, or external state was modified by the review lanes.
-

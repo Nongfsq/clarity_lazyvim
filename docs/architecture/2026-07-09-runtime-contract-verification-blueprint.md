@@ -2,7 +2,8 @@
 
 Date: 2026-07-09
 Architecture type: existing-system verification architecture
-Status: proposed; awaiting approval before PM task planning or implementation
+Status: historical approved blueprint; local implementation followed; current
+truth is in `docs/ai/current-reality.md` and the active PLAN+TASK
 
 ## Summary
 

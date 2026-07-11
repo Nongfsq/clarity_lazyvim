@@ -2,6 +2,12 @@
 
 Date: 2026-07-09
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 - Recreated the review from fresh evidence and recorded the 58/100 baseline.
 - Wrote the approved existing-system refactor architecture, product/UX PM doc,
   and decision-complete PLAN+TASK.

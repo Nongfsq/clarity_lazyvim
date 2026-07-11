@@ -13,6 +13,12 @@ Product intent:
 Evidence baseline:
 [`../docs/reviews/2026-07-09-clarity-95-quality-review.md`](../docs/reviews/2026-07-09-clarity-95-quality-review.md)
 
+> **Historical / superseded:** this document records the state and decisions at
+> the stated date or commit. It is not current runtime, dependency, release,
+> CI, or task-status authority. Use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and the active
+> PLAN+TASK linked there.
+
 ## Summary
 
 Refactor Clarity into a thin, reproducible, UX-first product layer over LazyVim.

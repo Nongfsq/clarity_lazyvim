@@ -2,6 +2,12 @@
 
 Date: 2026-07-10
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 - Atomically accepted the validated `nvim-lspconfig` lock drift with backup.
 - Lock recheck is clean at `af8ad1d`; first/restart smoke resolves 27 plugins.
 - Completed `OBS-004` through `OBS-007` locally.

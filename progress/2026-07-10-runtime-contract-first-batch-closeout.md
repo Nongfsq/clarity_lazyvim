@@ -2,6 +2,12 @@
 
 Date: 2026-07-10
 
+> **Historical closeout:** this file records commit-bound results from the
+> stated date only. Counts, hashes, platform evidence, and pending tasks are not
+> current authority; use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and its active
+> PLAN+TASK.
+
 - Completed `RUNTIME-001` through `RUNTIME-004`; stopped before `RUNTIME-005`.
 - Added one catalog for 10 config modules and 14 promoted capabilities.
 - Added a passive pre-init observer and empty/file/attached-UI scenario runner.

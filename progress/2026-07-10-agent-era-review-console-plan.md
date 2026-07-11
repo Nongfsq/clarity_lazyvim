@@ -5,6 +5,12 @@ Status: implementation complete on local macOS and manual Ubuntu; Windows/WSL an
 PM: `docs/product/clarity-agent-era-review-console-pm.md`
 Architecture: `docs/architecture/2026-07-10-agent-era-editor-surface-blueprint.md`
 
+> **Historical / superseded:** this document records the state and decisions at
+> the stated date or commit. It is not current runtime, dependency, release,
+> CI, or task-status authority. Use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and the active
+> PLAN+TASK linked there.
+
 ## Summary
 
 Convert Clarity from a conventional curated IDE surface into a review-first

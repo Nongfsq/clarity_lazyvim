@@ -1,7 +1,8 @@
 # Clarity 95+ Product And Experience Plan
 
 Date: 2026-07-09
-Status: product intent approved; implementation awaits PLAN+TASK approval
+Status: historical approved product baseline; local implementation followed;
+current truth is in `docs/ai/current-reality.md` and the active PLAN+TASK
 
 ## Problem And Product Intent
 

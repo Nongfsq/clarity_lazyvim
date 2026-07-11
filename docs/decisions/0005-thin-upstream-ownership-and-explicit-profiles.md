@@ -1,6 +1,7 @@
 # ADR-0005: Thin Upstream Ownership And Explicit Profiles
 
-Status: accepted locally and on manual Ubuntu; Windows/release evidence pending  
+Status: accepted; commit-bound macOS and older manual Ubuntu evidence exist;
+exact-commit Ubuntu, Windows, WSL, and hosted evidence remain pending
 Date: 2026-07-10
 
 ## Context
@@ -23,9 +24,10 @@ conflicts, and host dependencies without more core user value.
   promises outbound copy, not remote clipboard read/paste.
 - lazy.nvim's lazy default is restored. Every eager exception or retained
   dependency requires a named product or transitive contract.
-- Product exclusions live in `nvim/lua/plugins/minimal.lua`; the lock contains active
-  dependencies and explicitly supported optional profiles only. A policy test
-  prevents disabled defaults from returning or accumulating stale lock pins.
+- Reviewed product exclusions live in `config.product_policy` with a rationale
+  and revisit trigger. `minimal.lua` is generated from that registry; lock
+  normalization intersects it with actual runtime-disabled plugins and never
+  treats arbitrary lazy state as product policy.
 
 ## Rejected Alternatives
 
@@ -43,9 +45,10 @@ conflicts, and host dependencies without more core user value.
 
 ## Consequences
 
-- Empty headless loaded plugins decrease from 10 to 4.
+- Empty headless loaded plugins decrease from the reviewed 10 to three.
 - Optional provider and clipboard capabilities remain independent of core.
-- Gitsigns hunk actions move under `<leader>gh`; `[c`/`]c` return to Tree-sitter.
+- Gitsigns retains only `[h`/`]h` navigation and dynamic `<leader>ghp` preview;
+  repository mutation mappings are removed after every attachment.
 - Plugin upgrades are less likely to silently lose upstream behavior.
 - Release claims still require the platform evidence defined by ADR-0003.
 

@@ -5,6 +5,11 @@ Scope: existing-system product, runtime, architecture, verification, release,
 and documentation review
 Status: evidence baseline for the approved refactor; no implementation implied
 
+> Historical baseline: this review intentionally remains the 58/100 starting
+> point. The implemented observation-surface result and current 92/100 local
+> assessment are recorded in
+> [`2026-07-11-observation-surface-implementation-review.md`](2026-07-11-observation-surface-implementation-review.md).
+
 ## Executive Conclusion
 
 Clarity LazyVim has a clear product direction and a good daily-work core, but it

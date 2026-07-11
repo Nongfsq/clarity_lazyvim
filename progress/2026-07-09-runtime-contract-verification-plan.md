@@ -9,6 +9,12 @@ Architecture:
 Parent plan:
 [`2026-07-09-clarity-95-refactor-plan.md`](2026-07-09-clarity-95-refactor-plan.md)
 
+> **Historical / superseded:** this document records the state and decisions at
+> the stated date or commit. It is not current runtime, dependency, release,
+> CI, or task-status authority. Use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and the active
+> PLAN+TASK linked there.
+
 ## Summary
 
 Build a code-level verification contract that proves Clarity modules load

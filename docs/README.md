@@ -9,7 +9,7 @@ handoff documents for Clarity LazyVim.
 - Documentation index: [`DOCUMENT_INDEX.md`](DOCUMENT_INDEX.md)
 - Current repository state: [`ai/current-reality.md`](ai/current-reality.md)
 - Active implementation plan:
-  [`../progress/2026-07-09-clarity-95-refactor-plan.md`](../progress/2026-07-09-clarity-95-refactor-plan.md)
+  [`../progress/2026-07-11-agent-era-observation-surface-plan.md`](../progress/2026-07-11-agent-era-observation-surface-plan.md)
 
 ## Directory Roles
 

@@ -5,6 +5,15 @@ Status: all five implementation batches complete locally and on manual Ubuntu;
 Windows/release evidence remains pending — 2026-07-10  
 Evidence review: `docs/reviews/2026-07-10-interaction-dependency-modernization-review.md`
 
+> **Historical / superseded:** this document records the state and decisions at
+> the stated date or commit. It is not current runtime, dependency, release,
+> CI, or task-status authority. Use
+> [`../docs/ai/current-reality.md`](../docs/ai/current-reality.md) and the active
+> PLAN+TASK linked there. Copilot and its Node/profile surface were later
+> removed end to end; see
+> [ADR-0006](../docs/decisions/0006-agent-era-review-console.md). Do not restore
+> the optional profile from this historical document.
+
 ## Summary
 
 Reduce Clarity to one obvious path per core job while preserving LazyVim as the

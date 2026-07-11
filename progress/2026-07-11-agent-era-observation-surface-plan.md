@@ -2,7 +2,8 @@
 
 Date: 2026-07-11
 
-Status: approved; implementation authorized and in progress.
+Status: local implementation and release gate complete; documentation closeout
+and authorized branch push in progress.
 
 PM: `docs/product/clarity-observation-surface-pm.md`
 
@@ -10,7 +11,8 @@ Architecture:
 `docs/architecture/2026-07-11-agent-era-observation-surface-blueprint.md`
 
 Evidence:
-`docs/reviews/2026-07-11-keymap-surface-decision-report.md`
+`docs/reviews/2026-07-11-keymap-surface-decision-report.md` and
+`docs/reviews/2026-07-11-observation-surface-implementation-review.md`
 
 ## Summary
 
@@ -25,18 +27,28 @@ execution, commits, and push on 2026-07-11. GitHub CI is explicitly excluded.
 
 ## Current Reality
 
-- Baseline is `main` at `c7f80052362860c2500327cb00365754c5f7997e`.
-- The worktree contains the approved untracked blueprint/report plus document
-  index edits and a pre-existing two-entry `lazy-lock.json` drift:
-  Gitsigns `25050e4 -> eb60cc7`, Neo-tree `a3adf0a -> b01ee17`.
-- Natural runtime evidence: 133 global normal leader actions; 20 buffer-local
-  leader rows in a Lua Git+LSP buffer; 153 effective union; Neo-tree 70 local
-  rows; one files picker 134 rows.
-- Locked Snacks/Neo-tree interfaces expose hidden Git mutation. The current
-  Gitsigns `on_attach` also retains and duplicates repository-write mappings.
-- Live locale changes do not refresh menus or contextual maps.
-- The active and locked plugin sets each contain 23 entries before any approved
-  dependency gate is executed.
+- The reviewed baseline is `main` at
+  `c7f80052362860c2500327cb00365754c5f7997e`.
+- The accepted lock drift is isolated in `1706819`; product behavior is in
+  `9a69835`; gated dependency removal is in `57328ae`; isolated contract and
+  release hardening is in `596cffa`; exact i18n and real-input trust-gap closure
+  is in `21f8d29`.
+- Natural runtime evidence now proves exactly 28 global normal leader actions
+  plus seven context-scoped actions: five LSP, one Git hunk preview, and one
+  editable-buffer formatting recovery. Neo-tree exposes 20 local mappings;
+  files Picker exposes input 19 normal/18 insert, list 20 normal, and preview
+  two normal mappings; dashboard exposes six actions.
+- Five Git observations and retained Gitsigns navigation/preview pass full
+  HEAD/refs/index/worktree/optional-lock snapshots. No promoted or component-
+  local Git mutation path remains.
+- English/Chinese switching refreshes global/contextual which-key, Neo-tree,
+  active/future Picker instances, dashboard, and open Health content without
+  changing callback identity.
+- Resolved active and locked plugin sets each contain exactly 18 entries after
+  the approved parity gates.
+- The previous clean macOS artifact binds `596cffa`; the final clean release
+  rerun for `21f8d29` plus reconciled documentation is pending before push.
+  Exact-commit Ubuntu, Windows, WSL, and hosted-CI evidence remains pending.
 
 ## Architecture Decisions
 
@@ -58,7 +70,7 @@ execution, commits, and push on 2026-07-11. GitHub CI is explicitly excluded.
 6. `User ClarityLocaleChanged` is the live refresh contract. Mapping identity
    never changes when only a label changes.
 7. Health becomes the human model/renderer facade. Legacy commands remain thin,
-   undocumented one-release compatibility routes; CLI/JSON IDs stay stable.
+   unpromoted one-release compatibility routes; CLI/JSON IDs stay stable.
 8. Project configuration and formatter defaults own style. Clarity owns routing
    and fallback only.
 9. Lock drift and dependency removal are separate atomic transactions. No lock
@@ -98,8 +110,9 @@ execution, commits, and push on 2026-07-11. GitHub CI is explicitly excluded.
 - Run `python3 scripts/run_clarity_tests.py fast`, `contracts`, `behavior`,
   `faults`, then `release` from copied candidates and isolated roots.
 - Run Ruff/StyLua and check-only lock normalization through existing routers.
-- Do not trigger GitHub Actions. Windows/WSL and commit-bound release evidence
-  remain pending and are not inferred from macOS.
+- Do not trigger GitHub Actions. The required remote Ubuntu/Windows/macOS matrix
+  and real-WSL evidence remain pending; they are not inferred from the completed
+  owner-provided macOS commit-bound release.
 
 ## Frontend Workstream
 
@@ -172,7 +185,9 @@ migration is allowed.
 
 ### LOCK-001: Resolve Existing Gitsigns And Neo-tree Lock Drift
 
-- Status: pending
+- Status: done — 2026-07-11; accepted in lock-only commit `1706819` after copied-
+  candidate validation; exact pre-task bytes remain in owner-only backup
+  `20260711T192244Z-pre-observation-surface-lazy-lock.json`
 - Depends on: SURFACE-001
 - Files: `lazy-lock.json`, owner-only backup under
   `~/.local/state/clarity_lazyvim/lock-backups/`, task evidence in this plan
@@ -188,7 +203,8 @@ migration is allowed.
 
 ### SURFACE-002: Materialize The Product Action Catalog
 
-- Status: pending
+- Status: done — 2026-07-11; implemented in `9a69835`, with exact catalog,
+  disable-set, scope, identity, and real-input contracts hardened in `596cffa`
 - Depends on: SURFACE-001, LOCK-001
 - Files: `nvim/lua/config/actions/catalog.lua`,
   `nvim/lua/config/keymaps.lua`, `nvim/lua/plugins/{tooling,treesitter,git}.lua`,
@@ -205,7 +221,8 @@ migration is allowed.
 
 ### SURFACE-003: Make Localization Live And Scope-Aware
 
-- Status: pending
+- Status: done — 2026-07-11; implemented in `9a69835` and verified through
+  `en -> zh -> en` global, contextual, component, dashboard, and open-view tests
 - Depends on: SURFACE-002
 - Files: `nvim/lua/config/{i18n,menu_i18n,help,health}.lua`, action catalog,
   i18n/keymap/help tests
@@ -221,7 +238,8 @@ migration is allowed.
 
 ### SURFACE-004: Implement Zero-Mutation Git Observation
 
-- Status: pending
+- Status: done — 2026-07-11; implemented in `9a69835`, with real-input repository
+  immutability and optional-lock snapshots hardened in `596cffa`
 - Depends on: SURFACE-002, SURFACE-003
 - Files: `nvim/lua/config/actions/git.lua`, `nvim/lua/plugins/git.lua`,
   `nvim/lua/plugins/neo-tree.lua`, Git action and behavior tests
@@ -238,7 +256,8 @@ migration is allowed.
 
 ### SURFACE-005: Curate Neo-tree, Picker, And Dashboard Profiles
 
-- Status: pending
+- Status: done — 2026-07-11; implemented in `9a69835` and verified against
+  natural resolved component maps and removed-action negative input
 - Depends on: SURFACE-002, SURFACE-004
 - Files: `nvim/lua/plugins/{neo-tree,ui}.lua`, action catalog, component-profile
   tests, help/i18n strings
@@ -255,14 +274,15 @@ migration is allowed.
 
 ### SURFACE-006: Make Health The Human Entry
 
-- Status: pending
+- Status: done — 2026-07-11; seven Health routes, live rendering, stable machine
+  contracts, and one-release legacy command adapters landed in `9a69835`
 - Depends on: SURFACE-003, SURFACE-005
 - Files: `nvim/lua/config/{health,help,commands,audit,validation}.lua`, README,
   guide, Health/help/command tests
 - Change: render Health overview, recovery, Messages, and Clarity diagnostic
   events through one facade; move Start/Clipboard/Sync content into routes;
   preserve path/export and machine contracts; keep legacy commands as
-  undocumented compatibility routes for one release.
+  unpromoted compatibility routes for one release.
 - Acceptance: only Health and Language are promoted; Messages includes native/
   Noice history separately from structured events; repeated/open-view locale
   refresh is non-destructive; old commands reach equivalent content.
@@ -271,7 +291,8 @@ migration is allowed.
 
 ### SURFACE-007: Remove Global Style And Background Maintenance
 
-- Status: pending
+- Status: done — 2026-07-11; project-owned formatting, disabled background
+  checker, stable wrap/numbers, and visible fold failures landed in `9a69835`
 - Depends on: SURFACE-002
 - Files: `nvim/lua/plugins/formatting.lua`, `nvim/lua/config/lazy.lua`,
   `nvim/lua/config/options.lua`, tooling/Tree-sitter policy and related tests
@@ -287,7 +308,9 @@ migration is allowed.
 
 ### SURFACE-008: Execute Dependency Parity Gates And Atomic Migration
 
-- Status: pending
+- Status: done — 2026-07-11; five dependencies removed in `57328ae` after
+  system-LSP, static-theme, native-snippet/completion, pairs, and fold gates;
+  active and locked sets are 18/18
 - Depends on: SURFACE-004, SURFACE-005, SURFACE-006, SURFACE-007
 - Files: `nvim/lua/plugins/{minimal,tooling,colorscheme}.lua`,
   `nvim/colors/custom_colorblind_theme.lua`, `lazy-lock.json`, dependency/theme/
@@ -306,23 +329,29 @@ migration is allowed.
 
 ### SURFACE-009: Close The Local Behavior And Release Gate
 
-- Status: pending
+- Status: in progress — 2026-07-11; all development gates pass after trust-gap
+  hardening; final clean commit-bound release rerun awaits the documentation
+  reconciliation commit; 60 Python and 26 Lua tests pass
 - Depends on: SURFACE-003, SURFACE-004, SURFACE-005, SURFACE-006, SURFACE-007,
   SURFACE-008
-- Files: runtime/contract tests, `scripts/run_clarity_tests.py` only if routing
-  coverage is missing, evidence fields in this plan
+- Files: `scripts/{clarity_runtime,run_clarity_action_matrix,run_clarity_contracts,
+  run_clarity_smoke,run_clarity_tests}.py`, `tests/lua/real_input_action_matrix.lua`,
+  fake LSP/formatter fixtures, action-matrix/runtime/i18n Python tests, evidence
+  fields in this plan
 - Change: run the complete local layered gate from clean copied candidates;
   record exact counts, hashes, versions, kept blockers, and honest platform
   boundary. Do not edit scoring or required gates to obtain success.
 - Acceptance: fast, contracts, behavior, faults, and release pass; candidate and
-  authority hashes remain stable; zero P0/P1 remains locally; Windows/WSL and
-  GitHub-hosted release evidence stay pending.
+  authority hashes remain stable; zero P0/P1 remains locally; Ubuntu, Windows,
+  WSL, and GitHub-hosted release evidence stay pending.
 - Validation: all five router commands; JSON report inspection; `git diff
   --check`; clean archive/offline restart.
 
 ### SURFACE-010: Reconcile Truth, Commit, And Push
 
-- Status: pending
+- Status: in progress — public/current docs, ADRs, implementation review,
+  dependency manifest, and closeout are being reconciled before the final clean
+  release rerun and branch push
 - Depends on: SURFACE-009
 - Files: `README.md`, `doc/clarity_lazyvim_complete_guide_zh.md`,
   `docs/ai/current-reality.md`, `docs/DOCUMENT_INDEX.md`, product/architecture/
@@ -337,6 +366,36 @@ migration is allowed.
 - Validation: docs path/link/stale scan; `git status --short --branch`; commit
   review; `git push -u origin codex/20260711-observation-surface`; verify remote
   ref only, do not inspect or trigger workflow runs.
+
+## Execution Evidence And Deviations
+
+- Lock acceptance and dependency pruning remained separate transactions. The
+  pre-observation backup is mode `0600`; normalization only prunes the
+  intersection of the reviewed exclusion registry and runtime-disabled specs.
+- `config.product_policy` is the single reviewed exclusion registry. It carries
+  18 rationale/revisit-trigger records and generates `minimal.lua`, replacing
+  hand-maintained disabled lock sentinels with an auditable policy mechanism.
+- Picker which-key trigger filetypes are disabled because they reintroduced
+  inherited input mappings after profile resolution. The curated built-in help
+  remains the one discoverability path and the exact component budgets pass.
+- The static palette preserves the approved visual intent and corrects contrast
+  for `Visual`, `LineNr`, and `DiagnosticError`; exact Lush implementation values
+  were not treated as product behavior.
+- Git observations use bounded fixed argv and repository-local cwd. Gitsigns
+  keeps upstream lifecycle ownership and receives only Clarity's navigation and
+  preview delta; behavior snapshots, not environment labels, prove no mutation.
+- System/project LSP, formatter, snippets, and parsers remain user/project owned.
+  Missing tools produce recovery outcomes and schedule no install path.
+- Real input now covers 28 global, seven contextual, and four native/diagnostic
+  actions. WorkspaceEdits must change and restore buffers; startup, cleanup,
+  repository/authority immutability, path privacy, and fake-process exit are
+  required gates rather than informational fields.
+- Candidate copies use Git tracked/non-ignored files, so ignored local `.env`,
+  agent contracts, and private state cannot enter copied-candidate evidence.
+- Attached-UI execution is pinned to `pynvim==0.6.0`; test manifests record the
+  pin and all command timeouts terminate descendant process groups.
+- GitHub Actions was not run or inspected. The local score therefore remains
+  below 95 until the separately authorized platform evidence gates are met.
 
 ## Handoff
 

@@ -46,13 +46,13 @@
   <!-- Feature list -->
   <text x="98" y="330" fill="#E2E8F0" font-family="JetBrains Mono, Consolas, monospace" font-size="20">• high-contrast visual system</text>
   <text x="98" y="368" fill="#E2E8F0" font-family="JetBrains Mono, Consolas, monospace" font-size="20">• first-run guidance</text>
-  <text x="98" y="406" fill="#E2E8F0" font-family="JetBrains Mono, Consolas, monospace" font-size="20">• explicit platform workflows</text>
-  <text x="98" y="444" fill="#E2E8F0" font-family="JetBrains Mono, Consolas, monospace" font-size="20">• audit + validation + CI</text>
+  <text x="98" y="406" fill="#E2E8F0" font-family="JetBrains Mono, Consolas, monospace" font-size="20">• bilingual review surface</text>
+  <text x="98" y="444" fill="#E2E8F0" font-family="JetBrains Mono, Consolas, monospace" font-size="20">• health + deterministic tests</text>
 
   <!-- Score bar -->
   <rect x="98" y="490" width="180" height="12" rx="6" fill="#1E293B"/>
-  <rect x="98" y="490" width="180" height="12" rx="6" fill="url(#accent)"/>
-  <text x="98" y="522" fill="#BAE6FD" font-family="JetBrains Mono, Consolas, monospace" font-size="13">95+ target  |  evidence before claims</text>
+  <rect x="98" y="490" width="166" height="12" rx="6" fill="url(#accent)"/>
+  <text x="98" y="522" fill="#BAE6FD" font-family="JetBrains Mono, Consolas, monospace" font-size="13">92 local  |  95+ release target</text>
 
   <!-- RIGHT PANEL -->
 
@@ -61,18 +61,18 @@
   <circle cx="670" cy="132" r="7" fill="#FB7185"/>
   <circle cx="694" cy="132" r="7" fill="#FBBF24"/>
   <circle cx="718" cy="132" r="7" fill="#34D399"/>
-  <text x="752" y="139" fill="#93C5FD" font-family="JetBrains Mono, Consolas, monospace" font-size="17">Clarity Start</text>
+  <text x="752" y="139" fill="#93C5FD" font-family="JetBrains Mono, Consolas, monospace" font-size="17">Clarity Health</text>
 
   <!-- Command list — 6 items, evenly spaced from y=186 to y=426 (step 48) -->
   <text x="658" y="192" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">1. Space  open menu</text>
-  <text x="658" y="240" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">2. f      find files</text>
-  <text x="658" y="288" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">3. w      search text</text>
-  <text x="658" y="336" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">4. t      floating terminal</text>
-  <text x="658" y="384" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">5. a      audit environment</text>
-  <text x="658" y="432" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">6. s      sync Windows / WSL</text>
+  <text x="658" y="240" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">2. ff     find files</text>
+  <text x="658" y="288" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">3. fw     search text</text>
+  <text x="658" y="336" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">4. gs     review Git status</text>
+  <text x="658" y="384" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">5. hh     health + recovery</text>
+  <text x="658" y="432" fill="#E5E7EB" font-family="JetBrains Mono, Consolas, monospace" font-size="19">6. cz/uw  fold + wrap</text>
 
   <!-- Validated bar -->
   <rect x="642" y="490" width="160" height="12" rx="6" fill="#1E293B"/>
   <rect x="642" y="490" width="160" height="12" rx="6" fill="#22C55E"/>
-  <text x="642" y="522" fill="#BBF7D0" font-family="JetBrains Mono, Consolas, monospace" font-size="13">Validated in-editor + headless</text>
+  <text x="642" y="522" fill="#BBF7D0" font-family="JetBrains Mono, Consolas, monospace" font-size="13">Local macOS evidence · remote pending</text>
 </svg>

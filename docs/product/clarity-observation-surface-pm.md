@@ -2,11 +2,13 @@
 
 Date: 2026-07-11
 
-Status: approved for implementation by the owner on 2026-07-11.
+Status: implemented locally on 2026-07-11; exact-commit cross-platform evidence
+remains pending.
 
 ## Problem And Product Intent
 
-Clarity has already removed several obsolete dependencies, but its visible and
+At approval time, Clarity had already removed several obsolete dependencies,
+but its visible and
 contextual interaction surface still behaves like a general-purpose LazyVim
 distribution. A tracked file exposes 133 global normal-mode leader actions; a
 Git+LSP Lua buffer reaches 153 global-plus-buffer leader entries. Neo-tree and a
@@ -53,13 +55,13 @@ own broad code, file-tree, and repository mutation.
 - **Rejected compromise:** plugin-count theater. Noice, mini.pairs, Tree-sitter,
   and code intelligence remain when behavior evidence says they improve review.
 
-## Current Reality
+## Approval-Time Baseline
 
 - The exact audit is
   `docs/reviews/2026-07-11-keymap-surface-decision-report.md`.
 - The approved system target is
   `docs/architecture/2026-07-11-agent-era-observation-surface-blueprint.md`.
-- Current menu localization translates exact English descriptions and only
+- Approval-time menu localization translated exact English descriptions and only
   scans global normal/visual mappings on `VeryLazy`.
 - Live `:ClarityLanguage` changes effective locale but does not emit a refresh
   event; contextual LSP/Gitsigns/Neo-tree/Picker labels remain stale or English.
@@ -69,11 +71,11 @@ own broad code, file-tree, and repository mutation.
   Clarity namespace.
 - Formatter arguments impose Clarity-wide style choices; lazy.nvim background
   checking remains enabled in interactive sessions.
-- The current worktree contains a pre-existing two-entry lock drift for
-  Gitsigns and Neo-tree. It must be diagnosed and committed or rejected in a
-  dedicated lock-only transaction before dependency work.
+- The approval-time worktree contained a pre-existing two-entry lock drift for
+  Gitsigns and Neo-tree. The plan required a dedicated decision before
+  dependency work; `LOCK-001` resolved it in a lock-only transaction.
 
-## Proposed Behavior
+## Approved And Implemented Behavior
 
 - Materialize exactly 28 global normal-mode leader actions and seven additional
   capability-scoped normal actions in the fullest Git+LSP context. Removed
@@ -93,7 +95,7 @@ own broad code, file-tree, and repository mutation.
 - Emit `User ClarityLocaleChanged` once per effective change and refresh global,
   buffer-local, component, dashboard, and open Clarity views without restart.
 - Promote only `ClarityHealth` and `ClarityLanguage`. Keep old commands as
-  undocumented compatibility routes for one release while Health gains overview,
+  unpromoted compatibility routes for one release while Health gains overview,
   recovery, messages, and diagnostic-event views.
 - Honor project formatter configuration/tool defaults, disable background
   dependency checking, make source visibility explicit (`conceallevel=0`), and

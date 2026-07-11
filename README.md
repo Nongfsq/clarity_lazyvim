@@ -10,7 +10,7 @@
   </a>
   <img src="https://img.shields.io/badge/Neovim-0.12%2B-57A143?style=flat-square&logo=neovim&logoColor=white" alt="Neovim 0.12+" />
   <img src="https://img.shields.io/badge/Foundation-LazyVim-0F172A?style=flat-square" alt="LazyVim foundation" />
-  <img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20WSL2%20%7C%20Linux-1F6FEB?style=flat-square" alt="Windows WSL2 Linux" />
+  <img src="https://img.shields.io/badge/Targets-Windows%20%7C%20WSL2%20%7C%20Linux%20%7C%20macOS-1F6FEB?style=flat-square" alt="Target environments: Windows, WSL2, Linux, and macOS" />
   <a href="LICENSE">
     <img src="https://img.shields.io/github/license/Nongfsq/clarity_lazyvim?style=flat-square" alt="MIT license" />
   </a>
@@ -48,12 +48,11 @@ It is a focused editor product for daily work.
 | Code folding | `<leader>cz` | Toggle the fold containing the cursor without memorizing Vim's `z` commands |
 | Line wrapping | `<leader>uw` | Long lines wrap visually by default; toggle per editing window |
 | Terminal | `<leader>tf` | Reliable integrated terminal workflow inside the editor |
-| Git hunks | `<leader>ghs`, `<leader>ghr`, `<leader>ghp` | Git hunk actions live under the truthful `<leader>gh` group |
+| Git review | `<leader>gs`, `<leader>gd`, `<leader>gl`, `<leader>gt`, `<leader>gb` | Read-only status, changes, history, branch graph, and line provenance |
+| Git hunks | `[h`, `]h`, `<leader>ghp` | Navigate and preview tracked changes without staging or resetting them |
 | Recovery | `:ClarityHealth`, `<leader>hh` | One product-level help, health, and recovery entry |
 | Language | `:ClarityLanguage` | Switch Clarity-owned UI between `auto`, `en`, and `zh` |
-| Audit | `:ClarityAudit` | Environment and dependency readiness in one command |
-| Validation | `:ClarityValidate` | Behavior checks, not just "is the binary installed?" |
-| Diagnostics | `:ClarityLog` | Read recent Clarity events, locate the local log, or export sanitized evidence |
+| Diagnostics | `:ClarityHealth` | Overview, recovery, messages, structured events, clipboard, environment, and language routes |
 
 ## Product Highlights
 
@@ -87,8 +86,10 @@ Clarity now separates maintainer surfaces from product surfaces on purpose:
 - Clarity-owned runtime UI can render in English or Chinese
 - the locale is controlled with `:ClarityLanguage auto|en|zh`
 
-Version one localizes Clarity-owned help panels, key descriptions, notifications, command descriptions, and the inherited `<leader>` menu hints shown by `which-key`.
-It does not attempt to rewrite every upstream plugin UI.
+Live language changes refresh Clarity's global and contextual `which-key`
+descriptions, Neo-tree, active/future Snacks pickers, dashboard, and open Health
+view without recreating action callbacks. Upstream prose outside Clarity-owned
+surfaces remains upstream-owned.
 
 ### Terminal-first stability defaults
 
@@ -104,7 +105,7 @@ The goal is simple: typing, vertical movement, and window motion should feel sta
 
 ### Windows + WSL workflow discipline
 
-The project documents and supports a simple operational rule:
+The project targets and documents a simple operational rule:
 
 1. Windows repo is the source of truth for edits, commits, and pushes.
 2. WSL repo is the runtime mirror.
@@ -114,10 +115,10 @@ The project documents and supports a simple operational rule:
 
 This repo ships with:
 
-- `:ClarityAudit`
-- `:ClarityValidate`
+- `:ClarityHealth` and stable machine-readable audit/validation commands
 - headless validation scripts
-- GitHub Actions CI
+- isolated natural-lifecycle, fault, and release harnesses
+- a GitHub Actions workflow whose runs require separate authorization/evidence
 
 That makes the project feel more like a product than a bag of config files.
 
@@ -163,8 +164,8 @@ If you only remember one workflow, remember this:
 3. Use `<leader>fw` to search project text.
 4. Use `<leader>e` when you want the file tree.
 5. Use `<leader>tf` for the floating terminal.
-6. Use `gd`, `gr`, and `gl` to navigate code and diagnostics.
-7. Reopen help any time with `:ClarityStart` or `<leader>hh`.
+6. Use `gd`/`gr` for code navigation and `[d`/`]d` for diagnostics.
+7. Reopen help any time with `:ClarityHealth` or `<leader>hh`.
 
 While editing, use `<leader>cz` to toggle the current code fold and `<leader>uw` to toggle visual line wrapping.
 
@@ -198,7 +199,8 @@ flowchart TB
 
     Product --> Plugins
     Doctor --> LocalState["Local data/cache/parser/provider state"]
-    Doctor --> CI["GitHub Actions validation"]
+    Product --> Evidence["Local test and audit evidence"]
+    Evidence -. "separate opt-in" .-> CI["Hosted GitHub Actions"]
 ```
 
 ### Runtime pipeline
@@ -234,7 +236,7 @@ flowchart TD
     Required -->|No| Parser{"Tree-sitter parser/query failure?"}
     Parser -->|Yes| Override{"User-level parser override detected?"}
     Override -->|Yes| Apply["Run python3 scripts/clarity_doctor.py --apply"]
-    Override -->|No| ValidateParser["Run :ClarityAudit and inspect parser details"]
+    Override -->|No| ValidateParser["Open :ClarityHealth environment and inspect parser details"]
     Parser -->|No| Optional{"Optional warning?"}
     Optional -->|Yes| InstallOptional["Install only if you need that feature"]
     Optional -->|No| Validate["Run python3 scripts/run_clarity_validate.py"]
@@ -251,9 +253,9 @@ flowchart TD
 | --- | --- | --- | --- |
 | Local doctor | `python3 scripts/clarity_doctor.py` | Platform tools, providers, Neovim paths, parser health | Required failures block normal use; warnings are feature-specific |
 | Safe repair | `python3 scripts/clarity_doctor.py --apply` | Stale local parser overrides can be backed up without deleting files | Only runs conservative local repairs |
-| Runtime audit | `:ClarityAudit` or `python3 scripts/run_clarity_audit.py` | In-editor environment readiness and integration status | Missing required tools reduce readiness and should be fixed |
-| Behavior validation | `:ClarityValidate` or `python3 scripts/run_clarity_validate.py` | Keymaps, UI behavior, providers, parser health, localization parity | Required failures indicate a product/runtime regression |
-| CI baseline | GitHub Actions `clarity-validate` | Ubuntu and Windows reproducibility | Failing CI blocks trusted release state |
+| Runtime health | `:ClarityHealth` or `python3 scripts/run_clarity_audit.py` | Human recovery plus machine-readable environment and integration status | Missing required tools block readiness; optional profiles remain explicit |
+| Behavior validation | `python3 scripts/run_clarity_validate.py` and the test router | Natural key, UI, dependency, parser, and localization behavior | Required failures indicate a product/runtime regression |
+| CI baseline | GitHub Actions `clarity-validate` | Ubuntu, Windows, and macOS reproducibility | Remote evidence is required for a cross-platform release claim |
 
 ### Platform model
 
@@ -261,7 +263,7 @@ flowchart TD
 | --- | --- | --- | --- |
 | Windows | Authoring and GitHub source-of-truth workflow | `%LOCALAPPDATA%\nvim` | Keep commits and pushes explicit; compare `HEAD` before debugging stale WSL behavior |
 | WSL / Linux | Daily terminal runtime | `~/.config/nvim` | Best match for terminal-first workflows and Linux developer tools |
-| macOS | Local UNIX-like runtime | `~/.config/nvim` | Uses Homebrew-friendly tooling; doctor reports local Python/npm provider status |
+| macOS | Local UNIX-like runtime | `~/.config/nvim` | Uses Homebrew-friendly tooling; doctor reports Python-provider and parser/tool status |
 
 ### Dependency strategy
 
@@ -272,8 +274,9 @@ The project follows seven hard rules:
 3. Formatter and provider requirements must be documented.
 4. The source of truth for plugin versions is the root [`lazy-lock.json`](lazy-lock.json).
 5. Source comments stay English-only; Clarity-owned runtime UI may localize to English or Chinese.
-6. Public docs describe public behavior; local AI planning files stay out of the repo.
-7. Clarity-owned code uses a unified four-space indentation policy across editor defaults, formatters, and `.editorconfig`.
+6. Public docs describe public behavior; approved canonical plans are tracked,
+   while volatile session notes and machine-local agent config stay out of the repo.
+7. Repositories and formatter configuration own code style; Clarity owns formatter routing and safe fallback, not global indentation arguments.
 
 ## Tech Stack
 
@@ -291,19 +294,22 @@ The project follows seven hard rules:
 
 ## Current Validation Status
 
-As of 2026-07-09:
+As of 2026-07-11:
 
-- the current macOS machine passes required local runtime validation, with an
-  optional `pynvim` warning;
-- the local audit reports `core=ready`; optional profiles are reported separately
-  and local release quality remains `unverified`;
-- the public GitHub Actions history has no successful completed Ubuntu/Windows
-  baseline, so cross-platform release validation is not currently claimed;
-- the evidence-backed project review is `58/100`, with a target of at least
-  `95/100` and no open P0/P1 findings.
+- a clean, copied, commit-bound macOS candidate passes the local release router,
+  including 60 Python tests, 26 Lua tests, natural UI/behavior/fault contracts,
+  18/18 active-lock parity, and blocked-network offline restart;
+- in-editor Health/audit reports host and optional capability separately from
+  release evidence, so a local green result cannot certify another platform;
+- the 2026-07-09 review remains the historical `58/100` baseline, not a current
+  runtime score;
+- the observation-surface implementation has commit-bound local macOS evidence,
+  but exact-commit Ubuntu, Windows, WSL, and GitHub-hosted evidence remains
+  pending, so a cross-platform 95+ release is not currently claimed.
 
-See the [current quality review](docs/reviews/2026-07-09-clarity-95-quality-review.md)
-and [active refactor plan](progress/2026-07-09-clarity-95-refactor-plan.md).
+See the [historical quality baseline](docs/reviews/2026-07-09-clarity-95-quality-review.md),
+[current implementation review](docs/reviews/2026-07-11-observation-surface-implementation-review.md),
+and [active delivery ledger](progress/2026-07-11-agent-era-observation-surface-plan.md).
 Use `python3 scripts/clarity_doctor.py` for local environment diagnosis and
 `python3 scripts/run_clarity_smoke.py` for an isolated candidate boot; local
 success does not replace the required remote CI evidence.
@@ -313,10 +319,14 @@ success does not replace the required remote CI evidence.
 Inside Neovim:
 
 ```vim
-:ClarityAudit
-:ClarityValidate
-:ClarityLog
+:ClarityHealth
+:ClarityLanguage
 ```
+
+`:ClarityAudit`, `:ClarityValidate`, `:ClarityStart`, `:ClaritySync`,
+`:ClarityClipboard`, and the view form of `:ClarityLog` remain temporary
+compatibility routes into Health. Machine-readable bang/path/export contracts
+remain stable.
 
 From the terminal:
 
@@ -338,7 +348,7 @@ python3 scripts/run_clarity_smoke.py
 For the attached-UI runtime contract, run:
 
 ```sh
-uv run --with pynvim python scripts/run_clarity_contracts.py \
+uv run --with pynvim==0.6.0 python scripts/run_clarity_contracts.py \
   --scenario file_ui --reuse-plugin-cache ~/.local/share/nvim/lazy
 ```
 
@@ -347,14 +357,23 @@ The stable command-driven suites are:
 ```sh
 python3 scripts/run_clarity_tests.py fast
 python3 scripts/run_clarity_tests.py contracts --json
-uv run --with pynvim==0.6.0 python scripts/run_clarity_tests.py behavior --feature fold
+python3 scripts/run_clarity_tests.py behavior --feature fold
 python3 scripts/run_clarity_tests.py faults --feature fold
 ```
 
-Use `:ClarityLog`, `:ClarityLog tail`, `:ClarityLog path`, or
-`:ClarityLog export [path]` when a Clarity-owned action needs diagnosis. Events
-remain local and exclude buffer text, clipboard contents, environment values,
-tokens, command arguments, and raw provider payloads.
+The behavior and release suites also run the complete real-input action matrix.
+To inspect that report directly:
+
+```sh
+uv run --with pynvim==0.6.0 python scripts/run_clarity_action_matrix.py \
+  --reuse-plugin-cache ~/.local/share/nvim/lazy
+```
+
+Use Health's Messages and Events routes when a Clarity-owned action needs
+diagnosis. `:ClarityLog path` and `:ClarityLog export [path]` remain the stable
+machine/evidence routes. Events remain local and exclude buffer text, clipboard
+contents, environment values, tokens, command arguments, and raw provider
+payloads.
 
 `update_clarity_lock.py` is check-only by default: it normalizes a copied
 candidate, restarts it, requires core audit readiness, and reports drift without
@@ -365,9 +384,23 @@ Review the resulting Git diff before committing.
 
 Validation currently covers:
 
-- copied-candidate first boot/restart with authority-file hash checks
-- natural startup lifecycle, config-module ownership, and promoted behavior contracts
-- a required Ubuntu/Windows/macOS workflow matrix (remote evidence pending)
+- copied-candidate first boot, restart, and network-blocked offline restart with
+  exact active/lock parity and authority-file hash checks
+- natural startup lifecycle, 17 config-module classifications, 14 covered
+  capabilities, and independent promoted behavior contracts
+- exactly 28 global plus seven context-scoped normal leader actions: five LSP,
+  one Git hunk preview, and one editable-buffer formatting recovery action
+- four retained native/diagnostic actions (`gd`, `gr`, `K`, and `[d`/`]d`), with
+  exact LSP picker sources, real WorkspaceEdit application, and state restoration
+- startup-error capture, injected cleanup recovery, pinned `pynvim==0.6.0`,
+  repository/root-authority immutability, and fixture-process exit checks
+- read-only Git status/diff/log/graph/blame views with repository byte/identity
+  snapshots and negative mutation input
+- live English/Chinese refresh for `which-key`, Neo-tree, Picker, dashboard, and Health
+- system LSP attach, native snippets, mini.pairs input, project-owned formatting,
+  missing-tool no-install degradation, static-theme reload, and contrast thresholds
+- workflow source for a required Ubuntu/Windows/macOS matrix; this local
+  evidence does not execute or certify that remote matrix
 - keymap assertions for high-frequency paths
 - single-explorer directory startup and code fold/line-wrap behavior
 - dashboard, `neo-tree`, and terminal UI behavior
@@ -399,7 +432,7 @@ Run:
 python3 scripts/clarity_doctor.py
 ```
 
-The doctor is a cross-platform dry-run check for macOS, Linux, and WSL. It reports:
+The doctor is a cross-platform dry-run check for macOS, Linux, WSL, and Windows. It reports:
 
 - required and recommended tools
 - provider packages
@@ -441,15 +474,12 @@ If the old parser has already been moved and Neovim then reports `No parser for 
 This config expects the Snacks picker.
 If `<leader>ff` or `<leader>fw` mentions Telescope, you are almost certainly running stale config.
 
-Run:
-
-1. `:ClaritySync`
-2. compare `git rev-parse --short HEAD` between Windows and WSL
-3. restart Neovim after pull
+Open `:ClarityHealth recovery`, compare `git rev-parse --short HEAD` between
+machines, and restart Neovim after updating the checkout.
 
 ### Clipboard feels inconsistent in WSL
 
-Use `:ClarityClipboard`.
+Open `:ClarityHealth clipboard` (`:ClarityClipboard` remains a compatibility alias).
 
 It explains the difference between:
 
@@ -459,9 +489,9 @@ It explains the difference between:
 
 ### Language changed but some labels still look old
 
-`:ClarityLanguage` saves the new choice immediately.
-
-Some command menus and key descriptions are registered during startup, so restart Neovim after switching languages if you want a full refresh.
+`:ClarityLanguage` saves the choice and refreshes every Clarity-owned promoted
+surface immediately. A restart is not required; a remaining English label is a
+reportable ownership/localization defect.
 
 ### Typing or vertical movement feels laggy
 
@@ -475,7 +505,7 @@ If motion still feels stale after an update:
 
 If you previously saw a stray `|` while moving or in blank indented lines, that was most likely an indent or scope guide being rendered by the UI layer. Clarity now disables those bars by default in normal editing buffers.
 
-### `:ClarityAudit` reports missing optional tools
+### Health reports missing optional tools
 
 That is expected when optional extras are not installed.
 The related features warn and degrade gracefully instead of crashing the editor.
@@ -484,9 +514,9 @@ The related features warn and degrade gracefully instead of crashing the editor.
 
 - Chinese complete guide: [doc/clarity_lazyvim_complete_guide_zh.md](doc/clarity_lazyvim_complete_guide_zh.md)
 - Documentation index: [docs/DOCUMENT_INDEX.md](docs/DOCUMENT_INDEX.md)
-- Current 95+ quality review: [docs/reviews/2026-07-09-clarity-95-quality-review.md](docs/reviews/2026-07-09-clarity-95-quality-review.md)
-- Approved refactor architecture: [docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md](docs/architecture/2026-07-09-clarity-95-refactor-blueprint.md)
-- Product and UX plan: [docs/product/clarity-95-experience-pm.md](docs/product/clarity-95-experience-pm.md)
+- Current implementation review: [docs/reviews/2026-07-11-observation-surface-implementation-review.md](docs/reviews/2026-07-11-observation-surface-implementation-review.md)
+- Observation-surface architecture: [docs/architecture/2026-07-11-agent-era-observation-surface-blueprint.md](docs/architecture/2026-07-11-agent-era-observation-surface-blueprint.md)
+- Product and UX intent: [docs/product/clarity-observation-surface-pm.md](docs/product/clarity-observation-surface-pm.md)
 - The older [product evaluation](doc/clarity_architecture_governance.md) is retained as a historical snapshot.
 
 ## Project Structure
@@ -514,11 +544,16 @@ The related features warn and degrade gracefully instead of crashing the editor.
 ├── scripts/
 │   ├── clarity_doctor.py
 │   ├── run_clarity_audit.py
+│   ├── run_clarity_action_matrix.py
 │   ├── run_clarity_contracts.py
 │   └── run_clarity_validate.py
+├── tests/
+│   └── lua/
+│       └── real_input_action_matrix.lua
 ├── progress/
 ├── init.lua
-└── lazy-lock.json
+├── lazy-lock.json
+└── lazyvim.json
 ```
 
 ## License
