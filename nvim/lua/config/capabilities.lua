@@ -22,24 +22,6 @@ M.tool_specs = {
         repair = "Install ripgrep and ensure `rg` is on PATH.",
     },
     {
-        id = "compiler",
-        profile = "development",
-        required = true,
-        commands = { "cl", "gcc", "clang", "cc", "zig" },
-        feature = "build Tree-sitter parsers and native extensions",
-        impact = "Language parsers or native plugin extensions may not install.",
-        repair = "Install a supported C compiler or Zig and ensure it is on PATH.",
-    },
-    {
-        id = "tree_sitter_cli",
-        profile = "development",
-        required = true,
-        commands = { "tree-sitter" },
-        feature = "install and diagnose current Tree-sitter parsers",
-        impact = "Parser installation and parser diagnostics may fail.",
-        repair = "Install tree-sitter-cli and ensure `tree-sitter` is on PATH.",
-    },
-    {
         id = "fd",
         profile = "utilities",
         required = false,
@@ -47,25 +29,6 @@ M.tool_specs = {
         feature = "accelerated file discovery",
         impact = "File discovery may use a slower fallback.",
         repair = "Install fd when faster file discovery is desired.",
-    },
-    {
-        id = "node",
-        profile = "copilot",
-        required = true,
-        commands = { "node" },
-        feature = "optional Copilot runtime",
-        minimum_major = 22,
-        impact = "The optional Copilot profile is unavailable.",
-        repair = "Install Node.js 22+ or disable the Copilot profile.",
-    },
-    {
-        id = "npm",
-        profile = "providers",
-        required = false,
-        commands = { "npm" },
-        feature = "optional Node provider package management",
-        impact = "Node provider packages cannot be installed from npm.",
-        repair = "Install npm only when the Node provider is needed.",
     },
     {
         id = "python",
@@ -84,15 +47,6 @@ M.tool_specs = {
         feature = "optional Python provider package management",
         impact = "Python provider packages cannot be installed with pip.",
         repair = "Install pip only when Python provider packages are needed.",
-    },
-    {
-        id = "system_monitor",
-        profile = "utilities",
-        required = false,
-        commands = { "htop", "btop" },
-        feature = "optional system monitor terminal",
-        impact = "The optional system-monitor shortcut shows install guidance.",
-        repair = "Install htop or btop only when this optional utility is desired.",
     },
 }
 
@@ -151,7 +105,7 @@ end
 
 function M.summarize(checks)
     local profiles = {}
-    for _, profile in ipairs({ "development", "copilot", "providers", "clipboard", "utilities" }) do
+    for _, profile in ipairs({ "providers", "clipboard", "utilities" }) do
         profiles[profile] = summarize_group(checks, profile)
     end
 

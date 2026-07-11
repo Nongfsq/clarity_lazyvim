@@ -16,13 +16,11 @@ equal(capabilities.nvim_supported({ major = 1, minor = 0, patch = 0 }), true, "f
 local summary = capabilities.summarize({
     capabilities.check({ id = "core_ok", profile = "core", required = true, status = "pass" }),
     capabilities.check({ id = "optional_warn", profile = "providers", required = false, status = "warn" }),
-    capabilities.check({ id = "copilot_missing", profile = "copilot", required = true, status = "fail" }),
 })
 
 equal(summary.core.status, "ready", "optional profile failures do not block core")
 equal(summary.host.status, "ready", "host status follows core readiness")
 equal(summary.profiles.providers.status, "degraded", "optional provider warning is degraded")
-equal(summary.profiles.copilot.status, "blocked", "missing required profile capability blocks that profile")
 equal(summary.release.status, "unverified", "local checks do not self-certify release quality")
 
 local blocked = capabilities.summarize({

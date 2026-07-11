@@ -1,13 +1,30 @@
 ---@diagnostic disable: undefined-global
 vim.cmd("hi clear")
-if vim.fn.exists("syntax_on") then
+if vim.fn.exists("syntax_on") == 1 then
     vim.cmd("syntax reset")
 end
 
 vim.o.background = "dark"
-vim.g.colors_name = "custom_colorblind_theme"
 
-local lush = require("lush")
+local ok, lush = pcall(require, "lush")
+if not ok then
+    vim.schedule(function()
+        vim.notify(
+            "custom_colorblind_theme requires lush.nvim; using habamax instead.",
+            vim.log.levels.WARN,
+            { title = "Clarity" }
+        )
+    end)
+    local fallback_loaded = pcall(vim.cmd.colorscheme, "habamax")
+    if fallback_loaded then
+        -- A nested :colorscheme can leave the name unset while the fallback
+        -- highlights are active. Keep health/reporting explicit in that case.
+        vim.g.colors_name = "habamax"
+    end
+    return
+end
+
+vim.g.colors_name = "custom_colorblind_theme"
 local hsl = lush.hsl
 
 local theme = lush(function(injected_functions)

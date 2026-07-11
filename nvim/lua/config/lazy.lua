@@ -52,24 +52,6 @@ local function bundled_runtime_paths()
     return paths
 end
 
-local mason_packages = {
-    "lua_ls",
-    "clangd",
-    "rust_analyzer",
-    "pyright",
-    "ts_ls",
-    "bashls",
-    "cmake",
-    "stylua",
-    "clang-format",
-    "rustfmt",
-    "black",
-    "isort",
-    "prettier",
-    "shfmt",
-    "cmake-format",
-}
-
 if not vim.loop.fs_stat(lazypath) then
     if vim.fn.executable("git") ~= 1 then
         bootstrap_fail(
@@ -110,12 +92,6 @@ lazy.setup({
         {
             "LazyVim/LazyVim",
             import = "lazyvim.plugins",
-            opts = {
-                -- Configure Mason-managed tools here.
-                mason = {
-                    ensure_installed = noninteractive and {} or mason_packages,
-                },
-            },
         },
 
         -- Aggregate repo-owned plugins explicitly so nested config roots still load reliably.
@@ -124,7 +100,7 @@ lazy.setup({
 
     -- Remaining lazy.nvim defaults.
     lockfile = vim.g.clarity_repo_root .. "/lazy-lock.json",
-    defaults = { lazy = false, version = false },
+    defaults = { lazy = true, version = false },
     install = { colorscheme = { "habamax" } },
     checker = { enabled = not noninteractive },
     performance = {
@@ -144,3 +120,4 @@ require("config.audit").setup()
 require("config.help").setup()
 require("config.validation").setup()
 require("config.commands").setup()
+require("config.health").setup()

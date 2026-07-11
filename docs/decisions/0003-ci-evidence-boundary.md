@@ -14,7 +14,7 @@ paths rather than a clean candidate.
 Required runtime CI uses:
 
 - official Neovim `v0.12.4` assets with recorded SHA-256 digests;
-- pinned Python 3.12, Node 22, provider packages, and immutable action SHAs;
+- pinned Python 3.12, Python provider packages, and immutable action SHAs;
 - Ubuntu 24.04, Windows 2022, and macOS 14;
 - isolated config/data/state/cache roots;
 - a copied candidate repository for first boot and restart;

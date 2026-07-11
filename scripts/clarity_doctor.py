@@ -110,48 +110,36 @@ def install_hint(tool_id: str, kind: str) -> str:
             "compiler": "Install Xcode Command Line Tools: xcode-select --install",
             "ripgrep": "brew install ripgrep",
             "fd": "brew install fd",
-            "node": "Install Node 22+ with fnm, nvm, volta, or Homebrew.",
-            "npm": "Install Node.js 22+; npm ships with most Node distributions.",
             "python": "brew install python",
             "pip": "python3 -m ensurepip --upgrade",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "brew install htop or brew install btop",
         },
         "linux": {
             "git": "sudo apt-get install -y git",
             "compiler": "sudo apt-get install -y build-essential",
             "ripgrep": "sudo apt-get install -y ripgrep",
             "fd": "sudo apt-get install -y fd-find",
-            "node": "Install Node 22+ with fnm, nvm, volta, or your distro package manager.",
-            "npm": "Install Node.js 22+; npm ships with most Node distributions.",
             "python": "sudo apt-get install -y python3",
             "pip": "sudo apt-get install -y python3-pip",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "sudo apt-get install -y htop or sudo apt-get install -y btop",
         },
         "wsl": {
             "git": "sudo apt-get install -y git",
             "compiler": "sudo apt-get install -y build-essential",
             "ripgrep": "sudo apt-get install -y ripgrep",
             "fd": "sudo apt-get install -y fd-find",
-            "node": "Install Node 22+ inside WSL with fnm, nvm, volta, or apt-based setup.",
-            "npm": "Install Node.js 22+ inside WSL; npm ships with most Node distributions.",
             "python": "sudo apt-get install -y python3",
             "pip": "sudo apt-get install -y python3-pip",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "sudo apt-get install -y htop or sudo apt-get install -y btop",
         },
         "windows": {
             "git": "winget install --id Git.Git",
             "compiler": "choco install zig -y",
             "ripgrep": "winget install --id BurntSushi.ripgrep.MSVC",
             "fd": "winget install --id sharkdp.fd",
-            "node": "Install Node 22+ with fnm, nvm-windows, volta, or winget.",
-            "npm": "Install Node.js 22+; npm ships with the official distribution.",
             "python": "winget install --id Python.Python.3.12",
             "pip": "python -m ensurepip --upgrade",
             "tree_sitter_cli": "npm install -g tree-sitter-cli",
-            "system_monitor": "Install an optional Windows terminal monitor only when needed.",
         },
     }
 
@@ -255,14 +243,9 @@ def make_tool_checks(kind: str, env: dict[str, str]) -> list[Check]:
     tool_specs = [
         ("git", "Git", ["git"], True),
         ("ripgrep", "ripgrep for primary project text search", ["rg"], True),
-        ("compiler", "C compiler for the development profile", ["cl", "gcc", "clang", "cc", "zig"], False),
         ("fd", "fd for fast file search", ["fd", "fdfind"], False),
-        ("node", "Node.js runtime for Copilot/provider support", ["node"], False),
-        ("npm", "npm for provider package installs", ["npm"], False),
         ("python", "Python runtime for validation scripts", ["python3", "python"], False),
         ("pip", "pip for Python provider installs", ["pip3", "pip"], False),
-        ("tree_sitter_cli", "Tree-sitter CLI for parser diagnostics", ["tree-sitter"], False),
-        ("system_monitor", "htop or btop terminal monitor", ["htop", "btop"], False),
     ]
 
     checks: list[Check] = []
@@ -306,46 +289,6 @@ def provider_checks(env: dict[str, str]) -> list[Check]:
         )
     )
 
-    npm = shutil.which("npm")
-    if not npm:
-        checks.append(
-            Check(
-                "node_provider",
-                "Node provider package (npm -g neovim)",
-                "warn",
-                "npm executable not found",
-                "Install Node.js 22+ and then run: npm install -g neovim",
-            )
-        )
-        return checks
-
-    npm_check = run_command(
-        [npm, "list", "-g", "neovim", "--depth=0", "--json"],
-        cwd=Path.cwd(),
-        env=env,
-        timeout=30,
-    )
-    npm_ok = False
-    npm_details = npm_check.stderr.strip() or "not installed"
-    if npm_check.stdout:
-        try:
-            data = json.loads(npm_check.stdout)
-            dependency = data.get("dependencies", {}).get("neovim")
-            if dependency:
-                npm_ok = True
-                npm_details = "neovim@" + dependency.get("version", "installed")
-        except json.JSONDecodeError:
-            npm_details = npm_check.stdout.strip() or npm_details
-
-    checks.append(
-        Check(
-            "node_provider",
-            "Node provider package (npm -g neovim)",
-            "pass" if npm_ok else "warn",
-            npm_details,
-            "npm install -g neovim",
-        )
-    )
     return checks
 
 

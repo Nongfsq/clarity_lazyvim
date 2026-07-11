@@ -3,14 +3,6 @@ local i18n = require("config.i18n")
 
 local M = {}
 
-local function repo_root()
-    if type(vim.g.clarity_repo_root) == "string" and vim.g.clarity_repo_root ~= "" then
-        return vim.g.clarity_repo_root
-    end
-
-    return vim.fn.getcwd()
-end
-
 local function add_result(results, group, id, ok, detail)
     table.insert(results, {
         group = group,
@@ -24,97 +16,8 @@ local function command_exists(name)
     return vim.fn.exists(":" .. name) == 2
 end
 
-local function has_map(lhs, mode)
-    local map = vim.fn.maparg(lhs, mode, false, true)
-    return type(map) == "table" and next(map) ~= nil
-end
-
-local function dashboard_number_check()
-    local current_buf = vim.api.nvim_get_current_buf()
-    local current_win = vim.api.nvim_get_current_win()
-    local scratch = vim.api.nvim_create_buf(false, true)
-
-    vim.api.nvim_win_set_buf(current_win, scratch)
-    vim.bo[scratch].buftype = ""
-    vim.bo[scratch].filetype = "snacks_dashboard"
-
-    vim.api.nvim_exec_autocmds("FileType", { buffer = scratch, modeline = false })
-    vim.api.nvim_exec_autocmds("BufEnter", { buffer = scratch, modeline = false })
-
-    local ok = not vim.wo[current_win].number and not vim.wo[current_win].relativenumber
-    local detail = string.format(
-        "snacks_dashboard number=%s relativenumber=%s",
-        tostring(vim.wo[current_win].number),
-        tostring(vim.wo[current_win].relativenumber)
-    )
-
-    if vim.api.nvim_buf_is_valid(current_buf) then
-        vim.api.nvim_win_set_buf(current_win, current_buf)
-    end
-    if vim.api.nvim_buf_is_valid(scratch) then
-        vim.api.nvim_buf_delete(scratch, { force = true })
-    end
-
-    return ok, detail
-end
-
-local function neotree_number_check()
-    local ok, err = pcall(vim.cmd, "Neotree show")
-    if not ok then
-        return false, "Neotree show failed: " .. tostring(err)
-    end
-
-    vim.wait(250, function()
-        for _, win in ipairs(vim.api.nvim_list_wins()) do
-            local buf = vim.api.nvim_win_get_buf(win)
-            if vim.bo[buf].filetype == "neo-tree" then
-                return true
-            end
-        end
-        return false
-    end)
-
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
-        local buf = vim.api.nvim_win_get_buf(win)
-        if vim.bo[buf].filetype == "neo-tree" then
-            local valid = not vim.wo[win].number and not vim.wo[win].relativenumber
-            local detail = string.format(
-                "neo-tree number=%s relativenumber=%s",
-                tostring(vim.wo[win].number),
-                tostring(vim.wo[win].relativenumber)
-            )
-            pcall(vim.cmd, "Neotree close")
-            return valid, detail
-        end
-    end
-
-    return false, "neo-tree window was not created"
-end
-
-local function toggleterm_check()
-    local ok, config = pcall(require, "toggleterm.config")
-    if not ok then
-        return false, "toggleterm.config unavailable"
-    end
-
-    local settings = config.get()
-    local valid = settings.hide_numbers and settings.start_in_insert and settings.direction == "float"
-    local detail = string.format(
-        "hide_numbers=%s start_in_insert=%s direction=%s",
-        tostring(settings.hide_numbers),
-        tostring(settings.start_in_insert),
-        tostring(settings.direction)
-    )
-
-    return valid, detail
-end
-
 function M.get_report()
     local results = {}
-    local root = repo_root()
-
-    vim.cmd("doautocmd User VeryLazy")
-    vim.wait(150)
 
     add_result(results, "commands", "clarity_audit_command", command_exists("ClarityAudit"), ":ClarityAudit")
     add_result(results, "commands", "clarity_start_command", command_exists("ClarityStart"), ":ClarityStart")
@@ -129,38 +32,10 @@ function M.get_report()
     add_result(results, "commands", "clarity_validate_command", command_exists("ClarityValidate"), ":ClarityValidate")
     add_result(results, "commands", "clarity_language_command", command_exists("ClarityLanguage"), ":ClarityLanguage")
 
-    add_result(results, "keymaps", "leader_ff", has_map("<leader>ff", "n"), "<leader>ff")
-    add_result(results, "keymaps", "leader_fw", has_map("<leader>fw", "n"), "<leader>fw")
-    add_result(results, "keymaps", "leader_gd", has_map("<leader>gd", "n"), "<leader>gd")
-    add_result(results, "keymaps", "leader_cz", has_map("<leader>cz", "n"), "<leader>cz")
-    add_result(results, "keymaps", "leader_uw", has_map("<leader>uw", "n"), "<leader>uw")
-    add_result(results, "keymaps", "leader_tf", has_map("<leader>tf", "n"), "<leader>tf")
-    add_result(results, "keymaps", "leader_hh", has_map("<leader>hh", "n"), "<leader>hh")
-
-    local readme = root .. "/README.md"
-    if vim.fn.filereadable(readme) == 1 then
-        vim.cmd("silent edit " .. vim.fn.fnameescape(readme))
-        vim.wait(1200, function()
-            return vim.b.gitsigns_head ~= nil and vim.b.clarity_gitsigns_keymaps == true
-        end)
-    end
-
-    add_result(results, "keymaps", "leader_hs", has_map("<leader>hs", "n"), "<leader>hs in a tracked buffer")
-
-    local dashboard_ok, dashboard_detail = dashboard_number_check()
-    add_result(results, "ui", "dashboard_numbers_hidden", dashboard_ok, dashboard_detail)
-
-    local neotree_ok, neotree_detail = neotree_number_check()
-    add_result(results, "ui", "neo_tree_numbers_hidden", neotree_ok, neotree_detail)
-
-    local toggleterm_ok, toggleterm_detail = toggleterm_check()
-    add_result(results, "ui", "toggleterm_defaults", toggleterm_ok, toggleterm_detail)
-
     local audit_report = audit.get_report()
     local integrations = audit_report.integrations or {}
     local clipboard_ready = integrations.clipboard and integrations.clipboard.present or false
     local picker_ready = integrations.picker and integrations.picker.backend == "snacks"
-    local copilot_ready = integrations.copilot and integrations.copilot.satisfied or false
 
     add_result(results, "integrations", "clipboard_provider_ready", clipboard_ready, "clipboard provider available")
     add_result(
@@ -170,8 +45,6 @@ function M.get_report()
         picker_ready,
         "search backend should resolve to Snacks"
     )
-    add_result(results, "integrations", "copilot_node_ready", copilot_ready, "Copilot node runtime must satisfy >=22")
-
     local i18n_report = i18n.get_validation_report()
     add_result(
         results,
@@ -201,6 +74,20 @@ function M.get_report()
             total = total,
         },
         checks = results,
+        delegated_checks = {
+            leader_ff = "CLARITY_RUNTIME_PICKER_CONTRACT",
+            leader_fw = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+            leader_cz = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+            leader_uw = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+            leader_tf = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
+            leader_hh = "CLARITY_RUNTIME_HELP_CONTRACT",
+            lsp_gd = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+            leader_hs = "CLARITY_RUNTIME_GITSIGNS_CONTRACT",
+            leader_ghs = "CLARITY_RUNTIME_GITSIGNS_CONTRACT",
+            dashboard_numbers_hidden = "CLARITY_RUNTIME_UI_CONTRACT",
+            neo_tree_numbers_hidden = "CLARITY_RUNTIME_EXPLORER_CONTRACT",
+            snacks_terminal = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
+        },
         audit = {
             core_status = audit_report.summary and audit_report.summary.core and audit_report.summary.core.status
                 or nil,

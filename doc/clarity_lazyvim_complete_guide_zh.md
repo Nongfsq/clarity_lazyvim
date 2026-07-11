@@ -1051,17 +1051,17 @@ python scripts/run_clarity_audit.py
 
 ### 17.4 什么时候先跑审计
 
-出现以下情况时，先跑 `:ClarityAudit`：
+出现以下情况时，先跑 `:ClarityHealth audit`：
 
 - 搜索突然不可用
-- Copilot 启动失败
 - 格式化失败
 - 新机器刚配置完
 - WSL / Windows 切换之后感觉环境不对
 
 ### 17.5 进阶验证（T-011 方向）
 
-除 `:ClarityAudit` 之外，当前还可以直接运行：
+统一入口是 `:ClarityHealth`。旧的 `:ClarityAudit` 和
+`:ClarityValidate` 在一个兼容版本内仍可直接运行：
 
 ```vim
 :ClarityValidate
@@ -1103,8 +1103,6 @@ python3 scripts/run_clarity_tests.py faults --feature fold
 - provider 就绪度检查：
   - clipboard
   - `pynvim`
-  - `npm neovim`
-  - Copilot Node 版本
 - 本地化检查：
   - `en` / `zh` 键位说明是否正确
   - `:ClarityLanguage` 命令是否存在
@@ -1122,11 +1120,11 @@ python3 scripts/run_clarity_tests.py faults --feature fold
 现在不再使用一个加权总分表示所有质量。你会看到三类结果：
 
 - `Core readiness`：文件/文本搜索、插件锁、基础解析等核心能力是否可用
-- `Profile ...`：开发工具、Copilot、provider、剪贴板和实用工具是否可用
+- `Profile ...`：可选 provider、工具和剪贴板是否可用
 - `Release quality`：必须由绑定具体提交的跨平台 CI 证明，本地始终显示
   `unverified`
 
-缺少 `fd`、`pynvim`、Copilot 或系统监控工具不会伪装成核心故障；缺少
+缺少 `fd` 或 `pynvim` 不会伪装成核心故障；缺少
 Neovim 0.12、Git 或 `ripgrep` 等核心条件则会明确阻断，并给出修复和复查路径。
 
 ---
@@ -1232,10 +1230,8 @@ Esc
 
 因为有些能力依赖外部工具：
 
-- Copilot 依赖 Node.js `22+`
 - 全局搜索依赖 `rg`
 - 文件搜索更推荐 `fd`
-- 系统监视终端依赖 `htop` / `btop`
 
 ### 20.5 为什么我“已经改了”，WSL 里还是旧行为
 

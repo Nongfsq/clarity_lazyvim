@@ -14,8 +14,7 @@ behavior or CI was broken.
 Clarity reports three independent concepts:
 
 - core/host readiness: whether the promoted local core can run;
-- optional profile readiness: development, Copilot, provider, clipboard, and
-  utility availability;
+- optional profile readiness: provider, clipboard, and utility availability;
 - release quality: commit-bound CI/release evidence, always `unverified` in a
   local audit.
 

@@ -8,6 +8,7 @@ return {
     { "kdheepak/lazygit.nvim", enabled = false },
     { "nvim-mini/mini.ai", enabled = false },
     { "mfussenegger/nvim-lint", enabled = false },
+    { "windwp/nvim-ts-autotag", enabled = false },
     { "folke/persistence.nvim", enabled = false },
     { "folke/todo-comments.nvim", enabled = false },
     { "folke/tokyonight.nvim", enabled = false },

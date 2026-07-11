@@ -7,6 +7,10 @@ local function zh(text)
 end
 
 local desc_translations = {
+    ["Noice All"] = zh("Noice 全部消息"),
+    ["Noice History"] = zh("Noice 历史消息"),
+    ["Noice Last Message"] = zh("Noice 最后一条消息"),
+    ["Noice Picker (Telescope/FzfLua)"] = zh("Noice 选择器（Telescope/FzfLua）"),
     ["Buffers"] = zh("缓冲区"),
     ["Buffers (all)"] = zh("缓冲区（全部）"),
     ["Buffer Keymaps (which-key)"] = zh("当前缓冲区键位"),
@@ -43,11 +47,7 @@ local desc_translations = {
     ["Search for Plugin Spec"] = zh("搜索插件定义"),
     ["Notification History"] = zh("通知历史"),
     ["Dismiss All Notifications"] = zh("清空全部通知"),
-    ["Noice All"] = zh("Noice 全部消息"),
     ["Dismiss All"] = zh("清空全部消息"),
-    ["Noice History"] = zh("Noice 历史消息"),
-    ["Noice Last Message"] = zh("Noice 最后一条消息"),
-    ["Noice Picker (Telescope/FzfLua)"] = zh("Noice 选择器（Telescope/FzfLua）"),
     ["Toggle Scratch Buffer"] = zh("切换临时缓冲区"),
     ["Select Scratch Buffer"] = zh("选择临时缓冲区"),
     ["Switch to Other Buffer"] = zh("切换到另一个缓冲区"),
@@ -128,6 +128,7 @@ local group_translations = {
     insight = { en = "Inspect", zh = "分析" },
     find = { en = "Find", zh = "查找" },
     git = { en = "Git", zh = "Git" },
+    git_hunks = { en = "Git Hunks", zh = "Git 改动块" },
     clarity = { en = "Clarity", zh = "Clarity" },
     search = { en = "Search", zh = "搜索" },
     messages = { en = "Messages", zh = "消息" },
@@ -144,6 +145,7 @@ local group_specs = {
     { "<leader>d", "insight" },
     { "<leader>f", "find" },
     { "<leader>g", "git" },
+    { "<leader>gh", "git_hunks" },
     { "<leader>h", "clarity" },
     { "<leader>s", "search" },
     { "<leader>sn", "messages" },
@@ -171,42 +173,9 @@ local function translate_group(group_id)
     return entry[i18n.get_locale()] or entry.en or group_id
 end
 
-local function is_leader_map(lhs)
-    if type(lhs) ~= "string" or lhs == "" then
-        return false
-    end
+function M.register_keymap_labels(which_key)
+    local spec = {}
 
-    return lhs:find("^<leader>") ~= nil
-        or lhs:find("^<Leader>") ~= nil
-        or lhs:find("^<Space>") ~= nil
-        or lhs:sub(1, 1) == " "
-end
-
-local function remap_with_desc(mode, lhs, translated_desc)
-    local map = vim.fn.maparg(lhs, mode, false, true)
-    if type(map) ~= "table" or vim.tbl_isempty(map) then
-        return false
-    end
-
-    local rhs = map.callback or map.rhs
-    if rhs == nil or rhs == "" then
-        return false
-    end
-
-    local opts = {
-        desc = translated_desc,
-        expr = map.expr == 1,
-        nowait = map.nowait == 1,
-        replace_keycodes = map.replace_keycodes == 1,
-        remap = map.noremap == 0,
-        silent = map.silent == 1,
-    }
-
-    vim.keymap.set(mode, lhs, rhs, opts)
-    return true
-end
-
-function M.apply_keymap_desc_overrides()
     for _, mode in ipairs({ "n", "x", "v" }) do
         local seen = {}
 
@@ -215,20 +184,19 @@ function M.apply_keymap_desc_overrides()
             local translated = translate_desc(desc)
             local id = mode .. "\0" .. map.lhs
 
-            if desc ~= "" and translated ~= desc and is_leader_map(map.lhs) and not seen[id] then
+            if desc ~= "" and translated ~= desc and not seen[id] then
                 seen[id] = true
-                remap_with_desc(mode, map.lhs, translated)
+                table.insert(spec, { map.lhs, desc = translated, mode = mode })
             end
         end
     end
+
+    if #spec > 0 then
+        which_key.add(spec)
+    end
 end
 
-function M.register_group_labels()
-    local ok, which_key = pcall(require, "which-key")
-    if not ok then
-        return
-    end
-
+function M.register_group_labels(which_key)
     local spec = {}
 
     for _, item in ipairs(group_specs) do
@@ -239,8 +207,15 @@ function M.register_group_labels()
 end
 
 function M.apply()
-    M.apply_keymap_desc_overrides()
-    M.register_group_labels()
+    local ok, which_key = pcall(require, "which-key")
+    if not ok then
+        return
+    end
+
+    -- which-key metadata changes presentation without recreating mappings or
+    -- altering their callbacks, rhs values, scope, or execution options.
+    M.register_keymap_labels(which_key)
+    M.register_group_labels(which_key)
 end
 
 function M.setup()

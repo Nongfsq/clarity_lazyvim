@@ -2,6 +2,27 @@
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
 
+local M = {}
+
+function M.configure_clipboard(session)
+    session = session
+        or {
+            ssh = (vim.env.SSH_CONNECTION or "") ~= "" or (vim.env.SSH_TTY or "") ~= "",
+            display = (vim.env.DISPLAY or "") ~= "" or (vim.env.WAYLAND_DISPLAY or "") ~= "",
+        }
+
+    if session.ssh and not session.display and vim.g.clipboard == nil then
+        -- Set this before provider detection. OSC52 reliably supports remote
+        -- copy; terminal paste remains the supported inbound path.
+        vim.g.clipboard = "osc52"
+    end
+
+    vim.opt.clipboard:append("unnamedplus")
+    return vim.g.clipboard
+end
+
+M.configure_clipboard()
+
 vim.opt.number = true -- Always show absolute line numbers in normal editing windows.
 vim.opt.relativenumber = false -- Disable relative line numbers for beginner-friendly navigation.
 
@@ -31,3 +52,5 @@ opt.shiftwidth = 4 -- Number of spaces to use for each step of (auto)indent.
 opt.expandtab = true -- Use spaces instead of tabs.
 opt.smartindent = true -- Makes indenting smart.
 opt.autoindent = true -- Copy indent from current line when starting a new line.
+
+return M
