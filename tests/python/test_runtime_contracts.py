@@ -26,6 +26,9 @@ class RuntimeContractTests(unittest.TestCase):
         )
         self.assertEqual(issues, [])
 
+    def test_authority_files_include_root_bootstrap(self) -> None:
+        self.assertEqual(contracts.AUTHORITY_FILES, ("init.lua", "lazy-lock.json", "lazyvim.json"))
+
     def test_orphan_module_fails_catalog_drift(self) -> None:
         modules = contracts.discover_config_modules(REPO_ROOT) | {"config.orphan"}
         issues = contracts.catalog_issues(self.catalog, modules, contracts.discover_task_ids(REPO_ROOT))
@@ -40,6 +43,27 @@ class RuntimeContractTests(unittest.TestCase):
         command = contracts.build_headless_command(REPO_ROOT, "nvim", "file_headless", 1000)
         self.assertLess(command.index("--cmd"), command.index("-u"))
         self.assertIn("runtime_probe.lua", command[command.index("--cmd") + 1])
+        self.assertIn("io.stdout:write", command[-2])
+
+    def test_windows_fixture_wrapper_quotes_python_and_target_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "fixture path" / "fake_server.py"
+            target.parent.mkdir()
+            target.write_text("print('fixture')\n", encoding="utf-8")
+
+            wrapper = contracts.write_python_test_wrapper(
+                root,
+                "lua-language-server",
+                target,
+                windows=True,
+            )
+
+            self.assertEqual(wrapper.name, "lua-language-server.cmd")
+            source = wrapper.read_text(encoding="utf-8")
+            self.assertIn("@echo off", source)
+            self.assertIn(f'"{target}"', source)
+            self.assertIn("%*", source)
 
     def test_fault_transform_only_changes_candidate_runtime_visibility(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

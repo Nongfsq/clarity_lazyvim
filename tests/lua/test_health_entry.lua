@@ -135,6 +135,15 @@ for _, route in ipairs(health.route_order) do
     assert(buffer_text(buffer):find(expected_headings[route], 1, true), "Health route did not render: " .. route)
 end
 
+health.open("clipboard")
+local english_clipboard = buffer_text(buffer)
+assert(english_clipboard:find("Provider: test-provider", 1, true), "Health clipboard provider status missing")
+assert(english_clipboard:find("OSC52 is a copy-only path", 1, true), "Health clipboard copy-only boundary missing")
+assert(
+    english_clipboard:find("Health never reads or records clipboard contents", 1, true),
+    "Health clipboard privacy boundary missing"
+)
+
 health.open("environment")
 local environment = buffer_text(buffer)
 assert(environment:find("Enabled LSP readiness", 1, true), "LSP readiness section missing")
@@ -246,6 +255,15 @@ for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(buffer, "n")) do
     end
 end
 assert(one_desc and one_desc:find("概览", 1, true), "Health route map description did not refresh")
+
+health.open("clipboard")
+local chinese_clipboard = buffer_text(buffer)
+assert(chinese_clipboard:find("## 剪贴板能力", 1, true), "Chinese Health clipboard heading missing")
+assert(chinese_clipboard:find("OSC52 只负责复制", 1, true), "Chinese clipboard copy-only boundary missing")
+assert(
+    chinese_clipboard:find("Health 永远不会读取或记录剪贴板内容", 1, true),
+    "Chinese clipboard privacy boundary missing"
+)
 
 health.open("environment")
 local chinese_environment = buffer_text(buffer)

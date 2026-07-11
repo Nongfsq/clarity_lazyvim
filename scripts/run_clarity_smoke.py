@@ -4,10 +4,12 @@ import argparse
 import json
 import os
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 
 from clarity_runtime import (
+    AUTHORITY_FILES,
     build_env,
     combined_output,
     configure_isolated_runtime,
@@ -26,9 +28,38 @@ def copy_plugin_cache(source: Path, runtime_root: Path) -> None:
     shutil.copytree(source, destination, symlinks=True)
 
 
+def _git_candidate_paths(source: Path) -> list[Path] | None:
+    result = subprocess.run(
+        ["git", "-C", str(source), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        return None
+    return [Path(os.fsdecode(item)) for item in result.stdout.split(b"\0") if item]
+
+
 def copy_candidate(source: Path, destination: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
+
+    paths = _git_candidate_paths(source)
+    if paths is not None:
+        source = source.resolve()
+        destination.mkdir(parents=True)
+        for relative in paths:
+            if relative.is_absolute() or ".." in relative.parts:
+                raise RuntimeError(f"Unsafe candidate path returned by Git: {relative}")
+            source_path = source / relative
+            destination_path = destination / relative
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            if source_path.is_symlink():
+                destination_path.symlink_to(os.readlink(source_path))
+            elif source_path.is_file():
+                shutil.copy2(source_path, destination_path)
+            else:
+                raise RuntimeError(f"Unsupported candidate entry returned by Git: {relative}")
+        return
 
     ignored = shutil.ignore_patterns(
         ".git",
@@ -46,14 +77,14 @@ def probe_command() -> str:
         "+lua local cfg=require('lazy.core.config'); local names={}; "
         "for name,plugin in pairs(cfg.plugins or {}) do "
         "if plugin.enabled ~= false then table.insert(names,name) end end; table.sort(names); "
-        "print(vim.json.encode({"
+        "local report={"
         "repo=vim.g.clarity_repo_root,"
         "lock=cfg.options.lockfile,"
         "json=LazyVim.config.json.path,"
         "nvim=vim.version(),"
         "plugin_count=#names,"
         "plugin_names=names"
-        "}))"
+        "}; io.stdout:write('\\n' .. vim.json.encode(report) .. '\\n'); io.stdout:flush()"
     )
 
 
@@ -66,10 +97,7 @@ def run() -> int:
     args = parser.parse_args()
 
     source_root = Path(__file__).resolve().parent.parent
-    source_files = {
-        "lock": source_root / "lazy-lock.json",
-        "json": source_root / "lazyvim.json",
-    }
+    source_files = {name: source_root / name for name in AUTHORITY_FILES}
     source_before = {name: sha256_file(path) for name, path in source_files.items()}
     nvim = resolve_nvim_binary(args.nvim_bin)
 
@@ -86,9 +114,15 @@ def run() -> int:
         env = configure_isolated_runtime(build_env(), runtime_root)
         repo_root = runtime_root / "candidate"
         copy_candidate(source_root, repo_root)
+        init_file = repo_root / "init.lua"
         lockfile = repo_root / "lazy-lock.json"
         lazyvim_json = repo_root / "lazyvim.json"
-        before = {"lock": sha256_file(lockfile), "json": sha256_file(lazyvim_json)}
+        candidate_files = {
+            "init.lua": init_file,
+            "lazy-lock.json": lockfile,
+            "lazyvim.json": lazyvim_json,
+        }
+        before = {name: sha256_file(path) for name, path in candidate_files.items()}
         if args.reuse_plugin_cache:
             copy_plugin_cache(args.reuse_plugin_cache.resolve(), runtime_root)
 
@@ -133,7 +167,7 @@ def run() -> int:
                     f"expected={expected_plugins} actual={report.get('plugin_names')}"
                 )
 
-        after = {"lock": sha256_file(lockfile), "json": sha256_file(lazyvim_json)}
+        after = {name: sha256_file(path) for name, path in candidate_files.items()}
         if before != after:
             raise RuntimeError(f"Runtime mutated candidate authority files: before={before} after={after}")
 

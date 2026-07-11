@@ -14,6 +14,8 @@ from typing import Any
 from xml.sax.saxutils import escape
 
 from clarity_runtime import (
+    AUTHORITY_FILES,
+    REQUIRED_PYNVIM_VERSION,
     build_env,
     combined_output,
     configure_isolated_runtime,
@@ -27,11 +29,19 @@ from run_clarity_smoke import copy_plugin_cache
 SCHEMA_VERSION = 1
 RAW_LIMIT = 1024 * 1024
 STRUCTURED_LIMIT = 256 * 1024
-AUTHORITY_FILES = ("lazy-lock.json", "lazyvim.json")
-
-
 def authority_hashes(repo_root: Path) -> dict[str, str]:
     return {name: sha256_file(repo_root / name) for name in AUTHORITY_FILES}
+
+
+def default_plugin_cache(
+    env: dict[str, str] | None = None,
+    *,
+    home: Path | None = None,
+) -> Path | None:
+    source = os.environ if env is None else env
+    data_home = Path(source["XDG_DATA_HOME"]) if source.get("XDG_DATA_HOME") else (home or Path.home()) / ".local" / "share"
+    candidate = data_home / "nvim" / "lazy"
+    return candidate if candidate.is_dir() else None
 
 
 def truncate_output(value: str, limit: int = RAW_LIMIT) -> tuple[str, bool]:
@@ -67,14 +77,23 @@ def nvim_version(nvim: str) -> str:
 
 def contract_python_command(python: str) -> list[str]:
     try:
-        probe = subprocess.run([python, "-c", "import pynvim"], capture_output=True, text=True)
+        probe = subprocess.run(
+            [
+                python,
+                "-c",
+                "import pynvim,sys; "
+                f"sys.exit(0 if pynvim.__version__ == '{REQUIRED_PYNVIM_VERSION}' else 1)",
+            ],
+            capture_output=True,
+            text=True,
+        )
         if probe.returncode == 0:
             return [python]
     except OSError:
         pass
     uv = shutil.which("uv")
     if uv:
-        return [uv, "run", "--with", "pynvim", "python"]
+        return [uv, "run", "--with", f"pynvim=={REQUIRED_PYNVIM_VERSION}", "python"]
     return [python]
 
 
@@ -93,6 +112,14 @@ def build_commands(
     contracts = [
         *contract_python_command(python),
         "scripts/run_clarity_contracts.py",
+        "--nvim-bin",
+        nvim,
+        "--json",
+        *cache_args,
+    ]
+    action_matrix = [
+        *contract_python_command(python),
+        "scripts/run_clarity_action_matrix.py",
         "--nvim-bin",
         nvim,
         "--json",
@@ -119,7 +146,8 @@ def build_commands(
             {
                 "id": "CLARITY_TESTS_BEHAVIOR_FOLD",
                 "command": [*contracts, "--scenario", "file_ui"],
-            }
+            },
+            {"id": "CLARITY_TESTS_ACTION_MATRIX", "command": action_matrix},
         ]
     if suite == "faults":
         if feature != "fold":
@@ -154,6 +182,7 @@ def build_commands(
                     "file_ui",
                 ],
             },
+            {"id": "CLARITY_TESTS_ACTION_MATRIX", "command": action_matrix},
             {
                 "id": "CLARITY_TESTS_FAULT_RAW_FOLD",
                 "command": [
@@ -311,10 +340,8 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
     nvim = resolve_nvim_binary(args.nvim_bin)
     plugin_cache = args.reuse_plugin_cache
-    if plugin_cache is None and os.environ.get("XDG_DATA_HOME"):
-        candidate_cache = Path(os.environ["XDG_DATA_HOME"]) / "nvim" / "lazy"
-        if candidate_cache.is_dir():
-            plugin_cache = candidate_cache
+    if plugin_cache is None and args.suite != "fast":
+        plugin_cache = default_plugin_cache()
     before = authority_hashes(repo_root)
     try:
         commands = build_commands(
@@ -332,7 +359,7 @@ def main() -> int:
     runtime_context = tempfile.TemporaryDirectory(prefix="clarity-release-runtime-")
     runtime_root = Path(runtime_context.name)
     runtime_env = configure_isolated_runtime(build_env(), runtime_root)
-    if plugin_cache:
+    if plugin_cache and args.suite != "fast":
         copy_plugin_cache(plugin_cache.resolve(), runtime_root)
     if args.suite == "release" and dirty_before:
         checks = [
@@ -360,6 +387,7 @@ def main() -> int:
         "git_dirty": dirty_before,
         "platform": platform.platform(),
         "python": platform.python_version(),
+        "pynvim": REQUIRED_PYNVIM_VERSION,
         "nvim": nvim,
         "nvim_version": nvim_version(nvim),
         "authority_hashes": after,

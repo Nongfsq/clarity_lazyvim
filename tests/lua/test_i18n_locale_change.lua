@@ -33,7 +33,7 @@ vim.api.nvim_create_autocmd("User", {
         table.insert(events, {
             data = vim.deepcopy(args.data),
             effective = i18n.get_locale(),
-            translated = i18n.t("keymaps.toggle_fold"),
+            translated = i18n.t("commands.health"),
         })
     end,
 })
@@ -45,7 +45,7 @@ assert(#events == 1, "effective locale change must emit exactly one event")
 assert(events[1].data.previous == "en" and events[1].data.current == "zh", "event transition is wrong")
 assert(events[1].data.choice == "zh" and events[1].data.source == "runtime", "event state is incomplete")
 assert(events[1].effective == "zh", "new locale must be visible inside the event callback")
-assert(events[1].translated == "切换当前代码折叠", "event callback saw stale translations")
+assert(events[1].translated == "打开统一的 Clarity 帮助与健康入口", "event callback saw stale translations")
 
 ok = i18n.set_choice("zh", { persist = false, silent = true })
 assert(ok and #events == 1, "same effective locale must not emit another event")
@@ -81,8 +81,36 @@ assert(message:find("injected persistence failure", 1, true), "persistence failu
 assert(i18n.get_locale() == "zh", "failed persistence changed live state")
 assert(#events == 3, "failed persistence must not emit a locale event")
 
-local source = table.concat(vim.fn.readfile(repo_root .. "/nvim/lua/config/i18n.lua"), "\n")
-assert(not source:find('t("locale.restart")', 1, true), "restart-only locale guidance remains")
+local report = i18n.get_validation_report()
+assert(report.ok, "English and Chinese i18n catalogs must have exact runtime parity")
+
+for _, key in ipairs({
+    "locale.current",
+    "commands.start",
+    "commands.clipboard",
+    "commands.sync",
+    "help.open_failed",
+    "keymaps.preview_hunk",
+    "notifications.fold_toggled",
+}) do
+    assert(i18n.t(key, nil, "en") ~= key, "retained English translation is missing: " .. key)
+    assert(i18n.t(key, nil, "zh") ~= key, "retained Chinese translation is missing: " .. key)
+end
+
+for _, key in ipairs({
+    "locale.restart",
+    "help.start_header",
+    "help.clipboard_header",
+    "help.sync_header",
+    "keymaps.stage_hunk",
+    "keymaps.reset_hunk",
+    "keymaps.stage_buffer",
+    "keymaps.reset_buffer",
+    "keymaps.undo_stage_hunk",
+}) do
+    assert(i18n.t(key, nil, "en") == key, "retired English translation returned: " .. key)
+    assert(i18n.t(key, nil, "zh") == key, "retired Chinese translation returned: " .. key)
+end
 
 vim.api.nvim_del_augroup_by_id(group)
 vim.fn.writefile = original_writefile

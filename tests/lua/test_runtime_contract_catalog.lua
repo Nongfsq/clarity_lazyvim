@@ -38,6 +38,23 @@ for id, capability in pairs(catalog.capabilities) do
     end
 end
 
+assert_true(
+    catalog.capabilities.lsp_navigation.surface == "gd|gr|K",
+    "LSP capability catalog advertises a nonexistent navigation key"
+)
+assert_true(
+    catalog.capabilities.recovery.surface == ":ClarityHealth|<leader>hh",
+    "recovery capability must promote Health rather than a legacy command"
+)
+assert_true(
+    catalog.capabilities.audit.surface == ":ClarityHealth environment|:ClarityAudit!",
+    "audit capability must separate the human Health route from machine JSON"
+)
+assert_true(
+    catalog.capabilities.validation.surface == ":ClarityHealth recovery|:ClarityValidate!",
+    "validation capability must separate the human Health route from machine JSON"
+)
+
 local check_ids = {}
 for _, check in ipairs(catalog.checks) do
     assert_true(not check_ids[check.id], "duplicate check id: " .. check.id)

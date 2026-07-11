@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from clarity_runtime import (
+    AUTHORITY_FILES,
     build_env,
     combined_output,
     configure_isolated_runtime,
     extract_last_json_object,
+    require_pynvim,
     resolve_nvim_binary,
     run_command,
     sha256_file,
@@ -24,7 +26,6 @@ from clarity_runtime import (
 from run_clarity_smoke import copy_candidate, copy_plugin_cache
 
 
-AUTHORITY_FILES = ("lazy-lock.json", "lazyvim.json")
 FAULT_MISSING_NESTED_RUNTIME = "missing_nested_runtime"
 FAULT_RAW_FOLD_ACTION = "raw_fold_action"
 
@@ -198,7 +199,7 @@ def build_headless_command(
         + lua_string(scenario)
         + ") end, 20); local report=p.snapshot("
         + lua_string(scenario)
-        + "); report.ready=ready; print(vim.json.encode(report))"
+        + "); report.ready=ready; io.stdout:write('\\n' .. vim.json.encode(report) .. '\\n'); io.stdout:flush()"
     )
     args = [str(candidate_root / "tests" / "fixtures" / "runtime" / "sample.lua")] if scenario == "file_headless" else []
     return [
@@ -227,6 +228,30 @@ def process_context(cwd: Path, env: dict[str, str]) -> Iterator[None]:
         os.environ.clear()
         os.environ.update(original_env)
         os.chdir(original_cwd)
+
+
+def write_python_test_wrapper(
+    bin_dir: Path,
+    name: str,
+    target: Path,
+    *,
+    windows: bool,
+) -> Path:
+    executable = bin_dir / (name + ".cmd" if windows else name)
+    if windows:
+        executable.write_text(
+            f'@echo off\r\n"{sys.executable}" "{target}" %*\r\n',
+            encoding="utf-8",
+        )
+    else:
+        executable.write_text(
+            f"#!{sys.executable}\n"
+            "import runpy\n"
+            f"runpy.run_path({str(target)!r}, run_name='__main__')\n",
+            encoding="utf-8",
+        )
+        executable.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+    return executable
 
 
 def prepare_attached_context_fixture(
@@ -260,45 +285,31 @@ def prepare_attached_context_fixture(
     with sample.open("a", encoding="utf-8") as handle:
         handle.write("\n-- tracked review change\n")
 
-    if os.name != "nt":
-        bin_dir = runtime_root / "system-bin"
-        bin_dir.mkdir(parents=True, exist_ok=True)
-        server = candidate_root / "tests" / "fixtures" / "lsp" / "fake_server.py"
-        executable = bin_dir / "lua-language-server"
-        executable.write_text(
-            f"#!{sys.executable}\n"
-            "import runpy\n"
-            f"runpy.run_path({str(server)!r}, run_name='__main__')\n",
-            encoding="utf-8",
-        )
-        executable.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-        formatter_log = runtime_root / "formatter-invocation.json"
-        formatter = bin_dir / "stylua"
-        formatter.write_text(
-            f"#!{sys.executable}\n"
-            "import json, os, pathlib, sys\n"
-            "args = sys.argv[1:]\n"
-            "pathlib.Path(os.environ['CLARITY_FAKE_FORMATTER_LOG']).write_text("
-            "json.dumps({'argv': args, 'cwd': os.getcwd()}), encoding='utf-8')\n"
-            "source = sys.stdin.read()\n"
-            "filename = args[args.index('--stdin-filepath') + 1] if '--stdin-filepath' in args else ''\n"
-            "cursor = pathlib.Path(filename).resolve().parent if filename else pathlib.Path.cwd()\n"
-            "configured = any((parent / 'stylua.toml').is_file() or (parent / '.stylua.toml').is_file() "
-            "for parent in (cursor, *cursor.parents))\n"
-            "if configured:\n"
-            "    source = '\\n'.join(('  ' + line[4:]) if line.startswith('    ') else line "
-            "for line in source.split('\\n'))\n"
-            "sys.stdout.write(source)\n",
-            encoding="utf-8",
-        )
-        formatter.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-        format_project = candidate_root / "tests" / "fixtures" / "runtime" / "format-project"
-        format_project.mkdir(parents=True, exist_ok=True)
-        (format_project / "stylua.toml").write_text("indent_width = 2\n", encoding="utf-8")
-        env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
-        env["CLARITY_FAKE_LSP_BIN"] = str(executable)
-        env["CLARITY_FAKE_FORMATTER_BIN"] = str(formatter)
-        env["CLARITY_FAKE_FORMATTER_LOG"] = str(formatter_log)
+    bin_dir = runtime_root / "system-bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    server = candidate_root / "tests" / "fixtures" / "lsp" / "fake_server.py"
+    formatter_fixture = candidate_root / "tests" / "fixtures" / "runtime" / "fake_formatter.py"
+    executable = write_python_test_wrapper(
+        bin_dir,
+        "lua-language-server",
+        server,
+        windows=os.name == "nt",
+    )
+    formatter = write_python_test_wrapper(
+        bin_dir,
+        "stylua",
+        formatter_fixture,
+        windows=os.name == "nt",
+    )
+    formatter_log = runtime_root / "formatter-invocation.json"
+    format_project = candidate_root / "tests" / "fixtures" / "runtime" / "format-project"
+    format_project.mkdir(parents=True, exist_ok=True)
+    (format_project / "stylua.toml").write_text("indent_width = 2\n", encoding="utf-8")
+    env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
+    env["CLARITY_FAKE_LSP_BIN"] = str(executable)
+    env["CLARITY_FAKE_LSP_LOG"] = str(runtime_root / "fake-lsp-requests.jsonl")
+    env["CLARITY_FAKE_FORMATTER_BIN"] = str(formatter)
+    env["CLARITY_FAKE_FORMATTER_LOG"] = str(formatter_log)
 
 
 def attached_ui_behavior_setup_lua() -> str:
@@ -1003,12 +1014,7 @@ def run_attached_ui(
     env: dict[str, str],
     wait_ms: int,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    try:
-        import pynvim
-    except ImportError as exc:
-        raise RuntimeError(
-            "file_ui requires pynvim. Run with: uv run --with pynvim python scripts/run_clarity_contracts.py ..."
-        ) from exc
+    pynvim = require_pynvim()
 
     probe = candidate_root / "tests" / "lua" / "runtime_probe.lua"
     observe = "lua dofile(" + lua_string(probe) + ").observe()"

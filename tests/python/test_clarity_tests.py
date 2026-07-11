@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -14,6 +15,32 @@ import run_clarity_tests as runner  # noqa: E402
 
 
 class ClarityTestRouterTests(unittest.TestCase):
+    def test_authority_files_include_root_bootstrap(self) -> None:
+        self.assertEqual(runner.AUTHORITY_FILES, ("init.lua", "lazy-lock.json", "lazyvim.json"))
+
+    def test_default_plugin_cache_falls_back_to_standard_data_home(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            expected = home / ".local" / "share" / "nvim" / "lazy"
+            expected.mkdir(parents=True)
+
+            self.assertEqual(runner.default_plugin_cache({}, home=home), expected)
+
+    def test_attached_python_requires_exact_pynvim_version_or_pinned_uv(self) -> None:
+        available = mock.Mock(returncode=0)
+        with mock.patch.object(runner.subprocess, "run", return_value=available):
+            self.assertEqual(runner.contract_python_command("python"), ["python"])
+
+        missing = mock.Mock(returncode=1)
+        with (
+            mock.patch.object(runner.subprocess, "run", return_value=missing),
+            mock.patch.object(runner.shutil, "which", return_value="/usr/bin/uv"),
+        ):
+            self.assertEqual(
+                runner.contract_python_command("python"),
+                ["/usr/bin/uv", "run", "--with", "pynvim==0.6.0", "python"],
+            )
+
     def test_output_truncation_is_bounded_and_marked(self) -> None:
         value, truncated = runner.truncate_output("a" * 100, 40)
         self.assertTrue(truncated)
@@ -27,6 +54,14 @@ class ClarityTestRouterTests(unittest.TestCase):
     def test_behavior_requires_the_fold_feature(self) -> None:
         with self.assertRaisesRegex(ValueError, "--feature fold"):
             runner.build_commands(REPO_ROOT, "behavior", "python", "nvim", None, [], None)
+
+    def test_behavior_routes_the_real_input_action_matrix(self) -> None:
+        commands = runner.build_commands(REPO_ROOT, "behavior", "python", "nvim", "fold", [], None)
+        self.assertEqual(
+            [command["id"] for command in commands],
+            ["CLARITY_TESTS_BEHAVIOR_FOLD", "CLARITY_TESTS_ACTION_MATRIX"],
+        )
+        self.assertIn("scripts/run_clarity_action_matrix.py", commands[1]["command"])
 
     def test_contract_scenarios_are_forwarded(self) -> None:
         commands = runner.build_commands(

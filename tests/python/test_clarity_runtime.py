@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -17,6 +19,7 @@ from clarity_runtime import (  # noqa: E402
     configure_isolated_runtime,
     extract_last_json_object,
     nvim_candidates,
+    process_group_popen_options,
     run_command,
     sha256_file,
 )
@@ -49,6 +52,10 @@ class ClarityRuntimeTests(unittest.TestCase):
         self.assertIn(r"D:\nvim\nvim.exe", candidates)
         self.assertIn(r"C:\tools\neovim\nvim-win64\bin\nvim.exe", candidates)
 
+    def test_process_group_options_cover_posix_and_windows(self) -> None:
+        self.assertEqual(process_group_popen_options(windows=False), {"start_new_session": True})
+        self.assertEqual(process_group_popen_options(windows=True), {"creationflags": 0x00000200})
+
     def test_timeout_is_bounded_and_actionable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(CommandTimeoutError) as caught:
@@ -60,6 +67,47 @@ class ClarityRuntimeTests(unittest.TestCase):
                 )
         self.assertIn("timed out", str(caught.exception))
         self.assertEqual(caught.exception.timeout, 0.05)
+
+    @unittest.skipIf(os.name == "nt", "POSIX process-group assertion")
+    def test_timeout_terminates_descendant_process_group(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pid_file = root / "child.pid"
+            child_source = (
+                "import signal, time; "
+                "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+                "time.sleep(30)"
+            )
+            source = (
+                "import pathlib, subprocess, sys, time; "
+                f"child=subprocess.Popen([sys.executable, '-c', {child_source!r}]); "
+                f"pathlib.Path({str(pid_file)!r}).write_text(str(child.pid)); "
+                "time.sleep(0.2); "
+                "time.sleep(30)"
+            )
+            with self.assertRaises(CommandTimeoutError):
+                run_command(
+                    [sys.executable, "-c", source],
+                    cwd=root,
+                    env=dict(os.environ),
+                    timeout=0.5,
+                )
+            child_pid = int(pid_file.read_text(encoding="utf-8"))
+            alive = True
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline:
+                try:
+                    os.kill(child_pid, 0)
+                except ProcessLookupError:
+                    alive = False
+                    break
+                time.sleep(0.05)
+            if alive:
+                try:
+                    os.kill(child_pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    alive = False
+            self.assertFalse(alive, f"descendant process {child_pid} survived timeout cleanup")
 
     def test_sha256_file_is_stable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

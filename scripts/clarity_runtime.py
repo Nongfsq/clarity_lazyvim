@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import signal
 import shutil
 import subprocess
 from pathlib import Path
@@ -10,6 +11,8 @@ from typing import Iterable, Sequence
 
 
 DEFAULT_TIMEOUT_SECONDS = 120
+REQUIRED_PYNVIM_VERSION = "0.6.0"
+AUTHORITY_FILES = ("init.lua", "lazy-lock.json", "lazyvim.json")
 
 
 class CommandTimeoutError(RuntimeError):
@@ -22,6 +25,24 @@ class CommandTimeoutError(RuntimeError):
         self.command = tuple(str(part) for part in command)
         self.timeout = timeout
         self.output = output
+
+
+def require_pynvim():
+    try:
+        import pynvim
+    except ImportError as exc:
+        raise RuntimeError(
+            "Attached-UI verification requires pynvim=="
+            f"{REQUIRED_PYNVIM_VERSION}. Run with: uv run --with "
+            f"pynvim=={REQUIRED_PYNVIM_VERSION} python ..."
+        ) from exc
+    version = getattr(pynvim, "__version__", "unknown")
+    if version != REQUIRED_PYNVIM_VERSION:
+        raise RuntimeError(
+            f"Attached-UI verification requires pynvim=={REQUIRED_PYNVIM_VERSION}; found {version}. "
+            f"Run with: uv run --with pynvim=={REQUIRED_PYNVIM_VERSION} python ..."
+        )
+    return pynvim
 
 
 def build_env(
@@ -100,6 +121,13 @@ def resolve_nvim_binary(
     )
 
 
+def process_group_popen_options(*, windows: bool | None = None) -> dict[str, object]:
+    is_windows = os.name == "nt" if windows is None else windows
+    if is_windows:
+        return {"creationflags": getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)}
+    return {"start_new_session": True}
+
+
 def run_command(
     command: Sequence[str],
     *,
@@ -107,20 +135,55 @@ def run_command(
     env: dict[str, str],
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
 ) -> subprocess.CompletedProcess[str]:
+    command_parts = [str(part) for part in command]
+    popen_options = process_group_popen_options()
+
+    process = subprocess.Popen(
+        command_parts,
+        cwd=cwd,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        **popen_options,
+    )
     try:
-        return subprocess.run(
-            [str(part) for part in command],
-            cwd=cwd,
-            env=env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=timeout,
+        stdout, stderr = process.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(
+            command_parts,
+            process.returncode,
+            stdout,
+            stderr,
         )
     except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout.decode("utf-8", errors="replace") if isinstance(exc.stdout, bytes) else exc.stdout or ""
-        stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr or ""
+        if os.name == "nt":
+            try:
+                subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    capture_output=True,
+                    check=False,
+                    timeout=5,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+            if process.poll() is None:
+                process.kill()
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                pass
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        stdout, stderr = process.communicate()
         raise CommandTimeoutError(command, timeout, "\n".join(part for part in (stdout, stderr) if part)) from exc
 
 
