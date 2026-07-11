@@ -8,4 +8,5 @@ return {
     require("plugins.tooling"),
     require("plugins.treesitter"),
     require("plugins.ui"),
+    require("plugins.action_surface"),
 }

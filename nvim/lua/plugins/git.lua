@@ -1,16 +1,25 @@
 -- nvim/lua/plugins/git.lua
 
 local i18n = require("config.i18n")
+local product_policy = require("config.product_policy")
+local function remove_inherited_maps(bufnr)
+    for _, removal in ipairs(product_policy.buffer_attach_removals("gitsigns.nvim")) do
+        for _, mode in ipairs(removal.modes) do
+            local lhs = removal.lhs
+            pcall(vim.keymap.del, mode, lhs, { buffer = bufnr })
+        end
+    end
+end
 
 local function setup_hunk_keymaps(bufnr)
-    if vim.b[bufnr].clarity_gitsigns_keymaps then
-        return
-    end
-
     local gs = package.loaded.gitsigns
     if not gs then
         return
     end
+
+    -- LazyVim owns attachment. Clarity prunes its write/duplicate surface after
+    -- every attachment so a detach/reattach cannot restore repository mutation.
+    remove_inherited_maps(bufnr)
 
     local function map(mode, lhs, rhs, desc)
         vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc, silent = true })
@@ -30,20 +39,10 @@ local function setup_hunk_keymaps(bufnr)
 
     map("n", "]h", hunk_nav(true), i18n.t("keymaps.next_hunk"))
     map("n", "[h", hunk_nav(false), i18n.t("keymaps.prev_hunk"))
-
-    map({ "n", "v" }, "<leader>ghs", ":Gitsigns stage_hunk<CR>", i18n.t("keymaps.stage_hunk"))
-    map({ "n", "v" }, "<leader>ghr", ":Gitsigns reset_hunk<CR>", i18n.t("keymaps.reset_hunk"))
-    map("n", "<leader>ghS", gs.stage_buffer, i18n.t("keymaps.stage_buffer"))
-    map("n", "<leader>ghR", gs.reset_buffer, i18n.t("keymaps.reset_buffer"))
-    map("n", "<leader>ghu", gs.undo_stage_hunk, i18n.t("keymaps.undo_stage_hunk"))
-
-    map("n", "<leader>ghp", gs.preview_hunk, i18n.t("keymaps.preview_hunk"))
-    map("n", "<leader>ghb", function()
-        gs.blame_line({ full = true })
-    end, i18n.t("keymaps.blame_line"))
-    map("n", "<leader>ghd", gs.diffthis, i18n.t("keymaps.diff_this"))
-
-    vim.b[bufnr].clarity_gitsigns_keymaps = true
+    local preview = gs.preview_hunk_inline or gs.preview_hunk
+    if preview then
+        map("n", "<leader>ghp", preview, i18n.t("keymaps.preview_hunk"))
+    end
 end
 
 return {

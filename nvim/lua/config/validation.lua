@@ -3,12 +3,14 @@ local i18n = require("config.i18n")
 
 local M = {}
 
-local function add_result(results, group, id, ok, detail)
+local function add_result(results, group, id, ok, detail, required)
     table.insert(results, {
         group = group,
         id = id,
         ok = ok,
         detail = detail,
+        required = required ~= false,
+        status = ok and "pass" or (required == false and "warn" or "fail"),
     })
 end
 
@@ -19,17 +21,7 @@ end
 function M.get_report()
     local results = {}
 
-    add_result(results, "commands", "clarity_audit_command", command_exists("ClarityAudit"), ":ClarityAudit")
-    add_result(results, "commands", "clarity_start_command", command_exists("ClarityStart"), ":ClarityStart")
-    add_result(
-        results,
-        "commands",
-        "clarity_clipboard_command",
-        command_exists("ClarityClipboard"),
-        ":ClarityClipboard"
-    )
-    add_result(results, "commands", "clarity_sync_command", command_exists("ClaritySync"), ":ClaritySync")
-    add_result(results, "commands", "clarity_validate_command", command_exists("ClarityValidate"), ":ClarityValidate")
+    add_result(results, "commands", "clarity_health_command", command_exists("ClarityHealth"), ":ClarityHealth")
     add_result(results, "commands", "clarity_language_command", command_exists("ClarityLanguage"), ":ClarityLanguage")
 
     local audit_report = audit.get_report()
@@ -37,7 +29,14 @@ function M.get_report()
     local clipboard_ready = integrations.clipboard and integrations.clipboard.present or false
     local picker_ready = integrations.picker and integrations.picker.backend == "snacks"
 
-    add_result(results, "integrations", "clipboard_provider_ready", clipboard_ready, "clipboard provider available")
+    add_result(
+        results,
+        "integrations",
+        "clipboard_provider_ready",
+        clipboard_ready,
+        "optional clipboard provider available",
+        false
+    )
     add_result(
         results,
         "integrations",
@@ -58,35 +57,41 @@ function M.get_report()
 
     local total = #results
     local passed = 0
+    local failed = 0
+    local warnings = 0
     for _, item in ipairs(results) do
         if item.ok then
             passed = passed + 1
+        elseif item.required then
+            failed = failed + 1
+        else
+            warnings = warnings + 1
         end
     end
 
     return {
         generated_at = os.date("!%Y-%m-%dT%H:%M:%SZ"),
         platform = vim.loop.os_uname(),
-        ok = passed == total,
+        ok = failed == 0,
         summary = {
             passed = passed,
-            failed = total - passed,
+            failed = failed,
+            warnings = warnings,
             total = total,
         },
         checks = results,
         delegated_checks = {
-            leader_ff = "CLARITY_RUNTIME_PICKER_CONTRACT",
-            leader_fw = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
-            leader_cz = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
-            leader_uw = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
-            leader_tf = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
-            leader_hh = "CLARITY_RUNTIME_HELP_CONTRACT",
-            lsp_gd = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
-            leader_hs = "CLARITY_RUNTIME_GITSIGNS_CONTRACT",
-            leader_ghs = "CLARITY_RUNTIME_GITSIGNS_CONTRACT",
-            dashboard_numbers_hidden = "CLARITY_RUNTIME_UI_CONTRACT",
-            neo_tree_numbers_hidden = "CLARITY_RUNTIME_EXPLORER_CONTRACT",
-            snacks_terminal = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
+            picker = "CLARITY_RUNTIME_PICKER_CONTRACT",
+            explorer = "CLARITY_RUNTIME_EXPLORER_CONTRACT",
+            ui = "CLARITY_RUNTIME_UI_CONTRACT",
+            help = "CLARITY_RUNTIME_HELP_CONTRACT",
+            gitsigns = "CLARITY_RUNTIME_GITSIGNS_CONTRACT",
+            terminal = "CLARITY_RUNTIME_TERMINAL_CONTRACT",
+            keymap = "CLARITY_RUNTIME_KEYMAP_CONTRACT",
+            fold = "CLARITY_RUNTIME_FOLD_CONTRACT",
+            wrap = "CLARITY_RUNTIME_WRAP_CONTRACT",
+            i18n = "CLARITY_RUNTIME_I18N_CONTRACT",
+            lsp = "CLARITY_RUNTIME_LSP_CONTRACT",
         },
         audit = {
             core_status = audit_report.summary and audit_report.summary.core and audit_report.summary.core.status
@@ -106,6 +111,7 @@ function M.render_report(report)
         "Clarity Validate",
         string.format("Checks passed: %d/%d", report.summary.passed, report.summary.total),
         string.format("Checks failed: %d", report.summary.failed),
+        string.format("Optional warnings: %d", report.summary.warnings or 0),
     }
 
     if report.audit.core_status then
@@ -117,7 +123,7 @@ function M.render_report(report)
     end
 
     for _, item in ipairs(report.checks) do
-        local marker = item.ok and "OK" or "FAIL"
+        local marker = item.ok and "OK" or (item.required and "FAIL" or "WARN")
         table.insert(lines, string.format("- [%s] %s (%s): %s", marker, item.id, item.group, item.detail))
     end
 
@@ -130,16 +136,13 @@ function M.setup()
     end
 
     vim.api.nvim_create_user_command("ClarityValidate", function(info)
-        local report = M.get_report()
-
         if info.bang then
+            local report = M.get_report()
             print(vim.json.encode(report))
             return
         end
 
-        for _, line in ipairs(M.render_report(report)) do
-            print(line)
-        end
+        require("config.health").open("recovery")
     end, {
         bang = true,
         desc = i18n.t("commands.validate"),

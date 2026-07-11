@@ -106,6 +106,42 @@ local function find_python_module(module_name)
     return false, nil
 end
 
+local function lsp_command(config)
+    local command = type(config) == "table" and config.cmd or nil
+    if type(command) == "table" then
+        command = command[1]
+    end
+    return type(command) == "string" and command ~= "" and command or nil
+end
+
+local function get_lsp_status()
+    local servers = {}
+    local configs = vim.lsp and vim.lsp.get_configs and vim.lsp.get_configs() or {}
+
+    for _, config in ipairs(configs) do
+        local name = type(config) == "table" and config.name or nil
+        if name and vim.lsp.is_enabled(name) then
+            local executable = lsp_command(config)
+            local present = executable ~= nil and vim.fn.executable(executable) == 1
+            table.insert(servers, {
+                name = name,
+                executable = executable,
+                path = present and vim.fn.exepath(executable) or nil,
+                present = present,
+            })
+        end
+    end
+    table.sort(servers, function(left, right)
+        return left.name < right.name
+    end)
+
+    return {
+        auto_install = false,
+        enabled_count = #servers,
+        servers = servers,
+    }
+end
+
 function M.classify_clipboard(input)
     input = input or {}
     local provider = input.provider
@@ -469,6 +505,7 @@ function M.get_report()
     local python_provider_present, python_interpreter = find_python_module("pynvim")
     local picker = get_picker_status(report.plugins)
     local treesitter = get_treesitter_status()
+    local lsp = get_lsp_status()
 
     report.integrations = {
         clipboard = clipboard,
@@ -479,6 +516,7 @@ function M.get_report()
         },
         picker = picker,
         treesitter = treesitter,
+        lsp = lsp,
     }
 
     add_check({
@@ -527,6 +565,22 @@ function M.get_report()
         impact = "Optional Python-backed integrations are unavailable.",
         repair = "Install pynvim for the active Python interpreter when needed.",
     })
+    for _, server in ipairs(lsp.servers) do
+        local executable = server.executable or "unresolved command"
+        add_check({
+            id = "lsp_server_" .. server.name:gsub("[^%w_%-]", "_"),
+            profile = "lsp",
+            required = false,
+            status = server.present and "pass" or "warn",
+            detail = string.format("server=%s executable=%s", server.name, executable),
+            impact = "Language-aware navigation and review are unavailable for files handled by this server.",
+            repair = string.format(
+                "Install %s externally and ensure it is on PATH; Clarity never auto-installs language servers.",
+                executable
+            ),
+            recheck = ":ClarityHealth environment",
+        })
+    end
     report.summary = capabilities.summarize(checks)
     report.summary.required = {
         ok = report.summary.core.passed,
@@ -604,6 +658,20 @@ function M.render_report(report)
         string.format("Search backend: %s (%s)", report.integrations.picker.backend, report.integrations.picker.reason)
     )
 
+    local lsp = report.integrations.lsp or { servers = {} }
+    table.insert(lines, string.format("Enabled LSP servers: %d (automatic installation: off)", #lsp.servers))
+    for _, server in ipairs(lsp.servers) do
+        table.insert(
+            lines,
+            string.format(
+                "- [%s] LSP %s: %s",
+                server.present and "OK" or "MISSING",
+                server.name,
+                server.path or server.executable or "unresolved command"
+            )
+        )
+    end
+
     local ts_status = report.integrations.treesitter.health_ok and "OK" or "CHECK"
     local ts_metadata = report.integrations.treesitter.parser_metadata or {}
     local ts_version = string.format(
@@ -671,16 +739,13 @@ function M.setup()
     end
 
     vim.api.nvim_create_user_command("ClarityAudit", function(info)
-        local report = M.get_report()
-
         if info.bang then
+            local report = M.get_report()
             print(vim.json.encode(report))
             return
         end
 
-        for _, line in ipairs(M.render_report(report)) do
-            print(line)
-        end
+        require("config.health").open("environment")
     end, {
         bang = true,
         desc = i18n.t("commands.audit"),

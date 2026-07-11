@@ -6,6 +6,7 @@ local temp = vim.fn.tempname()
 vim.fn.mkdir(temp, "p")
 local export_path = temp .. "/diagnostics.jsonl"
 local notifications = {}
+local health_routes = {}
 local events = {
     {
         timestamp = "2026-07-10T00:00:00Z",
@@ -41,21 +42,18 @@ commands.setup({
     notify = function(message, level)
         table.insert(notifications, { message = message, level = level })
     end,
+    health = {
+        open = function(route)
+            table.insert(health_routes, route)
+        end,
+    },
 })
 commands.setup({ diagnostics = diagnostics, i18n = i18n })
 
 assert(vim.fn.exists(":ClarityLog") == 2, "ClarityLog command missing")
 vim.cmd("ClarityLog")
-local buffer = vim.api.nvim_get_current_buf()
-assert(vim.api.nvim_buf_get_name(buffer) == "clarity://log", "log buffer name is unstable")
-assert(vim.bo[buffer].modifiable == false and vim.bo[buffer].readonly, "log buffer must be read-only")
-assert(
-    table.concat(vim.api.nvim_buf_get_lines(buffer, 0, -1, false), "\n"):find("CLARITY_TEST_EVENT", 1, true),
-    "event missing from view"
-)
-
 vim.cmd("ClarityLog tail")
-assert(vim.api.nvim_win_get_cursor(0)[1] == vim.api.nvim_buf_line_count(buffer), "tail must move to latest event")
+assert(vim.deep_equal(health_routes, { "events", "events" }), "legacy log views must route through Health events")
 vim.cmd("ClarityLog path")
 assert(notifications[#notifications].message:find("events.jsonl", 1, true), "path notification missing")
 vim.cmd("ClarityLog export " .. vim.fn.fnameescape(export_path))

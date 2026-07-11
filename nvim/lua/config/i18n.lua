@@ -21,12 +21,13 @@ local strings = {
                 global = "vim.g.clarity_locale",
                 persisted = "saved preference",
                 auto = "automatic detection",
+                runtime = "current session",
             },
             current = "Clarity language choice: %{choice}; effective UI: %{effective}; source: %{source}.",
             usage = "Use `:ClarityLanguage {auto|en|zh}` to change it.",
             updated = "Clarity language preference saved as %{choice}. Effective UI: %{effective}.",
-            restart = "Restart Neovim to refresh key descriptions and command menus completely.",
             invalid = "Unsupported locale `%{choice}`. Use one of: auto, en, zh.",
+            save_failed = "Clarity could not save the language preference: %{reason}",
             command_desc = "Show or set the Clarity UI language",
         },
         commands = {
@@ -183,12 +184,13 @@ local strings = {
                 global = "vim.g.clarity_locale",
                 persisted = "已保存偏好",
                 auto = "自动检测",
+                runtime = "当前会话",
             },
             current = "Clarity 语言选择：%{choice}；当前界面语言：%{effective}；来源：%{source}。",
             usage = "使用 `:ClarityLanguage {auto|en|zh}` 切换界面语言。",
             updated = "Clarity 语言偏好已保存为 %{choice}。当前界面语言：%{effective}。",
-            restart = "请重启 Neovim，以完整刷新键位说明和命令菜单。",
             invalid = "不支持的语言 `%{choice}`。可用值：auto、en、zh。",
+            save_failed = "Clarity 无法保存语言偏好：%{reason}",
             command_desc = "查看或设置 Clarity 界面语言",
         },
         commands = {
@@ -365,8 +367,17 @@ end
 local function write_saved_choice(choice)
     local path = state_path()
     local dir = vim.fn.fnamemodify(path, ":h")
-    pcall(vim.fn.mkdir, dir, "p")
-    pcall(vim.fn.writefile, { choice }, path)
+    local made_dir, mkdir_result = pcall(vim.fn.mkdir, dir, "p")
+    if not made_dir or vim.fn.isdirectory(dir) ~= 1 then
+        return false, made_dir and "could not create the state directory" or tostring(mkdir_result)
+    end
+
+    local wrote, write_result = pcall(vim.fn.writefile, { choice }, path)
+    if not wrote or write_result ~= 0 then
+        return false, wrote and "could not write the state file" or tostring(write_result)
+    end
+
+    return true
 end
 
 local function detect_auto_locale()
@@ -530,12 +541,38 @@ function M.set_choice(choice, opts)
         return false, message
     end
 
+    local previous = ensure_state()
+
     if opts.persist ~= false then
-        write_saved_choice(normalized)
+        local persisted, persist_error = write_saved_choice(normalized)
+        if not persisted then
+            local message = M.t("locale.save_failed", { reason = persist_error }, previous.effective)
+            if not opts.silent then
+                notify(message, vim.log.levels.ERROR)
+            end
+            return false, message
+        end
     end
 
-    state = nil
+    state = {
+        choice = normalized,
+        effective = normalized == "auto" and detect_auto_locale() or normalized,
+        source = "runtime",
+    }
     local current = ensure_state()
+
+    if previous.effective ~= current.effective then
+        vim.api.nvim_exec_autocmds("User", {
+            pattern = "ClarityLocaleChanged",
+            modeline = false,
+            data = {
+                previous = previous.effective,
+                current = current.effective,
+                choice = current.choice,
+                source = current.source,
+            },
+        })
+    end
 
     if not opts.silent then
         notify(
@@ -545,7 +582,6 @@ function M.set_choice(choice, opts)
             }),
             vim.log.levels.INFO
         )
-        notify(M.t("locale.restart"), vim.log.levels.INFO)
     end
 
     return true, M.get_state()
