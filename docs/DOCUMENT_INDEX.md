@@ -22,6 +22,10 @@
 | Agent-era product intent | [`product/clarity-agent-era-review-console-pm.md`](product/clarity-agent-era-review-console-pm.md) | Review-first product boundary and success criteria |
 | Agent-era architecture | [`architecture/2026-07-10-agent-era-editor-surface-blueprint.md`](architecture/2026-07-10-agent-era-editor-surface-blueprint.md) | Approved dependency, ownership, migration, and verification decisions |
 | Agent-era PLAN+TASK | [`../progress/2026-07-10-agent-era-review-console-plan.md`](../progress/2026-07-10-agent-era-review-console-plan.md) | Active execution status and evidence ledger |
+| Observation-surface architecture | [`architecture/2026-07-11-agent-era-observation-surface-blueprint.md`](architecture/2026-07-11-agent-era-observation-surface-blueprint.md) | Approved interaction, localization, Git-observation, and dependency target |
+| Keymap decision report | [`reviews/2026-07-11-keymap-surface-decision-report.md`](reviews/2026-07-11-keymap-surface-decision-report.md) | Per-key leader/context/component audit, hidden-mutation counter-evidence, and target manifest |
+| Observation-surface product intent | [`product/clarity-observation-surface-pm.md`](product/clarity-observation-surface-pm.md) | Approved observation-first experience, scope, success criteria, and dependency gates |
+| Observation-surface PLAN+TASK | [`../progress/2026-07-11-agent-era-observation-surface-plan.md`](../progress/2026-07-11-agent-era-observation-surface-plan.md) | Approved implementation tasks, dependencies, validation, rollback, and delivery status |
 | Local agent contract | `AGENTS.md` at repository root | Durable local implementation rules; intentionally ignored by Git and therefore not a public repository link |
 
 ## Accepted Decisions
