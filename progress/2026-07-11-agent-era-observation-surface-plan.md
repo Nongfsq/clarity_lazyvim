@@ -46,9 +46,9 @@ execution, commits, and push on 2026-07-11. GitHub CI is explicitly excluded.
   changing callback identity.
 - Resolved active and locked plugin sets each contain exactly 18 entries after
   the approved parity gates.
-- The previous clean macOS artifact binds `596cffa`; the final clean release
-  rerun for `21f8d29` plus reconciled documentation is pending before push.
-  Exact-commit Ubuntu, Windows, WSL, and hosted-CI evidence remains pending.
+- Clean macOS release evidence binds `69ecfbf1872446287c1ec849e432b8d78fe48934`
+  under owner-only artifact `20260711-69ecfbf`. Exact-commit Ubuntu, Windows,
+  WSL, and hosted-CI evidence remains pending.
 
 ## Architecture Decisions
 
@@ -329,9 +329,8 @@ migration is allowed.
 
 ### SURFACE-009: Close The Local Behavior And Release Gate
 
-- Status: in progress — 2026-07-11; all development gates pass after trust-gap
-  hardening; final clean commit-bound release rerun awaits the documentation
-  reconciliation commit; 60 Python and 26 Lua tests pass
+- Status: done — 2026-07-11; clean commit-bound release passed for `69ecfbf`
+  with owner-only artifact `20260711-69ecfbf`; 60 Python and 26 Lua tests pass
 - Depends on: SURFACE-003, SURFACE-004, SURFACE-005, SURFACE-006, SURFACE-007,
   SURFACE-008
 - Files: `scripts/{clarity_runtime,run_clarity_action_matrix,run_clarity_contracts,
@@ -350,8 +349,8 @@ migration is allowed.
 ### SURFACE-010: Reconcile Truth, Commit, And Push
 
 - Status: in progress — public/current docs, ADRs, implementation review,
-  dependency manifest, and closeout are being reconciled before the final clean
-  release rerun and branch push
+  dependency manifest, and closeout are reconciled; the final clean release
+  passed and only the authorized branch push/remote-ref verification remains
 - Depends on: SURFACE-009
 - Files: `README.md`, `doc/clarity_lazyvim_complete_guide_zh.md`,
   `docs/ai/current-reality.md`, `docs/DOCUMENT_INDEX.md`, product/architecture/

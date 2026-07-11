@@ -196,8 +196,10 @@ Important evidence boundary:
 ## Current Local Validation Snapshot
 
 The observation runtime is implemented through `596cffa`; trust-gap hardening,
-exact i18n pruning, and the real-input matrix are in `21f8d29`. The final clean,
-commit-bound release rerun follows the documentation reconciliation commit:
+exact i18n pruning, and the real-input matrix are in `21f8d29`. A clean,
+commit-bound release passed for `69ecfbf1872446287c1ec849e432b8d78fe48934`
+with owner-only artifact
+`~/.local/state/clarity_lazyvim/release-evidence/20260711-69ecfbf`:
 
 - release manifest: clean worktree, Neovim 0.12.4, isolated config/data/state/
   cache, owner-only persistent artifacts

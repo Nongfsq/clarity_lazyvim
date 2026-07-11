@@ -4,15 +4,14 @@ Date: 2026-07-11
 
 Scope: approved local observation-surface implementation and macOS evidence
 
-Status: implementation complete; final clean release rerun pending before branch push
+Status: local execution complete; cross-platform 95+ release claim not yet authorized by evidence
 
 ## Executive Conclusion
 
 The approved refactor is implemented and materially improves the experience:
 Clarity now behaves as a small bilingual review console rather than a hidden
-full-LazyVim menu. The layered development gate is green and no P0/P1 runtime
-finding remains inside this plan's macOS scope; the final clean release rerun is
-still required before delivery.
+full-LazyVim menu. The clean local release gate is green and no P0/P1 runtime
+finding remains inside this plan's macOS scope.
 
 The full project score is **92/100**, up from the historical 58/100 baseline.
 This is deliberately below 95: the owner excluded GitHub CI from this delivery,
@@ -92,20 +91,20 @@ resolved runtime.
   `tests/python/{test_action_matrix.py,test_clarity_runtime.py}`, and
   `tests/python/test_i18n_catalog_contract.py`.
 
-## Release Evidence
+## Commit-Bound Evidence
 
-- Previous clean release commit: `596cffac0e08b3e21012c908d929c55aff0a4fe4`
-- Current trust-gap hardening commit: `21f8d29`; final documentation-bound clean
-  release rerun pending
+- Commit: `69ecfbf1872446287c1ec849e432b8d78fe48934`
+- Trust-gap hardening code boundary: `21f8d29`
 - Platform: macOS arm64, Neovim 0.12.4, Python 3.14.6
-- Previous artifact: `~/.local/state/clarity_lazyvim/release-evidence/20260711-596cffa`
+- Artifact: `~/.local/state/clarity_lazyvim/release-evidence/20260711-69ecfbf`
+  with directory mode `0700` and files `0600`
 - Authority hashes: `init.lua`
   `c5cb9129c78ec53b9646855c63e4025656961997788cf96afd5a127ea859b559`;
   lock
   `e158ec437e8cdd2ada480aa6f01e11479db7d322e4f16ad21d1626f5340c57ca`;
   LazyVim JSON
   `3911b0251e3c51aa127f937aa5de323dba1eb6227636549264bde36e1674ad02`
-- Development gates: 60 Python tests, 26 Lua tests, empty/file/attached scenarios,
+- Gates: 60 Python tests, 26 Lua tests, empty/file/attached scenarios,
   independent behavior contracts, raw-fold expected failure, passive validate,
   audit, exact active/lock parity, first boot, restart, and proxy/PATH-blocked
   offline restart.
